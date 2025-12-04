@@ -7,9 +7,13 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { fetchLLMFeed, validateLLMFeed, type LLMFeed } from '@/lib/llmfeed'
-import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple, CheckCircle, ArrowUpRight } from '@phosphor-icons/react'
+import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple, CheckCircle, ArrowUpRight, Lock } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
+import { GitHubSignIn } from './GitHubSignIn'
+import { UserProfile } from './UserProfile'
+import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
 
 interface FeedMetadata {
@@ -41,11 +45,13 @@ export interface ArchivedFeed {
 }
 
 export function Archive() {
+  const { user, loading: authLoading, isAuthenticated } = useAuth()
   const [archives, setArchives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
   const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
   const [domain, setDomain] = useState('')
   const [loading, setLoading] = useState(false)
   const [selectedSnapshot, setSelectedSnapshot] = useState<ArchivedSnapshot | null>(null)
+  const [showSignInDialog, setShowSignInDialog] = useState(false)
 
   const archiveList = Object.values(archives || {}).sort((a, b) => b.lastUpdated - a.lastUpdated)
 
@@ -173,6 +179,14 @@ export function Archive() {
   }
 
   const publishToDirectory = (snapshot: ArchivedSnapshot) => {
+    if (!isAuthenticated) {
+      setShowSignInDialog(true)
+      toast.error('Sign in required to publish', {
+        description: 'GitHub authentication is required to publish feeds to the public directory'
+      })
+      return
+    }
+
     const feedUrl = snapshot.feed.metadata.origin || `https://${snapshot.domain}/.well-known/mcp.llmfeed.json`
     
     const feedMetadata: FeedMetadata = {
@@ -198,7 +212,7 @@ export function Archive() {
         return feeds
       }
       toast.success(`Published "${feedMetadata.title}" to directory`, {
-        description: 'View it in the Directory tab alongside other feeds'
+        description: `Published by @${user?.login || 'user'} • View it in the Directory tab`
       })
       return [...feeds, feedMetadata]
     })
@@ -229,13 +243,49 @@ export function Archive() {
         </p>
       </div>
 
+      {isAuthenticated && user && (
+        <UserProfile user={user} compact />
+      )}
+
+      {!isAuthenticated && !authLoading && (
+        <Card className="p-6 glass-card border-accent/30 shadow-xl">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+              <Lock size={24} className="text-accent" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-foreground mb-2">
+                Sign in to Publish Feeds
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                You can archive feeds for free without signing in. However, publishing to the public directory requires GitHub authentication to maintain quality and prevent spam.
+              </p>
+              <Button
+                onClick={() => setShowSignInDialog(true)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Lock size={16} className="mr-2" />
+                Sign in with GitHub to Publish
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <Alert className="glass-card border-primary/20">
         <ArchiveIcon size={18} className="text-primary" />
         <AlertTitle className="text-sm font-semibold">Persistent Feed Storage & Publishing</AlertTitle>
-        <AlertDescription className="text-xs text-muted-foreground">
-          Archive any LLMFeed from any URL to ensure availability even if the original site goes offline. Each snapshot is timestamped and versioned. 
-          Published snapshots appear in the <span className="font-semibold text-accent">Directory tab</span> for public discovery and are served at 
-          dedicated URLs (<code className="font-mono">/archive/&#123;id&#125;.json</code>) with proper JSON headers for easy consumption by scrapers and AI bots.
+        <AlertDescription className="text-xs text-muted-foreground space-y-2">
+          <p>
+            Archive any LLMFeed from any URL to ensure availability even if the original site goes offline. Each snapshot is timestamped and versioned.
+          </p>
+          <div className="flex items-start gap-2 pt-2 border-t border-border/50">
+            <Lock size={14} className="text-accent mt-0.5 flex-shrink-0" />
+            <p>
+              <span className="font-semibold text-accent">Publishing requires GitHub sign-in:</span> Published snapshots appear in the <span className="font-semibold text-accent">Directory tab</span> for public discovery and are served at 
+              dedicated URLs (<code className="font-mono bg-muted px-1 rounded">/archive/&#123;id&#125;.json</code>) with proper JSON headers for easy consumption by scrapers and AI bots.
+            </p>
+          </div>
         </AlertDescription>
       </Alert>
 
@@ -375,10 +425,19 @@ export function Archive() {
                                         variant="ghost"
                                         size="sm"
                                         className="h-6 px-2 text-xs text-accent hover:text-accent hover:bg-accent/10"
-                                        title="Publish to Directory"
+                                        title={isAuthenticated ? "Publish to Directory" : "Sign in required to publish"}
                                       >
-                                        <UploadSimple size={12} className="mr-1" />
-                                        Publish
+                                        {isAuthenticated ? (
+                                          <>
+                                            <UploadSimple size={12} className="mr-1" />
+                                            Publish
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Lock size={12} className="mr-1" />
+                                            Publish
+                                          </>
+                                        )}
                                       </Button>
                                     )}
                                     <Button
@@ -439,10 +498,20 @@ export function Archive() {
                         onClick={() => publishToDirectory(selectedSnapshot)}
                         variant="default"
                         size="sm"
-                        className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                        className={isAuthenticated ? "bg-accent hover:bg-accent/90 text-accent-foreground" : "bg-muted text-muted-foreground cursor-not-allowed"}
+                        title={isAuthenticated ? "Publish to Directory" : "Sign in required to publish"}
                       >
-                        <UploadSimple size={16} className="mr-2" />
-                        Publish to Directory
+                        {isAuthenticated ? (
+                          <>
+                            <UploadSimple size={16} className="mr-2" />
+                            Publish to Directory
+                          </>
+                        ) : (
+                          <>
+                            <Lock size={16} className="mr-2" />
+                            Sign in to Publish
+                          </>
+                        )}
                       </Button>
                     )}
                     <Button
@@ -554,6 +623,18 @@ export function Archive() {
           </div>
         </div>
       )}
+
+      <Dialog open={showSignInDialog} onOpenChange={setShowSignInDialog}>
+        <DialogContent className="sm:max-w-md bg-background border-primary/30">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Sign in with GitHub</DialogTitle>
+          </DialogHeader>
+          <GitHubSignIn 
+            context="publish" 
+            onClose={() => setShowSignInDialog(false)} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

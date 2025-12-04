@@ -13,11 +13,11 @@ A universal LLMFeed analyzer that addresses critical gaps in feed validation, cr
 ## Essential Features
 
 ### Feed Directory & Discovery Index
-- **Functionality**: Publicly accessible, scrollable directory of published LLM feeds organized by "Top Feeds" (most capabilities) and "Latest Published" (most recent), with direct JSON links optimized for scraper discovery
-- **Purpose**: Provides a centralized discovery mechanism for feeds, making it easy for AI agents, scrapers, and developers to find and access available LLMFeed endpoints
-- **Trigger**: User navigates to Directory tab
-- **Progression**: View Directory → Browse top/latest feeds → See feed metadata (type, capabilities, version, author) → Click JSON URL to access raw feed
-- **Success criteria**: Feeds are clearly organized with visible metadata, JSON URLs are marked with data attributes for programmatic access, links open in new tabs with proper rel attributes
+- **Functionality**: Publicly accessible, scrollable directory of published LLM feeds organized by "Top Feeds" (most capabilities) and "Latest Published" (most recent), with direct JSON links optimized for scraper discovery. Publishing feeds requires GitHub authentication.
+- **Purpose**: Provides a centralized discovery mechanism for feeds, making it easy for AI agents, scrapers, and developers to find and access available LLMFeed endpoints. Authentication ensures directory quality and prevents spam.
+- **Trigger**: User navigates to Directory tab to browse published feeds. GitHub authentication required to publish new feeds from Archive tab.
+- **Progression**: View Directory → Browse top/latest feeds → See feed metadata (type, capabilities, version, author) → Click JSON URL to access raw feed | Archive feed → Sign in with GitHub → Publish to directory
+- **Success criteria**: Feeds are clearly organized with visible metadata, JSON URLs are marked with data attributes for programmatic access, links open in new tabs with proper rel attributes, authentication is required for publishing, unauthenticated users can still archive and export feeds
 
 ### Universal LLMFeed Validator
 - **Functionality**: Comprehensive validation of any .llmfeed.json file from URL, file upload, or direct paste - including structure, schema conformance, and Ed25519 signature verification
@@ -51,11 +51,11 @@ A universal LLMFeed analyzer that addresses critical gaps in feed validation, cr
 - **Success criteria**: Renders schemas clearly, generates valid sample requests, identifies schema issues
 
 ### Universal WebMCP Archive
-- **Functionality**: Centralized, public archival system for any LLM feed or MCP manifest from any URL with versioning and persistence
-- **Purpose**: Addresses Gap 3 - provides resilience and reproducibility for feeds that may go offline or change over time, regardless of their hosting location
-- **Trigger**: User adds a URL (domain or full path) to archive, or archives current discovered feed
-- **Progression**: Add URL → Fetch feed from any location → Store timestamped snapshot → Display version history → Enable export/restoration of archived versions
-- **Success criteria**: Successfully stores multiple versions with timestamps, allows browsing historical snapshots, provides stable canonical URLs for each archived feed version, works with feeds from any URL
+- **Functionality**: Centralized, public archival system for any LLM feed or MCP manifest from any URL with versioning and persistence. Free archival for all users; publishing to public directory requires GitHub authentication.
+- **Purpose**: Addresses Gap 3 - provides resilience and reproducibility for feeds that may go offline or change over time, regardless of their hosting location. Authentication for publishing prevents spam and maintains directory quality.
+- **Trigger**: User adds a URL (domain or full path) to archive, or archives current discovered feed. Publishing requires GitHub sign-in.
+- **Progression**: Add URL → Fetch feed from any location → Store timestamped snapshot (free, no auth required) → Optionally sign in with GitHub → Publish to public directory → Display version history → Enable export/restoration of archived versions
+- **Success criteria**: Successfully stores multiple versions with timestamps, allows browsing historical snapshots, provides stable canonical URLs for each archived feed version, works with feeds from any URL, authenticated users can publish to directory, non-authenticated users can archive and export freely
 
 ## Edge Case Handling
 
@@ -118,6 +118,8 @@ Animations should reinforce validation states and guide attention to critical se
   - `Progress` for multi-step validation workflows
   - `Tooltip` for schema field explanations
   - `Separator` to divide validation sections and metadata fields
+  - `Dialog` for GitHub authentication flow and sign-in prompts
+  - `Avatar` for displaying authenticated user profile information
   
 - **Customizations**: 
   - Custom JSON syntax highlighter using regex-based colorization
@@ -125,6 +127,8 @@ Animations should reinforce validation states and guide attention to critical se
   - Capability cards with schema preview and copy-to-clipboard
   - Custom Ed25519 verification stepper component
   - Feed directory cards with metadata display and direct JSON access links
+  - GitHub sign-in modal with authentication status display
+  - User profile component showing GitHub avatar and username
   
 - **States**: 
   - Validation button: default (cyan gradient), loading (animated pulse), success (lime), error (crimson)
@@ -149,6 +153,10 @@ Animations should reinforce validation states and guide attention to critical se
   - Globe for domain/URL display
   - Tag for feed type badges
   - Calendar for timestamp formatting
+  - Lock for authentication requirements and restricted features
+  - GithubLogo for GitHub sign-in prompts
+  - Crown for owner/admin status badges
+  - SignOut for user sign-out actions
   
 - **Spacing**: 
   - Section padding: `p-6` for cards, `p-8` for page container and directory sections
