@@ -42,7 +42,9 @@ function App() {
   useEffect(() => {
     const checkRoute = () => {
       const path = window.location.pathname
-      setIsArchiveRoute(path.startsWith('/archive/') && path.endsWith('.json'))
+      // Handle both root deployment and subdirectory deployment (e.g., /repo-name/archive/...)
+      const isArchive = path.includes('/archive/') && path.endsWith('.json')
+      setIsArchiveRoute(isArchive)
     }
     
     checkRoute()

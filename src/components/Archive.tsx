@@ -184,8 +184,9 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
   }
 
   const copySnapshotUrl = (snapshot: ArchivedSnapshot) => {
-    const baseUrl = window.location.origin
-    const archiveUrl = `${baseUrl}/archive/${snapshot.id}.json`
+    // Get the base path from current URL (handles subdirectory deployments)
+    const basePath = window.location.pathname.replace(/\/(archive\/.*)?$/, '')
+    const archiveUrl = `${window.location.origin}${basePath}/archive/${snapshot.id}.json`
     navigator.clipboard.writeText(archiveUrl)
     toast.success('Archive URL copied to clipboard', {
       description: 'Share this URL with scrapers and AI bots'
@@ -590,7 +591,12 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
                       </Button>
                     )}
                     <Button
-                      onClick={() => window.open(`${window.location.origin}/archive/${selectedSnapshot.id}.json`, '_blank')}
+                      onClick={() => {
+                        // Get the base path from current URL (handles subdirectory deployments)
+                        const basePath = window.location.pathname.replace(/\/(archive\/.*)?$/, '')
+                        const archiveUrl = `${window.location.origin}${basePath}/archive/${selectedSnapshot.id}.json`
+                        window.open(archiveUrl, '_blank')
+                      }}
                       variant="outline"
                       size="sm"
                       title="View served archive in new tab"

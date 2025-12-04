@@ -10,6 +10,7 @@ export function ArchiveServer() {
   useEffect(() => {
     const checkForArchiveRequest = () => {
       const path = window.location.pathname
+      // Match /archive/{id}.json with any prefix (for subdirectory deployments)
       const match = path.match(/\/archive\/([^/]+)\.json$/)
       
       if (match) {
