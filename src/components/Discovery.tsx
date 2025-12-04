@@ -4,10 +4,12 @@ import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { fetchLLMFeed, type LLMFeed, calculateTokenEstimate } from '@/lib/llmfeed'
-import { MagnifyingGlass, CloudArrowDown, Code, CheckCircle, Copy } from '@phosphor-icons/react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { fetchLLMFeed, type LLMFeed, type Capability, calculateTokenEstimate } from '@/lib/llmfeed'
+import { MagnifyingGlass, CloudArrowDown, Code, CheckCircle, Copy, ArrowsOutSimple } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
 import { ExampleUrls } from './ExampleUrls'
+import { CapabilityInspector } from './CapabilityInspector'
 import { toast } from 'sonner'
 
 export function Discovery() {
@@ -15,6 +17,8 @@ export function Discovery() {
   const [loading, setLoading] = useState(false)
   const [feed, setFeed] = useState<LLMFeed | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCapability, setSelectedCapability] = useState<Capability | null>(null)
+  const [inspectorOpen, setInspectorOpen] = useState(false)
 
   const handleDiscover = async () => {
     if (!domain.trim()) return
@@ -38,6 +42,11 @@ export function Discovery() {
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
     toast.success(`${label} copied to clipboard`)
+  }
+
+  const openCapabilityInspector = (capability: Capability) => {
+    setSelectedCapability(capability)
+    setInspectorOpen(true)
   }
 
   const tokenEstimate = feed ? calculateTokenEstimate(feed) : null
@@ -266,15 +275,26 @@ export function Discovery() {
                           </div>
                         )}
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(JSON.stringify(capability, null, 2), 'Capability')}
-                          className="w-full"
-                        >
-                          <Copy size={16} className="mr-2" />
-                          Copy Capability JSON
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(JSON.stringify(capability, null, 2), 'Capability')}
+                            className="flex-1"
+                          >
+                            <Copy size={16} className="mr-2" />
+                            Copy JSON
+                          </Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => openCapabilityInspector(capability)}
+                            className="flex-1 bg-primary hover:bg-primary/90"
+                          >
+                            <ArrowsOutSimple size={16} className="mr-2" />
+                            Deep Inspect
+                          </Button>
+                        </div>
                       </div>
                     </AccordionContent>
                   </AccordionItem>
@@ -297,6 +317,25 @@ export function Discovery() {
           </Card>
         </div>
       )}
+
+      {/* Capability Inspector Dialog */}
+      <Dialog open={inspectorOpen} onOpenChange={setInspectorOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto glass-strong border-primary/20">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold font-mono flex items-center gap-2">
+              <Code size={24} className="text-primary" />
+              Capability Inspector
+            </DialogTitle>
+          </DialogHeader>
+          {selectedCapability && feed && (
+            <CapabilityInspector 
+              capability={selectedCapability} 
+              feed={feed}
+              onClose={() => setInspectorOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

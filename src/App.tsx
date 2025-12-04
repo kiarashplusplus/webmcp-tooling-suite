@@ -1,9 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Validator } from '@/components/Validator'
-import { Discovery } from '@/components/Discovery'
-import { RAGPrep } from '@/components/RAGPrep'
-import { Archive } from '@/components/Archive'
-import { Directory } from '@/components/Directory'
+import { lazy, Suspense, useState, useEffect } from 'react'
 import { ArchiveServer } from '@/components/ArchiveServer'
 import { FeedStructuredData } from '@/components/FeedStructuredData'
 import { SitemapGenerator } from '@/components/SitemapGenerator'
@@ -11,7 +7,28 @@ import { SEOMetaTags } from '@/components/SEOMetaTags'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { Toaster } from '@/components/ui/sonner'
 import { ShieldCheck, MagnifyingGlass, Database, Archive as ArchiveIcon, FolderOpen } from '@phosphor-icons/react'
-import { useState, useEffect } from 'react'
+
+// Lazy load tab content components for code splitting
+const Validator = lazy(() => import('@/components/Validator').then(m => ({ default: m.Validator })))
+const Discovery = lazy(() => import('@/components/Discovery').then(m => ({ default: m.Discovery })))
+const RAGPrep = lazy(() => import('@/components/RAGPrep').then(m => ({ default: m.RAGPrep })))
+const Archive = lazy(() => import('@/components/Archive').then(m => ({ default: m.Archive })))
+const Directory = lazy(() => import('@/components/Directory').then(m => ({ default: m.Directory })))
+
+// Loading skeleton for tab content
+function TabLoadingSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="h-8 w-64 bg-muted rounded-lg" />
+      <div className="h-4 w-96 bg-muted/50 rounded" />
+      <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className="h-10 bg-muted/30 rounded-lg" />
+        <div className="h-32 bg-muted/20 rounded-lg" />
+        <div className="h-10 w-32 bg-primary/20 rounded-lg" />
+      </div>
+    </div>
+  )
+}
 
 function App() {
   const [isArchiveRoute, setIsArchiveRoute] = useState(false)
@@ -116,23 +133,33 @@ function App() {
               </TabsList>
 
               <TabsContent value="directory" className="mt-0">
-                <Directory />
+                <Suspense fallback={<TabLoadingSkeleton />}>
+                  <Directory />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="validator" className="mt-0">
-                <Validator />
+                <Suspense fallback={<TabLoadingSkeleton />}>
+                  <Validator />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="discovery" className="mt-0">
-                <Discovery />
+                <Suspense fallback={<TabLoadingSkeleton />}>
+                  <Discovery />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="archive" className="mt-0">
-                <Archive />
+                <Suspense fallback={<TabLoadingSkeleton />}>
+                  <Archive />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="rag" className="mt-0">
-                <RAGPrep />
+                <Suspense fallback={<TabLoadingSkeleton />}>
+                  <RAGPrep />
+                </Suspense>
               </TabsContent>
             </Tabs>
           </main>

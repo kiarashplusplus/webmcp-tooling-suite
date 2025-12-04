@@ -17,7 +17,8 @@ import {
   Calendar,
   ArrowUpRight,
   Archive,
-  Trash
+  Trash,
+  Info
 } from '@phosphor-icons/react'
 
 interface FeedMetadata {
@@ -33,90 +34,30 @@ interface FeedMetadata {
   author?: string
 }
 
-const SAMPLE_FEEDS: FeedMetadata[] = [
-  {
-    id: '1',
-    url: 'https://example.com/.well-known/llmfeed.json',
-    title: 'Example API Gateway',
-    description: 'Production-ready API gateway with authentication and rate limiting capabilities',
-    feed_type: 'webmcp',
-    domain: 'example.com',
-    timestamp: Date.now() - 1000 * 60 * 60 * 2,
-    capabilities_count: 12,
-    version: '1.0.0',
-    author: 'Example Corp'
-  },
-  {
-    id: '2',
-    url: 'https://demo.llmfeed.io/api/feed.json',
-    title: 'Demo LLM Tools',
-    description: 'Collection of utility tools for text processing and data transformation',
-    feed_type: 'llmfeed',
-    domain: 'demo.llmfeed.io',
-    timestamp: Date.now() - 1000 * 60 * 60 * 5,
-    capabilities_count: 8,
-    version: '2.1.0',
-    author: 'LLMFeed Community'
-  },
-  {
-    id: '3',
-    url: 'https://api.acme.dev/.well-known/llmfeed.json',
-    title: 'ACME Developer Platform',
-    description: 'Enterprise-grade development tools and AI-powered code analysis',
-    feed_type: 'webmcp',
-    domain: 'api.acme.dev',
-    timestamp: Date.now() - 1000 * 60 * 60 * 24,
-    capabilities_count: 25,
-    version: '3.2.1',
-    author: 'ACME Inc'
-  },
-  {
-    id: '4',
-    url: 'https://tools.ai-agent.cloud/llmfeed.json',
-    title: 'AI Agent Toolkit',
-    description: 'Comprehensive agent capabilities for web scraping, data extraction, and analysis',
-    feed_type: 'llmfeed',
-    domain: 'tools.ai-agent.cloud',
-    timestamp: Date.now() - 1000 * 60 * 30,
-    capabilities_count: 15,
-    version: '1.5.2',
-    author: 'AI Agent Labs'
-  },
-  {
-    id: '5',
-    url: 'https://feeds.opentools.org/.well-known/llmfeed.json',
-    title: 'OpenTools Collection',
-    description: 'Open-source LLM capabilities for document processing and semantic search',
-    feed_type: 'webmcp',
-    domain: 'feeds.opentools.org',
-    timestamp: Date.now() - 1000 * 60 * 60 * 12,
-    capabilities_count: 18,
-    version: '2.0.0',
-    author: 'OpenTools Foundation'
-  },
-  {
-    id: '6',
-    url: 'https://api.databridge.io/feeds/main.json',
-    title: 'DataBridge Integration Hub',
-    description: 'Connect and sync data across multiple platforms with automated workflows',
-    feed_type: 'llmfeed',
-    domain: 'api.databridge.io',
-    timestamp: Date.now() - 1000 * 60 * 60 * 48,
-    capabilities_count: 22,
-    version: '4.1.0',
-    author: 'DataBridge Team'
-  }
-]
+// Reference implementation feed - a real, verified feed
+const REFERENCE_FEED: FeedMetadata = {
+  id: 'reference-25x-codes',
+  url: 'https://25x.codes/.well-known/mcp.llmfeed.json',
+  title: '25x.codes Reference Implementation',
+  description: 'Reference LLMFeed implementation with full Ed25519 signature, JSON-RPC 2.0 invocation patterns, and typed capabilities',
+  feed_type: 'mcp',
+  domain: '25x.codes',
+  timestamp: Date.now() - 1000 * 60 * 60 * 24 * 7, // 1 week ago
+  capabilities_count: 8,
+  version: '1.0.0',
+  author: 'Kiarash Adl'
+}
 
 export function Directory() {
   const { user, isAuthenticated } = useAuth()
   const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
   const [archives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
   const [publishedBy, setPublishedBy] = useKV<Record<string, string>>('feed-publishers', {})
-  const [allFeeds, setAllFeeds] = useState<FeedMetadata[]>(SAMPLE_FEEDS)
+  const [allFeeds, setAllFeeds] = useState<FeedMetadata[]>([REFERENCE_FEED])
 
   useEffect(() => {
-    const combined = [...SAMPLE_FEEDS, ...(archivedFeeds || [])]
+    // Combine reference feed with user-published feeds
+    const combined = [REFERENCE_FEED, ...(archivedFeeds || [])]
     const unique = Array.from(
       new Map(combined.map(feed => [feed.id, feed])).values()
     )
@@ -233,11 +174,12 @@ export function Directory() {
 
   const canUnpublish = (feedId: string) => {
     if (!isAuthenticated || !user) return false
+    if (feedId === 'reference-25x-codes') return false // Can't unpublish reference feed
     const publisher = publishedBy?.[feedId]
     return publisher === user.login
   }
 
-  const FeedCard = ({ feed, isFromArchive }: { feed: FeedMetadata; isFromArchive?: boolean }) => (
+  const FeedCard = ({ feed, isFromArchive, isReference }: { feed: FeedMetadata; isFromArchive?: boolean; isReference?: boolean }) => (
     <Card 
       className="glass-card p-6 hover:glass-strong transition-all duration-300 group"
       itemScope
@@ -246,13 +188,21 @@ export function Directory() {
       <div className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <h3 
                 className="text-lg font-bold text-foreground font-mono truncate"
                 itemProp="name"
               >
                 {feed.title}
               </h3>
+              {isReference && (
+                <Badge 
+                  variant="outline" 
+                  className="shrink-0 bg-accent/10 text-accent border-accent/30 text-xs"
+                >
+                  Reference
+                </Badge>
+              )}
               {isFromArchive && (
                 <Badge 
                   variant="outline" 
@@ -419,19 +369,30 @@ export function Directory() {
           </div>
         </div>
 
-        <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-4" role="list" aria-label="Top published LLM feeds">
-            {topFeeds.map((feed, index) => (
-              <div key={`top-${feed.id}`} itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem" role="listitem">
-                <meta itemProp="position" content={String(index + 1)} />
-                <FeedCard 
-                  feed={feed}
-                  isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
-                />
-              </div>
-            ))}
+        {topFeeds.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Info size={48} className="text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">No feeds published yet</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">
+              Archive a feed and publish it to appear here
+            </p>
           </div>
-        </ScrollArea>
+        ) : (
+          <ScrollArea className="h-[600px] pr-4">
+            <div className="space-y-4" role="list" aria-label="Top published LLM feeds">
+              {topFeeds.map((feed, index) => (
+                <div key={`top-${feed.id}`} itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem" role="listitem">
+                  <meta itemProp="position" content={String(index + 1)} />
+                  <FeedCard 
+                    feed={feed}
+                    isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
+                    isReference={feed.id === 'reference-25x-codes'}
+                  />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
       </section>
 
       <section 
@@ -458,19 +419,30 @@ export function Directory() {
           </div>
         </div>
 
-        <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-4" role="list" aria-label="Latest published LLM feeds">
-            {latestFeeds.map((feed, index) => (
-              <div key={`latest-${feed.id}`} itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem" role="listitem">
-                <meta itemProp="position" content={String(index + 1)} />
-                <FeedCard 
-                  feed={feed}
-                  isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
-                />
-              </div>
-            ))}
+        {latestFeeds.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Info size={48} className="text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">No feeds published yet</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">
+              Archive a feed and publish it to appear here
+            </p>
           </div>
-        </ScrollArea>
+        ) : (
+          <ScrollArea className="h-[600px] pr-4">
+            <div className="space-y-4" role="list" aria-label="Latest published LLM feeds">
+              {latestFeeds.map((feed, index) => (
+                <div key={`latest-${feed.id}`} itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem" role="listitem">
+                  <meta itemProp="position" content={String(index + 1)} />
+                  <FeedCard 
+                    feed={feed}
+                    isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
+                    isReference={feed.id === 'reference-25x-codes'}
+                  />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
       </section>
 
       <aside className="glass-card rounded-2xl p-6" aria-label="Developer and bot information">
