@@ -70,7 +70,7 @@ const FALLBACK_CURATED_FEEDS: FeedMetadata[] = [
     feed_type: 'mcp',
     domain: '25x.codes',
     timestamp: Date.now() - 1000 * 60 * 60 * 24 * 7,
-    capabilities_count: 8,
+    capabilities_count: 3,
     version: '2.0.0',
     author: 'Kiarash Adl',
     is_curated: true
@@ -83,7 +83,7 @@ const FALLBACK_CURATED_FEEDS: FeedMetadata[] = [
     feed_type: 'mcp',
     domain: 'wellknownmcp.org',
     timestamp: Date.now() - 1000 * 60 * 60 * 24 * 3,
-    capabilities_count: 12,
+    capabilities_count: 0,
     version: '2.0.0',
     author: 'WellKnownMCP',
     is_curated: true
@@ -96,7 +96,7 @@ const FALLBACK_CURATED_FEEDS: FeedMetadata[] = [
     feed_type: 'mcp',
     domain: 'llmca.org',
     timestamp: Date.now() - 1000 * 60 * 60 * 24 * 2,
-    capabilities_count: 10,
+    capabilities_count: 4,
     version: '2.1.0',
     author: 'LLMCA',
     is_curated: true
@@ -109,7 +109,7 @@ const FALLBACK_CURATED_FEEDS: FeedMetadata[] = [
     feed_type: 'llm-index',
     domain: 'wellknownmcp.org',
     timestamp: Date.now() - 1000 * 60 * 60 * 24 * 1,
-    capabilities_count: 7,
+    capabilities_count: 0,
     version: '2.2.0',
     author: 'WellKnownMCP',
     is_curated: true
