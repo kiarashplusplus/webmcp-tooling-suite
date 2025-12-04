@@ -4,10 +4,35 @@ import { Discovery } from '@/components/Discovery'
 import { RAGPrep } from '@/components/RAGPrep'
 import { Archive } from '@/components/Archive'
 import { Directory } from '@/components/Directory'
+import { ArchiveServer } from '@/components/ArchiveServer'
 import { Toaster } from '@/components/ui/sonner'
 import { ShieldCheck, MagnifyingGlass, Database, Archive as ArchiveIcon, FolderOpen } from '@phosphor-icons/react'
+import { useState, useEffect } from 'react'
 
 function App() {
+  const [isArchiveRoute, setIsArchiveRoute] = useState(false)
+
+  useEffect(() => {
+    const checkRoute = () => {
+      const path = window.location.pathname
+      setIsArchiveRoute(path.startsWith('/archive/') && path.endsWith('.json'))
+    }
+    
+    checkRoute()
+    window.addEventListener('popstate', checkRoute)
+    
+    return () => window.removeEventListener('popstate', checkRoute)
+  }, [])
+
+  if (isArchiveRoute) {
+    return (
+      <>
+        <ArchiveServer />
+        <Toaster position="bottom-right" />
+      </>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_left,oklch(0.65_0.20_200)_0%,transparent_50%),radial-gradient(ellipse_at_bottom_right,oklch(0.75_0.22_150)_0%,transparent_50%),radial-gradient(ellipse_at_top_right,oklch(0.60_0.18_280)_0%,transparent_50%)] opacity-30" />

@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { fetchLLMFeed, validateLLMFeed, type LLMFeed } from '@/lib/llmfeed'
-import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple, CheckCircle } from '@phosphor-icons/react'
+import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple, CheckCircle, ArrowUpRight } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
 import { toast } from 'sonner'
 
@@ -164,9 +164,12 @@ export function Archive() {
   }
 
   const copySnapshotUrl = (snapshot: ArchivedSnapshot) => {
-    const canonicalUrl = `archive://${snapshot.domain}/${snapshot.id}`
-    navigator.clipboard.writeText(canonicalUrl)
-    toast.success('Canonical URL copied to clipboard')
+    const baseUrl = window.location.origin
+    const archiveUrl = `${baseUrl}/archive/${snapshot.id}.json`
+    navigator.clipboard.writeText(archiveUrl)
+    toast.success('Archive URL copied to clipboard', {
+      description: 'Share this URL with scrapers and AI bots'
+    })
   }
 
   const publishToDirectory = (snapshot: ArchivedSnapshot) => {
@@ -231,7 +234,8 @@ export function Archive() {
         <AlertTitle className="text-sm font-semibold">Persistent Feed Storage & Publishing</AlertTitle>
         <AlertDescription className="text-xs text-muted-foreground">
           Archive any LLMFeed from any URL to ensure availability even if the original site goes offline. Each snapshot is timestamped and versioned. 
-          Published snapshots appear in the <span className="font-semibold text-accent">Directory tab</span> for public discovery.
+          Published snapshots appear in the <span className="font-semibold text-accent">Directory tab</span> for public discovery and are served at 
+          dedicated URLs (<code className="font-mono">/archive/&#123;id&#125;.json</code>) with proper JSON headers for easy consumption by scrapers and AI bots.
         </AlertDescription>
       </Alert>
 
@@ -442,6 +446,15 @@ export function Archive() {
                       </Button>
                     )}
                     <Button
+                      onClick={() => window.open(`${window.location.origin}/archive/${selectedSnapshot.id}.json`, '_blank')}
+                      variant="outline"
+                      size="sm"
+                      title="View served archive in new tab"
+                    >
+                      <ArrowUpRight size={16} className="mr-2" />
+                      View
+                    </Button>
+                    <Button
                       onClick={() => copySnapshotUrl(selectedSnapshot)}
                       variant="outline"
                       size="sm"
@@ -471,10 +484,13 @@ export function Archive() {
                       <div className="text-sm text-foreground">{formatTimestamp(selectedSnapshot.timestamp)}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Canonical URL</div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Archive URL</div>
                       <code className="text-xs p-2 rounded bg-muted block text-foreground font-mono break-all">
-                        archive://{selectedSnapshot.domain}/{selectedSnapshot.id}
+                        {window.location.origin}/archive/{selectedSnapshot.id}.json
                       </code>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Served with <span className="font-mono text-accent">application/json</span> headers for scrapers and AI bots
+                      </p>
                     </div>
                     {selectedSnapshot.validationScore !== undefined && (
                       <div>

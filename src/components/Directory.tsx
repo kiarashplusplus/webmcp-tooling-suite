@@ -140,7 +140,8 @@ export function Directory() {
   }
 
   const getArchivedSnapshotUrl = (feedId: string) => {
-    return `#/archive/${feedId}`
+    const baseUrl = window.location.origin
+    return `${baseUrl}/archive/${feedId}.json`
   }
 
   const findArchivedSnapshot = (feedId: string) => {
@@ -153,10 +154,26 @@ export function Directory() {
     return null
   }
 
+  const handleViewArchivedMirror = (feed: FeedMetadata) => {
+    const archiveUrl = getArchivedSnapshotUrl(feed.id)
+    window.open(archiveUrl, '_blank')
+  }
+
   const handleDownloadArchivedMirror = (feed: FeedMetadata) => {
     const snapshot = findArchivedSnapshot(feed.id)
     if (snapshot) {
-      const blob = new Blob([JSON.stringify(snapshot.feed, null, 2)], { 
+      const servedData = {
+        snapshot_id: snapshot.id,
+        domain: snapshot.domain,
+        archived_at: new Date(snapshot.timestamp).toISOString(),
+        archive_url: getArchivedSnapshotUrl(snapshot.id),
+        feed_url: snapshot.feed.metadata.origin || `https://${snapshot.domain}/.well-known/mcp.llmfeed.json`,
+        validation_score: snapshot.validationScore,
+        signature_valid: snapshot.signatureValid,
+        feed: snapshot.feed
+      }
+      
+      const blob = new Blob([JSON.stringify(servedData, null, 2)], { 
         type: 'application/json' 
       })
       const url = URL.createObjectURL(blob)
@@ -250,17 +267,34 @@ export function Directory() {
           </a>
           
           {isFromArchive && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => handleDownloadArchivedMirror(feed)}
-              data-archived-feed-json-url={getArchivedSnapshotUrl(feed.id)}
-              className="flex-1 glass-strong hover:border-accent/50 text-accent hover:text-accent transition-all"
-            >
-              <Archive size={16} className="mr-2" />
-              <span className="font-mono text-xs">Archived Mirror</span>
-              <FileJs size={14} className="ml-2 shrink-0" />
-            </Button>
+            <>
+              <a
+                href={getArchivedSnapshotUrl(feed.id)}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-archived-feed-json-url={getArchivedSnapshotUrl(feed.id)}
+                className="flex-1"
+              >
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full glass-strong hover:border-accent/50 text-accent hover:text-accent transition-all"
+                >
+                  <Archive size={16} className="mr-2" />
+                  <span className="font-mono text-xs">View Mirror</span>
+                  <ArrowUpRight size={14} className="ml-2 shrink-0" />
+                </Button>
+              </a>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleDownloadArchivedMirror(feed)}
+                className="flex-1 sm:flex-initial glass hover:border-accent/50 text-accent hover:text-accent transition-all"
+                title="Download archived JSON"
+              >
+                <FileJs size={16} />
+              </Button>
+            </>
           )}
         </div>
 
@@ -324,13 +358,17 @@ export function Directory() {
 
       <div className="glass-card rounded-2xl p-6">
         <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
-          For Developers & Scrapers
+          For Developers, Scrapers & AI Bots
         </h3>
-        <p className="text-sm text-foreground/80 leading-relaxed">
+        <p className="text-sm text-foreground/80 leading-relaxed mb-3">
           All feed JSON URLs are marked with <code className="font-mono text-xs glass px-2 py-1 rounded">data-feed-json-url</code> attributes 
           for easy programmatic discovery. Click any feed URL to view the raw JSON schema directly.
-          Archived feeds include a <code className="font-mono text-xs glass px-2 py-1 rounded">data-archived-feed-json-url</code> attribute 
-          and clicking "Archived Mirror" will download the JSON with proper <code className="font-mono text-xs glass px-2 py-1 rounded">application/json</code> content-type headers.
+        </p>
+        <p className="text-sm text-foreground/80 leading-relaxed">
+          Archived feeds are served at dedicated URLs with <code className="font-mono text-xs glass px-2 py-1 rounded">application/json</code> headers at 
+          <code className="font-mono text-xs glass px-2 py-1 rounded">/archive/&#123;snapshot-id&#125;.json</code>. 
+          These URLs are marked with <code className="font-mono text-xs glass px-2 py-1 rounded">data-archived-feed-json-url</code> attributes for crawler discovery. 
+          Click "View Mirror" to open the served JSON in a new tab, or use the download button to save locally.
         </p>
       </div>
     </div>
