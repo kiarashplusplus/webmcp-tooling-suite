@@ -29,8 +29,56 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadUser()
+    // Check for OAuth callback first (hash contains auth data from worker)
+    if (window.location.hash.startsWith('#auth=')) {
+      handleHashCallback()
+    } else {
+      loadUser()
+    }
   }, [])
+
+  // Handle OAuth callback from URL hash
+  const handleHashCallback = () => {
+    setLoading(true)
+    try {
+      const hash = window.location.hash
+      const authData = new URLSearchParams(hash.slice(6)) // Remove '#auth='
+      
+      const error = authData.get('error')
+      if (error) {
+        console.error('OAuth error:', error, authData.get('error_description'))
+        window.history.replaceState(null, '', window.location.pathname)
+        loadUser() // Fall back to loading stored user
+        return
+      }
+
+      const token = authData.get('token')
+      const userJson = authData.get('user')
+
+      if (token && userJson) {
+        const userInfo = JSON.parse(userJson) as Omit<UserInfo, 'isOwner'>
+        const fullUserInfo: UserInfo = {
+          ...userInfo,
+          isOwner: false,
+        }
+
+        localStorage.setItem('webmcp-github-token', token)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(fullUserInfo))
+        setUser(fullUserInfo)
+        
+        // Clear the hash from URL
+        window.history.replaceState(null, '', window.location.pathname)
+      } else {
+        loadUser()
+      }
+    } catch (err) {
+      console.error('OAuth callback failed:', err)
+      window.history.replaceState(null, '', window.location.pathname)
+      loadUser()
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const loadUser = async () => {
     setLoading(true)
@@ -85,35 +133,57 @@ export function useAuth() {
   // Sign out handler
   const signOut = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem('webmcp-github-token')
     setUser(null)
   }, [])
 
-  // Handle OAuth callback (call this from a route handler or on page load)
-  const handleOAuthCallback = useCallback(async (code: string) => {
-    const tokenEndpoint = import.meta.env.VITE_GITHUB_TOKEN_URL
-    
-    if (!tokenEndpoint) {
-      console.error('VITE_GITHUB_TOKEN_URL not configured')
+  // Handle OAuth callback from URL hash (called on page load)
+  // The Cloudflare Worker redirects with: #auth=token=xxx&user={"login":"..."}
+  const handleOAuthCallback = useCallback((): boolean => {
+    const hash = window.location.hash
+    if (!hash.startsWith('#auth=')) {
       return false
     }
 
     try {
-      const response = await fetch(tokenEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
-      })
-
-      if (!response.ok) {
-        throw new Error('Token exchange failed')
+      // Parse the auth data from hash
+      const authData = new URLSearchParams(hash.slice(6)) // Remove '#auth='
+      
+      const error = authData.get('error')
+      if (error) {
+        console.error('OAuth error:', error, authData.get('error_description'))
+        // Clear the hash
+        window.history.replaceState(null, '', window.location.pathname)
+        return false
       }
 
-      const { user: userInfo } = await response.json()
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(userInfo))
-      setUser(userInfo)
+      const token = authData.get('token')
+      const userJson = authData.get('user')
+
+      if (!token || !userJson) {
+        console.error('Missing token or user in OAuth callback')
+        window.history.replaceState(null, '', window.location.pathname)
+        return false
+      }
+
+      const userInfo = JSON.parse(userJson) as Omit<UserInfo, 'isOwner'>
+      const fullUserInfo: UserInfo = {
+        ...userInfo,
+        isOwner: false, // Can be determined later if needed
+      }
+
+      // Store token and user
+      localStorage.setItem('webmcp-github-token', token)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(fullUserInfo))
+      setUser(fullUserInfo)
+
+      // Clear the hash from URL (keeps it out of history)
+      window.history.replaceState(null, '', window.location.pathname)
+      
       return true
     } catch (err) {
-      console.error('OAuth callback failed:', err)
+      console.error('OAuth callback parsing failed:', err)
+      window.history.replaceState(null, '', window.location.pathname)
       return false
     }
   }, [])
