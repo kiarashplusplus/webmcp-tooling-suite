@@ -4,26 +4,27 @@ A phased approach to growing the WebMCP/LLMFeed ecosystem through organic adopti
 
 ---
 
-## Phase 1: Foundation (Current)
+## Phase 1: Foundation ✅ COMPLETE
 
 ### ✅ Completed
-- [x] Curated directory with verified feeds pre-populated
+- [x] Curated directory with verified feeds pre-populated (4 feeds)
 - [x] Feed validation and signature verification tools
 - [x] GitHub Action for CI/CD validation
 - [x] Archive system for feed snapshots
 - [x] GitHub OAuth for authenticated publishing
+- [x] **Submit Your Feed** workflow (3-step: validate → sign in → submit)
+- [x] **Embeddable Verification Badges** (verified, signed, score, curated)
 
-### 🎯 Next Steps
+### Implementation Details
 
-#### 1. "Submit Your Feed" Workflow
-Create a prominent submission flow that guides site owners through:
-1. Validate their existing feed
-2. Sign up / sign in with GitHub
-3. Submit feed URL for inclusion in directory
-4. Optionally: Add GitHub Action to their repo
+#### Submit Feed Workflow (`/src/components/SubmitFeed.tsx`)
+A 3-step guided submission process:
+1. **Validate** — Enter URL, auto-detect `.well-known` path, run full validation
+2. **Sign In** — GitHub OAuth authentication (prevents spam)
+3. **Submit & Get Badges** — Add to directory, receive embeddable badge code
 
-#### 2. Embeddable Verification Badges
-Generate badges that site owners can embed on their sites:
+#### Badge Generator (`/src/lib/badge-generator.ts`)
+Generates SVG badges that site owners can embed:
 
 ```markdown
 ![WebMCP Verified](https://wellknownmcp.org/badge/verified.svg)
@@ -31,18 +32,25 @@ Generate badges that site owners can embed on their sites:
 ![Signature Valid](https://wellknownmcp.org/badge/signed.svg)
 ```
 
-**Badge Types:**
-- 🟢 **Verified** - Feed exists and is valid
-- 🔐 **Signed** - Ed25519 signature verified
-- ⭐ **Curated** - Featured in official directory
-- 🏆 **Certified** - LLMCA certification
+**Badge Types Generated:**
+- 🟢 **Verified** — Feed exists and passes validation
+- 🔐 **Signed** — Ed25519 signature verified
+- ⭐ **Score** — Shows validation score (e.g., 95/100)
+- ✨ **Curated** — Featured in official directory
+
+**Badge Formats:**
+- HTML `<img>` tag for websites
+- Markdown syntax for README files
+- Direct SVG for custom integrations
 
 **Why badges work:**
 - Organic discovery (visitors see badge → search "WebMCP")
 - Social proof for early adopters
 - Gamification encourages best practices
 
-#### 3. Enhanced Directory Features
+### 🎯 Phase 1 Stretch Goals (Optional)
+
+#### Enhanced Directory Features
 - Search and filter by feed_type, capabilities, domain
 - "Trending" section based on validation frequency
 - Public API for directory data (`/api/directory.json`)
@@ -163,21 +171,27 @@ Opening PRs on repos without consent:
 
 ## Implementation Priority
 
-| Priority | Feature | Effort | Impact |
-|----------|---------|--------|--------|
-| P0 | Submit Feed workflow | Medium | High |
-| P0 | Verification badges | Low | High |
-| P1 | Directory API | Low | Medium |
-| P1 | Crawler MVP | High | High |
-| P2 | GitHub App | High | Medium |
-| P2 | Partnership outreach | Medium | High |
-| P3 | Enterprise features | High | Medium |
+| Priority | Feature | Effort | Impact | Status |
+|----------|---------|--------|--------|--------|
+| P0 | Submit Feed workflow | Medium | High | ✅ Done |
+| P0 | Verification badges | Low | High | ✅ Done |
+| P1 | Directory API | Low | Medium | ⏳ Next |
+| P1 | Crawler MVP | High | High | ⏳ Phase 2 |
+| P2 | GitHub App | High | Medium | ⏳ Phase 3 |
+| P2 | Partnership outreach | Medium | High | ⏳ Phase 2 |
+| P3 | Enterprise features | High | Medium | ⏳ Phase 3 |
 
 ---
 
 ## Next Actions
 
-1. **This Week:** Implement badge generation endpoint
-2. **This Week:** Add "Submit Your Feed" button to directory
+### ✅ Completed (Phase 1)
+1. ~~Implement badge generation~~ → `src/lib/badge-generator.ts`
+2. ~~Add "Submit Your Feed" workflow~~ → `src/components/SubmitFeed.tsx`
+3. ~~Integrate into main app~~ → Added to WorkflowStepper as step 5
+
+### 🚀 Up Next (Phase 2 Prep)
+1. **This Week:** Add "Get Listed" marketing callout to Directory
+2. **This Week:** Create `/api/directory.json` endpoint
 3. **Next Sprint:** Build crawler prototype
 4. **Ongoing:** Outreach to awesome-mcp-servers maintainers

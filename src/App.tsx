@@ -16,6 +16,7 @@ const Validator = lazy(() => import('@/components/Validator').then(m => ({ defau
 const Discovery = lazy(() => import('@/components/Discovery').then(m => ({ default: m.Discovery })))
 const RAGPrep = lazy(() => import('@/components/RAGPrep').then(m => ({ default: m.RAGPrep })))
 const Archive = lazy(() => import('@/components/Archive').then(m => ({ default: m.Archive })))
+const SubmitFeed = lazy(() => import('@/components/SubmitFeed').then(m => ({ default: m.SubmitFeed })))
 
 // Loading skeleton for tab content
 function TabLoadingSkeleton() {
@@ -160,6 +161,12 @@ function App() {
                     onComplete={() => handleStepComplete('archive')}
                     initialUrl={discoveredFeedUrl}
                   />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="submit" className="mt-0">
+                <Suspense fallback={<TabLoadingSkeleton />}>
+                  <SubmitFeed />
                 </Suspense>
               </TabsContent>
 

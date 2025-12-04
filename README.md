@@ -34,6 +34,13 @@ The WebMCP Tooling Suite addresses critical gaps identified in the MCP/WebMCP/LL
   - "Top Feeds" (by capabilities) and "Latest Published" sections
   - Scraper-friendly JSON links with data attributes
   - GitHub authentication for publishing (prevents spam)
+  - **Curated feeds** from verified WebMCP sites
+
+- **Submit Your Feed** — Self-service feed submission workflow
+  - 3-step process: Validate → Sign In → Submit
+  - Automatic feed validation with score
+  - **Embeddable verification badges** (verified, signed, score)
+  - HTML, Markdown, and SVG badge formats
 
 - **Universal Archive** — Versioned feed archival with persistence
   - Timestamped snapshots for any feed URL
@@ -57,8 +64,14 @@ The WebMCP Tooling Suite addresses critical gaps identified in the MCP/WebMCP/LL
 │  │          │  │          │  │          │  │          │        │
 │  │ • Browse │  │ • Parse  │  │ • Fetch  │  │ • Store  │        │
 │  │ • Search │  │ • Verify │  │ • Analyze│  │ • Version│        │
-│  │ • Publish│  │ • Score  │  │ • Inspect│  │ • Export │        │
+│  │ • Curated│  │ • Score  │  │ • Inspect│  │ • Export │        │
 │  └──────────┘  └──────────┘  └──────────┘  └──────────┘        │
+│       ↑                                                         │
+│  ┌──────────┐                                                   │
+│  │ Submit   │ ← Self-service feed submission + badge generator  │
+│  │ • Submit │                                                   │
+│  │ • Badges │                                                   │
+│  └──────────┘                                                   │
 │                        ↓                                        │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │              Core Library (llmfeed.ts)                    │  │
