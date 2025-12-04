@@ -37,6 +37,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('discovery')
   const [completedSteps, setCompletedSteps] = useState<string[]>([])
   const [showTerms, setShowTerms] = useState(false)
+  const [discoveredFeedUrl, setDiscoveredFeedUrl] = useState('')
 
   useEffect(() => {
     const checkRoute = () => {
@@ -57,8 +58,11 @@ function App() {
     }
   }, [])
 
-  const handleTabChange = useCallback((value: string) => {
+  const handleTabChange = useCallback((value: string, feedUrl?: string) => {
     setActiveTab(value)
+    if (feedUrl) {
+      setDiscoveredFeedUrl(feedUrl)
+    }
   }, [])
 
   const handleStepComplete = useCallback((stepId: string) => {
@@ -134,7 +138,11 @@ function App() {
 
               <TabsContent value="validator" className="mt-0">
                 <Suspense fallback={<TabLoadingSkeleton />}>
-                  <Validator onNavigate={handleTabChange} onComplete={() => handleStepComplete('validator')} />
+                  <Validator 
+                    onNavigate={handleTabChange} 
+                    onComplete={() => handleStepComplete('validator')}
+                    initialUrl={discoveredFeedUrl}
+                  />
                 </Suspense>
               </TabsContent>
 

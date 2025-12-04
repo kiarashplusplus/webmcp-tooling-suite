@@ -13,7 +13,7 @@ import { CapabilityInspector } from './CapabilityInspector'
 import { toast } from 'sonner'
 
 interface DiscoveryProps {
-  onNavigate?: (tab: string) => void
+  onNavigate?: (tab: string, feedUrl?: string) => void
   onComplete?: () => void
 }
 
@@ -336,7 +336,7 @@ export function Discovery({ onNavigate, onComplete }: DiscoveryProps) {
                   <h4 className="font-bold text-foreground">Feed Discovered!</h4>
                   <p className="text-sm text-muted-foreground">Next, validate the feed to check its integrity and signature.</p>
                 </div>
-                <Button onClick={() => onNavigate('validator')} className="gap-2">
+                <Button onClick={() => onNavigate('validator', domain)} className="gap-2">
                   Validate Feed
                   <ArrowRight size={16} weight="bold" />
                 </Button>

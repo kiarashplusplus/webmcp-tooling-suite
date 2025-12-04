@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 interface ValidatorProps {
   onNavigate?: (tab: string) => void
   onComplete?: () => void
+  initialUrl?: string
 }
 
 const EXAMPLE_FEED = `{
@@ -45,13 +46,21 @@ const EXAMPLE_FEED = `{
   ]
 }`
 
-export function Validator({ onNavigate, onComplete }: ValidatorProps) {
+export function Validator({ onNavigate, onComplete, initialUrl }: ValidatorProps) {
   const [feedInput, setFeedInput] = useState('')
-  const [feedUrl, setFeedUrl] = useState('')
-  const [inputMode, setInputMode] = useState<'paste' | 'url' | 'file'>('paste')
+  const [feedUrl, setFeedUrl] = useState(initialUrl || '')
+  const [inputMode, setInputMode] = useState<'paste' | 'url' | 'file'>(initialUrl ? 'url' : 'paste')
   const [validating, setValidating] = useState(false)
   const [result, setResult] = useState<ValidationResult | null>(null)
   const [parsedFeed, setParsedFeed] = useState<LLMFeed | null>(null)
+
+  // Update feedUrl and inputMode when initialUrl changes
+  useEffect(() => {
+    if (initialUrl) {
+      setFeedUrl(initialUrl)
+      setInputMode('url')
+    }
+  }, [initialUrl])
 
   // Mark step as complete when validation succeeds
   useEffect(() => {
