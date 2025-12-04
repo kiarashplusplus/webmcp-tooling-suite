@@ -49,21 +49,28 @@ interface GitHubUser {
 }
 
 // CORS headers
-function corsHeaders(origin: string, env: Env): HeadersInit {
+function corsHeaders(origin: string | null, env: Env): HeadersInit {
   const allowedOrigins = [
+    'https://kiarashplusplus.github.io',
     env.FRONTEND_URL,
     'http://localhost:5000',
     'http://localhost:5173',
     'http://localhost:5174',
   ]
   
-  const allowOrigin = allowedOrigins.includes(origin) ? origin : env.FRONTEND_URL
+  // Check if origin matches any allowed origin (including subpaths)
+  const isAllowed = origin && allowedOrigins.some(allowed => 
+    origin === allowed || origin.startsWith(allowed)
+  )
+  
+  // If origin is allowed, echo it back; otherwise use wildcard for public GET requests
+  const allowOrigin = isAllowed ? origin : '*'
   
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Allow-Credentials': isAllowed ? 'true' : 'false',
   }
 }
 
