@@ -1,0 +1,7 @@
+name = "llmfeed-cors-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Optional: Add rate limiting
+# [vars]
+# RATE_LIMIT_PER_MINUTE = "60"

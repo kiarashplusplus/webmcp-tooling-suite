@@ -980,6 +980,40 @@ export function prepareForRAG(feed: LLMFeed): RAGIndexEntry[] {
   return entries
 }
 
+/**
+ * Get the CORS proxy URL from environment variables.
+ * Falls back to direct fetch if not configured.
+ */
+function getCorsProxyUrl(): string | null {
+  // Vite exposes env vars via import.meta.env
+  const proxyUrl = import.meta.env?.VITE_CORS_PROXY_URL
+  return proxyUrl || null
+}
+
+/**
+ * Check if a URL is same-origin or localhost (no proxy needed)
+ */
+function isSameOriginOrLocal(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    const current = typeof window !== 'undefined' ? window.location : null
+    
+    // Localhost always works without proxy
+    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+      return true
+    }
+    
+    // Same origin
+    if (current && parsed.origin === current.origin) {
+      return true
+    }
+    
+    return false
+  } catch {
+    return false
+  }
+}
+
 export async function fetchLLMFeed(input: string): Promise<LLMFeed> {
   let url = input.trim()
   
@@ -991,13 +1025,36 @@ export async function fetchLLMFeed(input: string): Promise<LLMFeed> {
     url = url.replace(/\/$/, '') + '/.well-known/mcp.llmfeed.json'
   }
 
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch feed: ${response.status} ${response.statusText}`)
+  // Determine if we need to use the CORS proxy
+  const corsProxyUrl = getCorsProxyUrl()
+  const needsProxy = !isSameOriginOrLocal(url)
+  
+  let fetchUrl = url
+  if (needsProxy && corsProxyUrl) {
+    // Route through CORS proxy
+    fetchUrl = `${corsProxyUrl}?url=${encodeURIComponent(url)}`
   }
 
-  const feed = await response.json()
-  return feed
+  try {
+    const response = await fetch(fetchUrl)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch feed: ${response.status} ${response.statusText}`)
+    }
+
+    const feed = await response.json()
+    return feed
+  } catch (error) {
+    // If proxy fetch fails, try direct as fallback (might work if server has CORS enabled)
+    if (needsProxy && corsProxyUrl && fetchUrl !== url) {
+      console.warn('CORS proxy failed, attempting direct fetch:', error)
+      const directResponse = await fetch(url)
+      if (!directResponse.ok) {
+        throw new Error(`Failed to fetch feed: ${directResponse.status} ${directResponse.statusText}`)
+      }
+      return directResponse.json()
+    }
+    throw error
+  }
 }
 
 export function calculateTokenEstimate(feed: LLMFeed): { total: number; perCapability: number } {
