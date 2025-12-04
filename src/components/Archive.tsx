@@ -331,8 +331,8 @@ export function Archive() {
 
                     <Accordion type="single" collapsible className="w-full">
                       <AccordionItem value="snapshots" className="border-none">
-                        <AccordionTrigger className="py-2 hover:no-underline text-xs text-primary font-semibold uppercase tracking-wide">
-                          View Snapshots
+                        <AccordionTrigger className="py-2 hover:no-underline text-xs text-accent font-semibold uppercase tracking-wide">
+                          Publish Snapshots
                         </AccordionTrigger>
                         <AccordionContent>
                           <div className="space-y-2 pt-2">
