@@ -153,30 +153,30 @@ npm run build:packages
 
 The tooling suite includes standalone packages for CI/CD integration:
 
-### @webmcp/validator (CLI)
+### @25xcodes/llmfeed-validator (CLI)
 
 Validate LLMFeed files with full Ed25519 signature verification.
 
 ```bash
-npm install -g @webmcp/validator
+npm install -g @25xcodes/llmfeed-validator
 
 llmfeed-validate https://25x.codes/.well-known/mcp.llmfeed.json
 llmfeed-validate ./feed.json --verbose --json
 ```
 
-### @webmcp/signer (CLI)
+### @25xcodes/llmfeed-signer (CLI)
 
 Generate Ed25519 keypairs and sign LLMFeed files.
 
 ```bash
-npm install -g @webmcp/signer
+npm install -g @25xcodes/llmfeed-signer
 
 llmfeed-sign keygen -o ./keys -n mysite
 llmfeed-sign sign feed.json --key ./keys/mysite.private.pem \
   --public-url https://example.com/.well-known/public.pem
 ```
 
-### @webmcp/github-action
+### @25xcodes/llmfeed-action (GitHub Action)
 
 GitHub Action for automated feed validation in CI/CD pipelines.
 
@@ -210,19 +210,19 @@ See individual package READMEs for complete documentation.
 
 ### ✅ Completed
 
-1. **CLI Validator Package** — `@webmcp/validator`
+1. **CLI Validator Package** — `@25xcodes/llmfeed-validator`
    - Full Ed25519 signature verification
    - Structural and schema validation  
    - Security scoring with detailed diagnostics
    - JSON output mode for CI/CD scripting
 
-2. **Feed Signing Tool** — `@webmcp/signer`
+2. **Feed Signing Tool** — `@25xcodes/llmfeed-signer`
    - Ed25519 keypair generation (PKCS#8 format)
    - Feed signing with configurable `signed_blocks`
    - PEM and base64 key formats
    - CI/CD-friendly CLI interface
 
-3. **GitHub Action** — `@webmcp/github-action`
+3. **GitHub Action** — `@25xcodes/llmfeed-action`
    - Automatic PR checks for feed changes
    - Ed25519 signature verification in CI
    - Dynamic SVG badge generation

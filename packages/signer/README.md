@@ -1,17 +1,17 @@
-# @webmcp/signer
+# @25xcodes/llmfeed-signer
 
 Ed25519 key generation and LLMFeed signing tool for the WebMCP ecosystem.
 
 ## Installation
 
 ```bash
-npm install @webmcp/signer
+npm install @25xcodes/llmfeed-signer
 ```
 
 Or use directly with npx:
 
 ```bash
-npx @webmcp/signer keygen
+npx @25xcodes/llmfeed-signer keygen
 ```
 
 ## CLI Usage
@@ -77,7 +77,7 @@ import {
   generateKeyPair,
   signFeed,
   verifyFeed,
-} from '@webmcp/signer'
+} from '@25xcodes/llmfeed-signer'
 
 // Generate keypair
 const keyPair = await generateKeyPair()
@@ -138,7 +138,7 @@ jobs:
         env:
           MCP_PRIVATE_KEY: ${{ secrets.MCP_PRIVATE_KEY }}
         run: |
-          npx @webmcp/signer sign mcp.llmfeed.json \
+          npx @25xcodes/llmfeed-signer sign mcp.llmfeed.json \
             --key <(echo "$MCP_PRIVATE_KEY") \
             --public-url https://example.com/.well-known/public.pem \
             --in-place
@@ -156,7 +156,7 @@ jobs:
 
 ```typescript
 // Sign at request time
-import { signFeed } from '@webmcp/signer'
+import { signFeed } from '@25xcodes/llmfeed-signer'
 
 export default {
   async fetch(request: Request, env: Env) {

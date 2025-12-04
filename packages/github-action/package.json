@@ -1,5 +1,5 @@
 {
-  "name": "@webmcp/github-action",
+  "name": "@25xcodes/llmfeed-action",
   "version": "1.0.0",
   "description": "GitHub Action for validating LLMFeed JSON files with Ed25519 signature verification",
   "main": "dist/index.js",

@@ -1,5 +1,5 @@
 {
-  "name": "@webmcp/validator",
+  "name": "@25xcodes/llmfeed-validator",
   "version": "1.0.0",
   "description": "LLMFeed validation library with Ed25519 signature verification",
   "type": "module",

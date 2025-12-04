@@ -1,4 +1,4 @@
-# @webmcp/validator
+# @25xcodes/llmfeed-validator
 
 LLMFeed validation library with Ed25519 cryptographic signature verification.
 
@@ -15,29 +15,29 @@ LLMFeed validation library with Ed25519 cryptographic signature verification.
 ## Installation
 
 ```bash
-npm install @webmcp/validator
+npm install @25xcodes/llmfeed-validator
 ```
 
 ## CLI Usage
 
 ```bash
 # Validate from URL (auto-discovers .well-known path)
-npx @webmcp/validator example.com
+npx @25xcodes/llmfeed-validator example.com
 
 # Validate full URL
-npx @webmcp/validator https://example.com/.well-known/mcp.llmfeed.json
+npx @25xcodes/llmfeed-validator https://example.com/.well-known/mcp.llmfeed.json
 
 # Validate local file
-npx @webmcp/validator ./my-feed.json
+npx @25xcodes/llmfeed-validator ./my-feed.json
 
 # JSON output (for CI/CD)
-npx @webmcp/validator example.com --json
+npx @25xcodes/llmfeed-validator example.com --json
 
 # Skip signature verification
-npx @webmcp/validator example.com --skip-signature
+npx @25xcodes/llmfeed-validator example.com --skip-signature
 
 # Verbose output
-npx @webmcp/validator example.com --verbose
+npx @25xcodes/llmfeed-validator example.com --verbose
 ```
 
 ### Exit Codes

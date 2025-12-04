@@ -1,5 +1,5 @@
 {
-  "name": "@webmcp/signer",
+  "name": "@25xcodes/llmfeed-signer",
   "version": "1.0.0",
   "description": "Ed25519 key generation and LLMFeed signing tool for the WebMCP ecosystem",
   "type": "module",

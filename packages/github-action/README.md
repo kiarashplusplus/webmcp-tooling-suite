@@ -1,4 +1,4 @@
-# @webmcp/github-action
+# @25xcodes/llmfeed-action
 
 GitHub Action for validating LLMFeed JSON files with Ed25519 signature verification.
 

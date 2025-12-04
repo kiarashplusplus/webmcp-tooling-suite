@@ -54,21 +54,21 @@ jobs:
           SIGNER_VERSION=$(node -p "require('./packages/signer/package.json').version")
           
           # Check validator
-          if npm view @webmcp/validator@$VALIDATOR_VERSION version 2>/dev/null; then
+          if npm view @25xcodes/llmfeed-validator@$VALIDATOR_VERSION version 2>/dev/null; then
             echo "validator_exists=true" >> $GITHUB_OUTPUT
-            echo "⚠️ @webmcp/validator@$VALIDATOR_VERSION already exists on npm"
+            echo "⚠️ @25xcodes/llmfeed-validator@$VALIDATOR_VERSION already exists on npm"
           else
             echo "validator_exists=false" >> $GITHUB_OUTPUT
-            echo "✅ @webmcp/validator@$VALIDATOR_VERSION is new"
+            echo "✅ @25xcodes/llmfeed-validator@$VALIDATOR_VERSION is new"
           fi
           
           # Check signer
-          if npm view @webmcp/signer@$SIGNER_VERSION version 2>/dev/null; then
+          if npm view @25xcodes/llmfeed-signer@$SIGNER_VERSION version 2>/dev/null; then
             echo "signer_exists=true" >> $GITHUB_OUTPUT
-            echo "⚠️ @webmcp/signer@$SIGNER_VERSION already exists on npm"
+            echo "⚠️ @25xcodes/llmfeed-signer@$SIGNER_VERSION already exists on npm"
           else
             echo "signer_exists=false" >> $GITHUB_OUTPUT
-            echo "✅ @webmcp/signer@$SIGNER_VERSION is new"
+            echo "✅ @25xcodes/llmfeed-signer@$SIGNER_VERSION is new"
           fi
 
       - name: Determine packages to publish
@@ -103,7 +103,7 @@ jobs:
       # ========================================
       # GitHub Action Build & Commit
       # ========================================
-      - name: Build @webmcp/github-action
+      - name: Build @25xcodes/llmfeed-action
         if: steps.packages.outputs.github_action == 'true'
         working-directory: packages/github-action
         run: npm run build
@@ -127,7 +127,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add packages/github-action/dist/
-          git commit -m "chore: build @webmcp/github-action dist [skip ci]"
+          git commit -m "chore: build @25xcodes/llmfeed-action dist [skip ci]"
           git push
           echo "✅ Committed GitHub Action build to repository"
 
@@ -140,7 +140,7 @@ jobs:
       # ========================================
       # npm Package Publishing
       # ========================================
-      - name: Build and publish @webmcp/validator
+      - name: Build and publish @25xcodes/llmfeed-validator
         if: contains(steps.packages.outputs.npm_packages, 'validator') && steps.version-check.outputs.validator_exists != 'true'
         working-directory: packages/validator
         run: |
@@ -155,11 +155,11 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Skip @webmcp/validator (already published)
+      - name: Skip @25xcodes/llmfeed-validator (already published)
         if: contains(steps.packages.outputs.npm_packages, 'validator') && steps.version-check.outputs.validator_exists == 'true'
-        run: echo "⏭️ Skipping @webmcp/validator - version already exists on npm"
+        run: echo "⏭️ Skipping @25xcodes/llmfeed-validator - version already exists on npm"
 
-      - name: Build and publish @webmcp/signer
+      - name: Build and publish @25xcodes/llmfeed-signer
         if: contains(steps.packages.outputs.npm_packages, 'signer') && steps.version-check.outputs.signer_exists != 'true'
         working-directory: packages/signer
         run: |
@@ -174,9 +174,9 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Skip @webmcp/signer (already published)
+      - name: Skip @25xcodes/llmfeed-signer (already published)
         if: contains(steps.packages.outputs.npm_packages, 'signer') && steps.version-check.outputs.signer_exists == 'true'
-        run: echo "⏭️ Skipping @webmcp/signer - version already exists on npm"
+        run: echo "⏭️ Skipping @25xcodes/llmfeed-signer - version already exists on npm"
 
       # ========================================
       # Summary
@@ -196,26 +196,26 @@ jobs:
           echo "### 🎬 GitHub Action" >> $GITHUB_STEP_SUMMARY
           if [ "${{ steps.packages.outputs.github_action }}" = "true" ]; then
             if [ "${{ steps.action-changes.outputs.changed }}" = "true" ]; then
-              echo "- @webmcp/github-action: ✅ Built & committed" >> $GITHUB_STEP_SUMMARY
+              echo "- @25xcodes/llmfeed-action: ✅ Built & committed" >> $GITHUB_STEP_SUMMARY
             else
-              echo "- @webmcp/github-action: ⏭️ No changes" >> $GITHUB_STEP_SUMMARY
+              echo "- @25xcodes/llmfeed-action: ⏭️ No changes" >> $GITHUB_STEP_SUMMARY
             fi
           else
-            echo "- @webmcp/github-action: ⏭️ Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "- @25xcodes/llmfeed-action: ⏭️ Skipped" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 npm Packages" >> $GITHUB_STEP_SUMMARY
           if [ -n "${{ steps.packages.outputs.npm_packages }}" ]; then
             if [ "${{ steps.version-check.outputs.validator_exists }}" = "true" ]; then
-              echo "- @webmcp/validator: ⏭️ Skipped (already exists)" >> $GITHUB_STEP_SUMMARY
+              echo "- @25xcodes/llmfeed-validator: ⏭️ Skipped (already exists)" >> $GITHUB_STEP_SUMMARY
             else
-              echo "- @webmcp/validator: ✅ Published" >> $GITHUB_STEP_SUMMARY
+              echo "- @25xcodes/llmfeed-validator: ✅ Published" >> $GITHUB_STEP_SUMMARY
             fi
             if [ "${{ steps.version-check.outputs.signer_exists }}" = "true" ]; then
-              echo "- @webmcp/signer: ⏭️ Skipped (already exists)" >> $GITHUB_STEP_SUMMARY
+              echo "- @25xcodes/llmfeed-signer: ⏭️ Skipped (already exists)" >> $GITHUB_STEP_SUMMARY
             else
-              echo "- @webmcp/signer: ✅ Published" >> $GITHUB_STEP_SUMMARY
+              echo "- @25xcodes/llmfeed-signer: ✅ Published" >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "- No npm packages selected" >> $GITHUB_STEP_SUMMARY

@@ -28,19 +28,19 @@ First stable release of the WebMCP Tooling Suite—a comprehensive toolkit for t
 - **Archive & Versioning** — Snapshot feeds with diff tracking and GitHub Gist publishing
 
 #### npm Packages
-- **@webmcp/validator** (`1.0.0`) — LLMFeed validation library
+- **@25xcodes/llmfeed-validator** (`1.0.0`) — LLMFeed validation library
   - Programmatic API for Node.js/browser
   - CLI tool (`llmfeed-validate`)
   - Ed25519 signature verification
   - TypeScript support with full type definitions
-- **@webmcp/signer** (`1.0.0`) — LLMFeed signing library
+- **@25xcodes/llmfeed-signer** (`1.0.0`) — LLMFeed signing library
   - Generate Ed25519 keypairs
   - Sign LLMFeed JSON files
   - CLI tool (`llmfeed-sign`)
   - TypeScript support
 
 #### GitHub Action
-- **@webmcp/github-action** — Validate LLMFeeds in CI/CD pipelines
+- **@25xcodes/llmfeed-action** — Validate LLMFeeds in CI/CD pipelines
   - Automatic `.well-known/mcp.llmfeed.json` detection
   - Signature verification
   - Configurable failure thresholds
@@ -54,7 +54,7 @@ First stable release of the WebMCP Tooling Suite—a comprehensive toolkit for t
 
 ### Security
 - Ed25519 cryptographic signature verification
-- Public key fetching from `/.well-known/jwks.json`
+- Public key fetching from `public_key_hint` URLs (PEM/SPKI format)
 - Security scoring with remediation guidance
 
 ---
