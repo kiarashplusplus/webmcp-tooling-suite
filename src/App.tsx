@@ -8,72 +8,90 @@ import { ShieldCheck, MagnifyingGlass, Database, Archive as ArchiveIcon } from '
 
 function App() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,oklch(0.55_0.15_195)_0%,transparent_50%),radial-gradient(circle_at_70%_60%,oklch(0.75_0.20_130)_0%,transparent_50%)] opacity-10" />
-        
-        <div className="relative">
-          <div className="container mx-auto px-4 py-8 max-w-6xl">
-            <header className="mb-12 text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-3 font-mono tracking-tight">
-                Universal LLMFeed Analyzer
-              </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Comprehensive validation, discovery, and archival tools for any LLMFeed-enabled website or custom feed URL
-              </p>
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <div className="h-px w-8 bg-border" />
-                <span className="uppercase tracking-wide">Works with Any .llmfeed.json File, Anywhere</span>
-                <div className="h-px w-8 bg-border" />
-              </div>
-            </header>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_left,oklch(0.65_0.20_200)_0%,transparent_50%),radial-gradient(ellipse_at_bottom_right,oklch(0.75_0.22_150)_0%,transparent_50%),radial-gradient(ellipse_at_top_right,oklch(0.60_0.18_280)_0%,transparent_50%)] opacity-30" />
+      <div className="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40" />
+      
+      <div className="relative">
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+          <header className="mb-16 text-center">
+            <div className="inline-block mb-6 px-6 py-2 rounded-full glass-strong">
+              <span className="text-sm font-semibold text-primary tracking-wide uppercase">Universal Feed Analysis</span>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 font-mono tracking-tight">
+              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                LLMFeed Analyzer
+              </span>
+            </h1>
+            <p className="text-xl text-foreground/80 max-w-2xl mx-auto leading-relaxed">
+              Comprehensive validation, discovery, and archival tools for any LLMFeed-enabled website or custom feed URL
+            </p>
+            <div className="mt-6 flex items-center justify-center gap-3 text-sm text-muted-foreground">
+              <div className="h-px w-12 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+              <span className="uppercase tracking-wider font-semibold">Works with Any .llmfeed.json File, Anywhere</span>
+              <div className="h-px w-12 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+            </div>
+          </header>
 
-            <Tabs defaultValue="validator" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mb-8 bg-muted/50 p-1">
-                <TabsTrigger value="validator" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold">
-                  <ShieldCheck size={18} className="mr-2" />
-                  <span className="hidden sm:inline">Validator</span>
-                </TabsTrigger>
-                <TabsTrigger value="discovery" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold">
-                  <MagnifyingGlass size={18} className="mr-2" />
-                  <span className="hidden sm:inline">Discovery</span>
-                </TabsTrigger>
-                <TabsTrigger value="archive" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold">
-                  <ArchiveIcon size={18} className="mr-2" />
-                  <span className="hidden sm:inline">Archive</span>
-                </TabsTrigger>
-                <TabsTrigger value="rag" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold">
-                  <Database size={18} className="mr-2" />
-                  <span className="hidden sm:inline">RAG Prep</span>
-                </TabsTrigger>
-              </TabsList>
+          <Tabs defaultValue="validator" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 mb-10 glass-strong p-2 rounded-2xl">
+              <TabsTrigger 
+                value="validator" 
+                className="data-[state=active]:glass-strong data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-semibold rounded-xl transition-all duration-300"
+              >
+                <ShieldCheck size={18} className="mr-2" />
+                <span className="hidden sm:inline">Validator</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="discovery" 
+                className="data-[state=active]:glass-strong data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-semibold rounded-xl transition-all duration-300"
+              >
+                <MagnifyingGlass size={18} className="mr-2" />
+                <span className="hidden sm:inline">Discovery</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="archive" 
+                className="data-[state=active]:glass-strong data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-semibold rounded-xl transition-all duration-300"
+              >
+                <ArchiveIcon size={18} className="mr-2" />
+                <span className="hidden sm:inline">Archive</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="rag" 
+                className="data-[state=active]:glass-strong data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-semibold rounded-xl transition-all duration-300"
+              >
+                <Database size={18} className="mr-2" />
+                <span className="hidden sm:inline">RAG Prep</span>
+              </TabsTrigger>
+            </TabsList>
 
-              <TabsContent value="validator" className="mt-0">
-                <Validator />
-              </TabsContent>
+            <TabsContent value="validator" className="mt-0">
+              <Validator />
+            </TabsContent>
 
-              <TabsContent value="discovery" className="mt-0">
-                <Discovery />
-              </TabsContent>
+            <TabsContent value="discovery" className="mt-0">
+              <Discovery />
+            </TabsContent>
 
-              <TabsContent value="archive" className="mt-0">
-                <Archive />
-              </TabsContent>
+            <TabsContent value="archive" className="mt-0">
+              <Archive />
+            </TabsContent>
 
-              <TabsContent value="rag" className="mt-0">
-                <RAGPrep />
-              </TabsContent>
-            </Tabs>
+            <TabsContent value="rag" className="mt-0">
+              <RAGPrep />
+            </TabsContent>
+          </Tabs>
 
-            <footer className="mt-16 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-              <p className="mb-2">
+          <footer className="mt-20 pt-10 text-center">
+            <div className="glass-card rounded-2xl p-8 mx-auto max-w-3xl">
+              <p className="mb-3 text-foreground/90 font-medium">
                 Universal Feed Analyzer • Supports any .llmfeed.json file from any location
               </p>
-              <p className="text-xs">
+              <p className="text-sm text-muted-foreground">
                 Provides validation, discovery, archival, and RAG preparation for WebMCP/LLMFeed ecosystem
               </p>
-            </footer>
-          </div>
+            </div>
+          </footer>
         </div>
       </div>
 

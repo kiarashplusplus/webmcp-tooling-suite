@@ -169,7 +169,7 @@ export function Validator() {
         </p>
       </div>
 
-      <Alert className="border-primary/30 bg-primary/5">
+      <Alert className="glass-card border-primary/20">
         <ShieldCheck size={18} className="text-primary" />
         <AlertTitle className="text-sm font-semibold">Universal Feed Support</AlertTitle>
         <AlertDescription className="text-xs text-muted-foreground">
@@ -177,7 +177,7 @@ export function Validator() {
         </AlertDescription>
       </Alert>
 
-      <Card className="p-6 gradient-border">
+      <Card className="p-6 gradient-border shadow-2xl">
         <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as 'paste' | 'url' | 'file')} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="paste">
@@ -283,8 +283,8 @@ export function Validator() {
               <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
                 Upload .llmfeed.json File
               </label>
-              <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
-                <FileArrowUp size={48} className="mx-auto mb-4 text-muted-foreground" />
+              <div className="border-2 border-dashed border-border/30 rounded-2xl p-8 text-center hover:border-primary/50 transition-all duration-300 glass-card">
+                <FileArrowUp size={48} className="mx-auto mb-4 text-primary/70" />
                 <p className="text-sm text-foreground mb-4">
                   Click to select a .llmfeed.json file from your computer
                 </p>
@@ -315,7 +315,7 @@ export function Validator() {
 
       {result && (
         <div className="space-y-4 animate-in fade-in duration-300">
-          <Card className={`p-6 ${getScoreBg(result.score)}`}>
+          <Card className={`p-6 glass-strong shadow-2xl ${getScoreBg(result.score)}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 {result.valid ? (
@@ -344,7 +344,7 @@ export function Validator() {
           </Card>
 
           {result.signatureValid !== undefined && (
-            <Alert className={result.signatureValid ? 'border-accent bg-accent/10' : 'border-destructive bg-destructive/10'}>
+            <Alert className={result.signatureValid ? 'glass-card border-accent/30' : 'glass-card border-destructive/30'}>
               {result.signatureValid ? (
                 <ShieldCheck size={20} className="text-accent" />
               ) : (
@@ -371,14 +371,14 @@ export function Validator() {
           )}
 
           {result.errors.length > 0 && (
-            <Card className="p-6">
+            <Card className="p-6 glass-card shadow-xl">
               <h4 className="font-bold text-foreground mb-4 flex items-center gap-2">
                 <XCircle size={20} className="text-destructive" />
                 Errors
               </h4>
               <div className="space-y-3">
                 {result.errors.map((error, idx) => (
-                  <div key={idx} className="flex gap-3 p-3 rounded bg-destructive/10 border border-destructive/20">
+                  <div key={idx} className="flex gap-3 p-3 rounded-xl glass border border-destructive/30">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="destructive" className="uppercase text-xs">
@@ -397,14 +397,14 @@ export function Validator() {
           )}
 
           {result.warnings.length > 0 && (
-            <Card className="p-6">
+            <Card className="p-6 glass-card shadow-xl">
               <h4 className="font-bold text-foreground mb-4 flex items-center gap-2">
                 <Warning size={20} className="text-warning" />
                 Warnings
               </h4>
               <div className="space-y-3">
                 {result.warnings.map((warning, idx) => (
-                  <div key={idx} className="flex gap-3 p-3 rounded bg-warning/10 border border-warning/20">
+                  <div key={idx} className="flex gap-3 p-3 rounded-xl glass border border-warning/30">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge className="uppercase text-xs bg-warning text-warning-foreground">
@@ -423,7 +423,7 @@ export function Validator() {
           )}
 
           {parsedFeed && (
-            <Card className="p-6">
+            <Card className="p-6 glass-card shadow-xl">
               <h4 className="font-bold text-foreground mb-4">Parsed Feed Structure</h4>
               <JsonViewer data={parsedFeed} maxHeight="400px" />
             </Card>

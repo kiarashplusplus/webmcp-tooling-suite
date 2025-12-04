@@ -176,7 +176,7 @@ export function Archive() {
         </p>
       </div>
 
-      <Alert className="border-primary/30 bg-primary/5">
+      <Alert className="glass-card border-primary/20">
         <ArchiveIcon size={18} className="text-primary" />
         <AlertTitle className="text-sm font-semibold">Persistent Feed Storage</AlertTitle>
         <AlertDescription className="text-xs text-muted-foreground">
@@ -185,7 +185,7 @@ export function Archive() {
         </AlertDescription>
       </Alert>
 
-      <Card className="p-6 gradient-border">
+      <Card className="p-6 gradient-border shadow-2xl">
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
@@ -245,8 +245,8 @@ export function Archive() {
       )}
 
       {archiveList.length === 0 ? (
-        <Card className="p-12 text-center">
-          <FolderOpen size={48} className="mx-auto mb-4 text-muted-foreground opacity-50" />
+        <Card className="p-12 text-center glass-card shadow-xl">
+          <FolderOpen size={48} className="mx-auto mb-4 text-primary/50" />
           <h3 className="text-lg font-semibold text-foreground mb-2">No Archives Yet</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Start archiving LLM feeds by entering a domain above. Each feed will be timestamped and versioned automatically.
@@ -259,7 +259,7 @@ export function Archive() {
             <ScrollArea className="h-[600px] pr-4">
               <div className="space-y-3">
                 {archiveList.map((archive) => (
-                  <Card key={archive.domain} className="p-4 hover:border-primary/50 transition-colors">
+                  <Card key={archive.domain} className="p-4 glass-card hover:border-primary/50 transition-all duration-300 shadow-lg">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h4 className="font-mono text-sm font-semibold text-foreground mb-1">
@@ -289,10 +289,10 @@ export function Archive() {
                             {archive.snapshots.map((snapshot) => (
                               <div
                                 key={snapshot.id}
-                                className={`p-3 rounded border cursor-pointer transition-colors ${
+                                className={`p-3 rounded-xl border cursor-pointer transition-all duration-300 ${
                                   selectedSnapshot?.id === snapshot.id
-                                    ? 'border-primary bg-primary/10'
-                                    : 'border-border hover:border-primary/30'
+                                    ? 'border-primary glass-strong shadow-lg'
+                                    : 'glass border-border/30 hover:border-primary/40'
                                 }`}
                                 onClick={() => setSelectedSnapshot(snapshot)}
                               >
@@ -371,7 +371,7 @@ export function Archive() {
                   </div>
                 </div>
 
-                <Card className="p-6">
+                <Card className="p-6 glass-card shadow-xl">
                   <div className="space-y-4">
                     <div>
                       <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Domain</div>
@@ -406,7 +406,7 @@ export function Archive() {
                   </div>
                 </Card>
 
-                <Card className="p-6">
+                <Card className="p-6 glass-card shadow-xl">
                   <h4 className="font-bold text-foreground mb-2">Feed Metadata</h4>
                   <div className="space-y-2 text-sm">
                     <div>
@@ -432,14 +432,14 @@ export function Archive() {
                   </div>
                 </Card>
 
-                <Card className="p-6">
+                <Card className="p-6 glass-card shadow-xl">
                   <h4 className="font-bold text-foreground mb-4">Complete Feed JSON</h4>
                   <JsonViewer data={selectedSnapshot.feed} maxHeight="400px" />
                 </Card>
               </>
             ) : (
-              <Card className="p-12 text-center">
-                <Clock size={48} className="mx-auto mb-4 text-muted-foreground opacity-50" />
+              <Card className="p-12 text-center glass-card shadow-xl">
+                <Clock size={48} className="mx-auto mb-4 text-primary/50" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">No Snapshot Selected</h3>
                 <p className="text-sm text-muted-foreground">
                   Select a snapshot from the list to view its details and archived feed data.

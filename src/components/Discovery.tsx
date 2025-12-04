@@ -53,7 +53,7 @@ export function Discovery() {
 
       <ExampleUrls />
 
-      <Card className="p-6 gradient-border">
+      <Card className="p-6 gradient-border shadow-2xl">
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
@@ -94,7 +94,7 @@ export function Discovery() {
           </div>
 
           {error && (
-            <div className="p-4 rounded bg-destructive/10 border border-destructive/20 text-destructive">
+            <div className="p-4 rounded-xl glass-card border border-destructive/30 text-destructive">
               {error}
             </div>
           )}
@@ -103,7 +103,7 @@ export function Discovery() {
 
       {feed && (
         <div className="space-y-6 animate-in fade-in duration-300">
-          <Card className="p-6 gradient-border">
+          <Card className="p-6 gradient-border shadow-2xl">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h3 className="text-2xl font-bold text-foreground mb-1">{feed.metadata.title}</h3>
@@ -158,13 +158,13 @@ export function Discovery() {
           </Card>
 
           {feed.agent_guidance && (
-            <Card className="p-6">
+            <Card className="p-6 glass-card shadow-xl">
               <h4 className="font-bold text-foreground mb-3 flex items-center gap-2">
                 <Code size={20} />
                 Agent Guidance
               </h4>
               {feed.agent_guidance.on_load && (
-                <div className="mb-4 p-4 rounded bg-muted/50 border border-border">
+                <div className="mb-4 p-4 rounded-xl glass-strong border border-border/30">
                   <div className="text-xs text-muted-foreground uppercase tracking-wide mb-2">On Load</div>
                   <p className="text-foreground text-sm">{feed.agent_guidance.on_load}</p>
                 </div>
@@ -180,7 +180,7 @@ export function Discovery() {
                   <div className="text-sm font-semibold text-foreground mb-2">Primary Actions</div>
                   <div className="space-y-2">
                     {feed.agent_guidance.primary_actions.map((action, idx) => (
-                      <div key={idx} className="p-3 rounded bg-secondary/30 border border-border">
+                      <div key={idx} className="p-3 rounded-xl glass-strong border border-primary/20">
                         <div className="flex items-center gap-2 mb-1">
                           <CheckCircle size={16} className="text-accent" weight="fill" />
                           <span className="font-mono text-sm text-primary">{action.tool}</span>
@@ -195,7 +195,7 @@ export function Discovery() {
           )}
 
           {feed.capabilities && feed.capabilities.length > 0 && (
-            <Card className="p-6">
+            <Card className="p-6 glass-card shadow-xl">
               <h4 className="font-bold text-foreground mb-4 flex items-center gap-2">
                 <Code size={20} />
                 Capabilities ({feed.capabilities.length})
@@ -283,7 +283,7 @@ export function Discovery() {
             </Card>
           )}
 
-          <Card className="p-6">
+          <Card className="p-6 glass-card shadow-xl">
             <h4 className="font-bold text-foreground mb-4">Complete Feed JSON</h4>
             <JsonViewer data={feed} maxHeight="500px" />
             <Button

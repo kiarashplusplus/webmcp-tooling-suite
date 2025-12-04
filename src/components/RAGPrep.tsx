@@ -71,7 +71,7 @@ export function RAGPrep() {
         </p>
       </div>
 
-      <Alert className="border-primary/50 bg-primary/10">
+      <Alert className="glass-card border-primary/20">
         <Lightbulb size={20} className="text-primary" />
         <AlertTitle className="font-bold text-foreground">Mitigates Prompt Bloat</AlertTitle>
         <AlertDescription className="text-foreground/80">
@@ -80,7 +80,7 @@ export function RAGPrep() {
         </AlertDescription>
       </Alert>
 
-      <Card className="p-6 gradient-border">
+      <Card className="p-6 gradient-border shadow-2xl">
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
@@ -115,7 +115,7 @@ export function RAGPrep() {
           </Button>
 
           {error && (
-            <div className="p-4 rounded bg-destructive/10 border border-destructive/20 text-destructive">
+            <div className="p-4 rounded-xl glass-card border border-destructive/30 text-destructive">
               {error}
             </div>
           )}
@@ -124,7 +124,7 @@ export function RAGPrep() {
 
       {ragEntries && tokenStats && (
         <div className="space-y-6 animate-in fade-in duration-300">
-          <Card className="p-6 bg-accent/10 border-accent/30">
+          <Card className="p-6 glass-strong border-accent/30 shadow-2xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wide mb-2">RAG Entries</div>
@@ -144,7 +144,7 @@ export function RAGPrep() {
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-6 glass-card shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h4 className="font-bold text-foreground">RAG Index Entries</h4>
               <Button onClick={handleExport} variant="outline" size="sm">
@@ -155,7 +155,7 @@ export function RAGPrep() {
 
             <div className="space-y-3">
               {ragEntries.map((entry, idx) => (
-                <div key={idx} className="p-4 rounded bg-muted/30 border border-border hover:border-primary/50 transition-colors">
+                <div key={idx} className="p-4 rounded-xl glass-strong border border-border/30 hover:border-primary/50 transition-all duration-300">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Badge variant={entry.type === 'capability' ? 'default' : 'secondary'}>
@@ -183,7 +183,7 @@ export function RAGPrep() {
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-6 glass-card shadow-xl">
             <h4 className="font-bold text-foreground mb-4">Complete RAG Export Structure</h4>
             <JsonViewer 
               data={{
@@ -196,7 +196,7 @@ export function RAGPrep() {
             />
           </Card>
 
-          <Alert className="border-accent/50 bg-accent/10">
+          <Alert className="glass-card border-accent/30">
             <Database size={20} className="text-accent" />
             <AlertTitle className="font-bold text-foreground">Next Steps: Vector Store Integration</AlertTitle>
             <AlertDescription className="text-foreground/80 space-y-2">
