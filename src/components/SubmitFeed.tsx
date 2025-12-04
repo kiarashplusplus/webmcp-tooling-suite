@@ -49,6 +49,12 @@ export function SubmitFeed() {
 
     try {
       let url = feedUrl.trim()
+      
+      // Auto-add https:// if no protocol specified
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url
+      }
+      
       // Auto-append .well-known path if just a domain
       if (!url.includes('.json') && !url.includes('/.well-known/')) {
         url = url.replace(/\/$/, '') + '/.well-known/mcp.llmfeed.json'
@@ -404,7 +410,7 @@ export function SubmitFeed() {
             </p>
             <Button variant="outline" size="sm" className="gap-2" asChild>
               <a 
-                href="https://wellknownmcp.org/spec" 
+                href="https://github.com/kiarashplusplus/webmcp-tooling-suite/blob/main/VALIDATOR_GUIDE.md" 
                 target="_blank" 
                 rel="noopener noreferrer"
               >
