@@ -8,6 +8,7 @@ import { ArchiveServer } from '@/components/ArchiveServer'
 import { FeedStructuredData } from '@/components/FeedStructuredData'
 import { SitemapGenerator } from '@/components/SitemapGenerator'
 import { SEOMetaTags } from '@/components/SEOMetaTags'
+import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { Toaster } from '@/components/ui/sonner'
 import { ShieldCheck, MagnifyingGlass, Database, Archive as ArchiveIcon, FolderOpen } from '@phosphor-icons/react'
 import { useState, useEffect } from 'react'
@@ -42,12 +43,15 @@ function App() {
       <SEOMetaTags />
       <FeedStructuredData />
       <SitemapGenerator />
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_left,oklch(0.65_0.20_200)_0%,transparent_50%),radial-gradient(ellipse_at_bottom_right,oklch(0.75_0.22_150)_0%,transparent_50%),radial-gradient(ellipse_at_top_right,oklch(0.60_0.18_280)_0%,transparent_50%)] opacity-30" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_left,oklch(0.70_0.15_220)_0%,transparent_50%),radial-gradient(ellipse_at_bottom_right,oklch(0.78_0.12_190)_0%,transparent_50%),radial-gradient(ellipse_at_top_right,oklch(0.60_0.14_240)_0%,transparent_50%)] opacity-30" />
       <div className="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40" />
       
       <div className="relative">
         <div className="container mx-auto px-4 py-12 max-w-6xl">
-          <header className="mb-16 text-center">
+          <header className="mb-16 text-center relative">
+            <div className="absolute top-0 right-0">
+              <ThemeSwitcher />
+            </div>
             <div className="inline-block mb-6 px-6 py-2 rounded-full glass-strong">
               <span className="text-sm font-semibold text-primary tracking-wide uppercase">Universal Feed Analysis</span>
             </div>

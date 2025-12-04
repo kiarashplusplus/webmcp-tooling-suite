@@ -122,19 +122,21 @@ Animations should reinforce validation states and guide attention to critical se
   - `Avatar` for displaying authenticated user profile information
   
 - **Customizations**: 
-  - Custom JSON syntax highlighter using regex-based colorization
+  - Custom JSON syntax highlighter using regex-based colorization (adapts to theme)
   - Security score visualization with radial progress indicator
   - Capability cards with schema preview and copy-to-clipboard
   - Custom Ed25519 verification stepper component
   - Feed directory cards with metadata display and direct JSON access links
   - GitHub sign-in modal with authentication status display
   - User profile component showing GitHub avatar and username
+  - Theme switcher dropdown with light/dark/system options (defaults to system)
   
 - **States**: 
-  - Validation button: default (cyan gradient), loading (animated pulse), success (lime), error (crimson)
-  - Input fields: focus ring in cyan, error borders in crimson with shake animation
-  - Feed cards: hover lift effect (2px translate), selected state with accent border, glassmorphic background transitions
+  - Validation button: default (winter blue gradient), loading (animated pulse), success (frost cyan), error (crimson)
+  - Input fields: focus ring in ice blue, error borders in crimson with shake animation
+  - Feed cards: hover lift effect (2px translate), selected state with accent border, glassmorphic background transitions (theme-aware)
   - Directory links: external link indicators, scraper-friendly data attributes
+  - Theme switcher: displays current theme icon (Sun/Moon/Monitor), dropdown with all three options
   
 - **Icon Selection**: 
   - Shield (ShieldCheck/ShieldWarning) for trust/signature states
@@ -157,6 +159,7 @@ Animations should reinforce validation states and guide attention to critical se
   - GithubLogo for GitHub sign-in prompts
   - Crown for owner/admin status badges
   - SignOut for user sign-out actions
+  - Sun/Moon/Monitor for theme switching (light/dark/system modes)
   
 - **Spacing**: 
   - Section padding: `p-6` for cards, `p-8` for page container and directory sections
