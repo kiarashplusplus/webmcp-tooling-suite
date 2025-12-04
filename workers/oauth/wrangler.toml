@@ -1,0 +1,10 @@
+name = "webmcp-oauth"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+# Public - your GitHub Pages URL
+FRONTEND_URL = "https://kiarashplusplus.github.io/webmcp-tooling-suite"
+
+# Set these as secrets via: wrangler secret put GITHUB_CLIENT_ID
+# wrangler secret put GITHUB_CLIENT_SECRET
