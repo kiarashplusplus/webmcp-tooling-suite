@@ -20,7 +20,8 @@ export function GitHubSignIn({ onClose, context = 'general' }: GitHubSignInProps
 
   const handleSignIn = () => {
     if (!termsAccepted) return
-    signIn()
+    // Save context so we return to the right place after OAuth
+    signIn({ tab: context === 'publish' ? 'archive' : undefined })
   }
 
   return (

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import {
   XCircle,
   Spinner,
   SignIn,
+  SignOut,
   Upload,
   Code,
   Copy,
@@ -25,7 +26,7 @@ import {
 } from '@phosphor-icons/react'
 
 export function SubmitFeed() {
-  const { user, isAuthenticated, signIn, loading: authLoading } = useAuth()
+  const { user, isAuthenticated, signIn, signOut, loading: authLoading } = useAuth()
   const { submitFeed, submitting: apiSubmitting, error: apiError } = useDirectory()
   
   const [feedUrl, setFeedUrl] = useState('')
@@ -35,6 +36,43 @@ export function SubmitFeed() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [copiedBadge, setCopiedBadge] = useState<string | null>(null)
+
+  // Restore state after OAuth callback
+  useEffect(() => {
+    const handleAuthComplete = (event: CustomEvent<{ feedUrl?: string; tab?: string }>) => {
+      const { feedUrl: savedUrl } = event.detail
+      if (savedUrl) {
+        setFeedUrl(savedUrl)
+        toast.success('Signed in! Continue submitting your feed.')
+      }
+    }
+
+    window.addEventListener('webmcp-auth-complete', handleAuthComplete as EventListener)
+    
+    // Also check localStorage on mount for pending state (backup)
+    const pending = localStorage.getItem('webmcp-auth-pending')
+    if (pending && isAuthenticated) {
+      try {
+        const state = JSON.parse(pending)
+        if (state.feedUrl && state.tab === 'submit') {
+          setFeedUrl(state.feedUrl)
+          localStorage.removeItem('webmcp-auth-pending')
+        }
+      } catch { /* ignore */ }
+    }
+
+    return () => {
+      window.removeEventListener('webmcp-auth-complete', handleAuthComplete as EventListener)
+    }
+  }, [isAuthenticated])
+
+  // Sign in with state preservation
+  const handleSignIn = () => {
+    signIn({ 
+      tab: 'submit', 
+      feedUrl: feedUrl.trim() 
+    })
+  }
 
   const handleValidate = async () => {
     if (!feedUrl.trim()) {
@@ -246,15 +284,24 @@ export function SubmitFeed() {
               alt={user.login} 
               className="w-10 h-10 rounded-full"
             />
-            <div>
+            <div className="flex-1">
               <p className="font-semibold">{user.login}</p>
-              <p className="text-sm text-muted-foreground">@{user.login}</p>
+              <p className="text-sm text-muted-foreground">Ready to submit</p>
             </div>
-            <CheckCircle size={24} className="ml-auto text-green-500" weight="fill" />
+            <CheckCircle size={24} className="text-green-500" weight="fill" />
+            <Button 
+              onClick={signOut}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive"
+              title="Sign out"
+            >
+              <SignOut size={18} />
+            </Button>
           </div>
         ) : (
           <Button 
-            onClick={signIn}
+            onClick={handleSignIn}
             disabled={authLoading}
             variant="outline"
             className="w-full gap-2 glass hover:glass-strong"

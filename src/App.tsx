@@ -55,9 +55,29 @@ function App() {
     const handleShowTerms = () => setShowTerms(true)
     window.addEventListener('show-terms', handleShowTerms)
     
+    // Listen for auth complete to restore tab
+    const handleAuthComplete = (event: CustomEvent<{ tab?: string }>) => {
+      if (event.detail.tab) {
+        setActiveTab(event.detail.tab)
+      }
+    }
+    window.addEventListener('webmcp-auth-complete', handleAuthComplete as EventListener)
+    
+    // Check for pending auth state on mount (backup restoration)
+    const pending = localStorage.getItem('webmcp-auth-pending')
+    if (pending) {
+      try {
+        const state = JSON.parse(pending)
+        if (state.tab) {
+          setActiveTab(state.tab)
+        }
+      } catch { /* ignore */ }
+    }
+    
     return () => {
       window.removeEventListener('popstate', checkRoute)
       window.removeEventListener('show-terms', handleShowTerms)
+      window.removeEventListener('webmcp-auth-complete', handleAuthComplete as EventListener)
     }
   }, [])
 

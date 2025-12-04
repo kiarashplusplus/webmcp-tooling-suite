@@ -68,6 +68,16 @@ export function useAuth() {
         
         // Clear the hash from URL
         window.history.replaceState(null, '', window.location.pathname)
+        
+        // Check for pending state to restore (e.g., form data from Submit flow)
+        const pendingState = localStorage.getItem('webmcp-auth-pending')
+        if (pendingState) {
+          localStorage.removeItem('webmcp-auth-pending')
+          // Dispatch custom event for components to restore state
+          window.dispatchEvent(new CustomEvent('webmcp-auth-complete', { 
+            detail: JSON.parse(pendingState) 
+          }))
+        }
       } else {
         loadUser()
       }
@@ -99,13 +109,22 @@ export function useAuth() {
   }
 
   // Sign in handler - for static sites, this initiates OAuth flow
-  const signIn = useCallback(async () => {
+  const signIn = useCallback(async (pendingState?: Record<string, unknown>) => {
+    // Save any pending state to restore after OAuth callback
+    if (pendingState) {
+      localStorage.setItem('webmcp-auth-pending', JSON.stringify(pendingState))
+    }
+    
     // Check if we have a GitHub OAuth endpoint configured
     const oauthEndpoint = import.meta.env.VITE_GITHUB_OAUTH_URL
     
     if (oauthEndpoint) {
-      // Redirect to OAuth endpoint (Cloudflare Worker, Netlify Function, etc.)
-      window.location.href = oauthEndpoint
+      // Build redirect URL with current path to return to after auth
+      const currentPath = window.location.pathname + window.location.search
+      const authUrl = new URL(oauthEndpoint)
+      authUrl.searchParams.set('redirect', currentPath)
+      
+      window.location.href = authUrl.toString()
       return
     }
 
@@ -188,6 +207,16 @@ export function useAuth() {
     }
   }, [])
 
+  // Get any pending state saved before OAuth redirect
+  const getPendingState = useCallback((): Record<string, unknown> | null => {
+    const pending = localStorage.getItem('webmcp-auth-pending')
+    if (pending) {
+      localStorage.removeItem('webmcp-auth-pending')
+      return JSON.parse(pending)
+    }
+    return null
+  }, [])
+
   return {
     user,
     loading,
@@ -196,6 +225,7 @@ export function useAuth() {
     signIn,
     signOut,
     handleOAuthCallback,
+    getPendingState,
     refresh: loadUser
   }
 }
