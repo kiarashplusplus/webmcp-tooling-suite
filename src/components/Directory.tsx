@@ -34,30 +34,71 @@ interface FeedMetadata {
   author?: string
 }
 
-// Reference implementation feed - a real, verified feed
-const REFERENCE_FEED: FeedMetadata = {
-  id: 'reference-25x-codes',
-  url: 'https://25x.codes/.well-known/mcp.llmfeed.json',
-  title: '25x.codes Reference Implementation',
-  description: 'Reference LLMFeed implementation with full Ed25519 signature, JSON-RPC 2.0 invocation patterns, and typed capabilities',
-  feed_type: 'mcp',
-  domain: '25x.codes',
-  timestamp: Date.now() - 1000 * 60 * 60 * 24 * 7, // 1 week ago
-  capabilities_count: 8,
-  version: '1.0.0',
-  author: 'Kiarash Adl'
-}
+// Reference implementation feeds - verified, curated feeds for launch
+const CURATED_FEEDS: FeedMetadata[] = [
+  {
+    id: 'reference-25x-codes',
+    url: 'https://25x.codes/.well-known/mcp.llmfeed.json',
+    title: '25x.codes Portfolio',
+    description: 'AI-enabled portfolio with Ed25519 signed discovery. Query projects, skills, and execute terminal-style commands.',
+    feed_type: 'mcp',
+    domain: '25x.codes',
+    timestamp: Date.now() - 1000 * 60 * 60 * 24 * 7,
+    capabilities_count: 8,
+    version: '2.0.0',
+    author: 'Kiarash Adl'
+  },
+  {
+    id: 'wellknownmcp-org',
+    url: 'https://wellknownmcp.org/.well-known/mcp.llmfeed.json',
+    title: 'WellKnownMCP Specification',
+    description: 'Complete LLMFeed specification publisher with universal feed loading. Part of the LLMCA ecosystem.',
+    feed_type: 'mcp',
+    domain: 'wellknownmcp.org',
+    timestamp: Date.now() - 1000 * 60 * 60 * 24 * 3,
+    capabilities_count: 12,
+    version: '2.0.0',
+    author: 'WellKnownMCP'
+  },
+  {
+    id: 'llmca-org',
+    url: 'https://llmca.org/.well-known/mcp.llmfeed.json',
+    title: 'LLMCA Trust System',
+    description: 'Model Context Protocol integration with LLMCA cryptographic trust system for verified MCP feeds.',
+    feed_type: 'mcp',
+    domain: 'llmca.org',
+    timestamp: Date.now() - 1000 * 60 * 60 * 24 * 2,
+    capabilities_count: 10,
+    version: '2.1.0',
+    author: 'LLMCA'
+  },
+  {
+    id: 'wellknownmcp-llm-index',
+    url: 'https://wellknownmcp.org/.well-known/llm-index.llmfeed.json',
+    title: 'WellKnownMCP Discovery Hub',
+    description: 'Intelligent navigation system that guides agents to the perfect content based on context and intent.',
+    feed_type: 'llm-index',
+    domain: 'wellknownmcp.org',
+    timestamp: Date.now() - 1000 * 60 * 60 * 24 * 1,
+    capabilities_count: 7,
+    version: '2.2.0',
+    author: 'WellKnownMCP'
+  }
+]
+
+// Legacy reference for backward compatibility
+const REFERENCE_FEED: FeedMetadata = CURATED_FEEDS[0]
 
 export function FeedDirectory() {
   const { user, isAuthenticated } = useAuth()
   const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
   const [archives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
   const [publishedBy, setPublishedBy] = useKV<Record<string, string>>('feed-publishers', {})
-  const [allFeeds, setAllFeeds] = useState<FeedMetadata[]>([REFERENCE_FEED])
+  const [allFeeds, setAllFeeds] = useState<FeedMetadata[]>(CURATED_FEEDS)
 
   useEffect(() => {
-    // Combine reference feed with user-published feeds
-    const combined = [REFERENCE_FEED, ...(archivedFeeds || [])]
+    // Combine curated feeds with user-published feeds
+    const combined = [...CURATED_FEEDS, ...(archivedFeeds || [])]
     const unique = Array.from(
       new Map(combined.map(feed => [feed.id, feed])).values()
     )
@@ -174,12 +215,18 @@ export function FeedDirectory() {
 
   const canUnpublish = (feedId: string) => {
     if (!isAuthenticated || !user) return false
-    if (feedId === 'reference-25x-codes') return false // Can't unpublish reference feed
+    // Can't unpublish curated/reference feeds
+    if (CURATED_FEEDS.some(f => f.id === feedId)) return false
     const publisher = publishedBy?.[feedId]
     return publisher === user.login
   }
 
-  const FeedCard = ({ feed, isFromArchive, isReference }: { feed: FeedMetadata; isFromArchive?: boolean; isReference?: boolean }) => (
+  const isCuratedFeed = (feedId: string) => CURATED_FEEDS.some(f => f.id === feedId)
+
+  const FeedCard = ({ feed, isFromArchive }: { feed: FeedMetadata; isFromArchive?: boolean }) => {
+    const isCurated = isCuratedFeed(feed.id)
+    
+    return (
     <Card 
       className="glass-card p-6 hover:glass-strong transition-all duration-300 group"
       itemScope
@@ -195,21 +242,21 @@ export function FeedDirectory() {
               >
                 {feed.title}
               </h3>
-              {isReference && (
+              {isCurated && (
                 <Badge 
                   variant="outline" 
                   className="shrink-0 bg-accent/10 text-accent border-accent/30 text-xs"
                 >
-                  Reference
+                  ✨ Curated
                 </Badge>
               )}
-              {isFromArchive && (
+              {isFromArchive && !isCurated && (
                 <Badge 
                   variant="outline" 
                   className="shrink-0 glass-strong text-primary border-primary/30 text-xs"
                 >
                   <Archive size={12} className="mr-1" />
-                  Archived
+                  Published
                 </Badge>
               )}
             </div>
@@ -341,7 +388,7 @@ export function FeedDirectory() {
         </div>
       </div>
     </Card>
-  )
+  )}
 
   return (
     <div className="space-y-8">
@@ -395,7 +442,6 @@ export function FeedDirectory() {
                   <FeedCard 
                     feed={feed}
                     isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
-                    isReference={feed.id === 'reference-25x-codes'}
                   />
                 </div>
               ))}
@@ -445,7 +491,6 @@ export function FeedDirectory() {
                   <FeedCard 
                     feed={feed}
                     isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
-                    isReference={feed.id === 'reference-25x-codes'}
                   />
                 </div>
               ))}
