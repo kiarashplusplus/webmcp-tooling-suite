@@ -3,8 +3,9 @@ import { Validator } from '@/components/Validator'
 import { Discovery } from '@/components/Discovery'
 import { RAGPrep } from '@/components/RAGPrep'
 import { Archive } from '@/components/Archive'
+import { Directory } from '@/components/Directory'
 import { Toaster } from '@/components/ui/sonner'
-import { ShieldCheck, MagnifyingGlass, Database, Archive as ArchiveIcon } from '@phosphor-icons/react'
+import { ShieldCheck, MagnifyingGlass, Database, Archive as ArchiveIcon, FolderOpen } from '@phosphor-icons/react'
 
 function App() {
   return (
@@ -33,8 +34,15 @@ function App() {
             </div>
           </header>
 
-          <Tabs defaultValue="validator" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-10 glass-strong p-2 rounded-2xl">
+          <Tabs defaultValue="directory" className="w-full">
+            <TabsList className="grid w-full grid-cols-5 mb-10 glass-strong p-2 rounded-2xl">
+              <TabsTrigger 
+                value="directory" 
+                className="data-[state=active]:glass-strong data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-semibold rounded-xl transition-all duration-300"
+              >
+                <FolderOpen size={18} className="mr-2" />
+                <span className="hidden sm:inline">Directory</span>
+              </TabsTrigger>
               <TabsTrigger 
                 value="validator" 
                 className="data-[state=active]:glass-strong data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-semibold rounded-xl transition-all duration-300"
@@ -64,6 +72,10 @@ function App() {
                 <span className="hidden sm:inline">RAG Prep</span>
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="directory" className="mt-0">
+              <Directory />
+            </TabsContent>
 
             <TabsContent value="validator" className="mt-0">
               <Validator />

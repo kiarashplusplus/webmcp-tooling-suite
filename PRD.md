@@ -12,6 +12,13 @@ A universal LLMFeed analyzer that addresses critical gaps in feed validation, cr
 
 ## Essential Features
 
+### Feed Directory & Discovery Index
+- **Functionality**: Publicly accessible, scrollable directory of published LLM feeds organized by "Top Feeds" (most capabilities) and "Latest Published" (most recent), with direct JSON links optimized for scraper discovery
+- **Purpose**: Provides a centralized discovery mechanism for feeds, making it easy for AI agents, scrapers, and developers to find and access available LLMFeed endpoints
+- **Trigger**: User navigates to Directory tab
+- **Progression**: View Directory → Browse top/latest feeds → See feed metadata (type, capabilities, version, author) → Click JSON URL to access raw feed
+- **Success criteria**: Feeds are clearly organized with visible metadata, JSON URLs are marked with data attributes for programmatic access, links open in new tabs with proper rel attributes
+
 ### Universal LLMFeed Validator
 - **Functionality**: Comprehensive validation of any .llmfeed.json file from URL, file upload, or direct paste - including structure, schema conformance, and Ed25519 signature verification
 - **Purpose**: Addresses Gap 1 from research - prevents tool poisoning and supply chain attacks by enforcing cryptographic trust, works with feeds from any location
@@ -100,50 +107,59 @@ Animations should reinforce validation states and guide attention to critical se
 ## Component Selection
 
 - **Components**: 
-  - `Tabs` for switching between Validator/Discovery/Archive/RAG tools
+  - `Tabs` for switching between Directory/Validator/Discovery/Archive/RAG tools
   - `Card` with custom gradient borders for feed display sections
-  - `Badge` for validation states (verified, invalid, warning)
+  - `Badge` for validation states (verified, invalid, warning) and feed types
   - `Accordion` for collapsible capability lists and snapshot histories
   - `Textarea` for JSON input with monospace styling
   - `Button` with distinct variants for validation actions vs navigation
   - `Alert` for critical security warnings (signature failures)
-  - `ScrollArea` for large JSON feed display and archive lists
+  - `ScrollArea` for large JSON feed display, archive lists, and feed directories
   - `Progress` for multi-step validation workflows
   - `Tooltip` for schema field explanations
-  - `Separator` to divide validation sections
+  - `Separator` to divide validation sections and metadata fields
   
 - **Customizations**: 
   - Custom JSON syntax highlighter using regex-based colorization
   - Security score visualization with radial progress indicator
   - Capability cards with schema preview and copy-to-clipboard
   - Custom Ed25519 verification stepper component
+  - Feed directory cards with metadata display and direct JSON access links
   
 - **States**: 
   - Validation button: default (cyan gradient), loading (animated pulse), success (lime), error (crimson)
   - Input fields: focus ring in cyan, error borders in crimson with shake animation
-  - Feed cards: hover lift effect (2px translate), selected state with accent border
+  - Feed cards: hover lift effect (2px translate), selected state with accent border, glassmorphic background transitions
+  - Directory links: external link indicators, scraper-friendly data attributes
   
 - **Icon Selection**: 
   - Shield (ShieldCheck/ShieldWarning) for trust/signature states
   - MagnifyingGlass for discovery and analysis
+  - FolderOpen for feed directory browsing
+  - TrendUp for top/trending feeds
+  - Clock for latest/recent feeds and timestamp displays
   - Code for capability inspection
   - CloudArrowDown for feed fetching
   - CheckCircle/XCircle for validation results
   - Database for RAG indexing
   - Archive for feed archival and version history
-  - Clock for timestamp displays
   - Trash for deletion actions
   - Download/Copy for export and clipboard operations
+  - FileJs for JSON file links
+  - Globe for domain/URL display
+  - Tag for feed type badges
+  - Calendar for timestamp formatting
   
 - **Spacing**: 
-  - Section padding: `p-6` for cards, `p-8` for page container
-  - Element gaps: `gap-4` for form elements, `gap-6` for major sections
+  - Section padding: `p-6` for cards, `p-8` for page container and directory sections
+  - Element gaps: `gap-4` for form elements and feed cards, `gap-6` for major sections
   - Component margins: `mb-4` for related groups, `mb-8` for section breaks
   
 - **Mobile**: 
-  - Tabs convert to stacked buttons on <768px
+  - Tabs convert to icon-only on <640px, scrollable horizontal on <768px
   - Two-column layouts (feed + analysis, archive list + details) stack vertically on mobile
   - JSON display switches to horizontally scrollable with reduced font size
   - Floating action button for quick validation/archival on mobile
   - Bottom sheet for capability details and snapshot viewers instead of side panels
   - Archive list becomes full-width with collapsible snapshot details
+  - Feed directory cards stack vertically with full-width JSON links on mobile
