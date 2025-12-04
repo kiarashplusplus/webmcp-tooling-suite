@@ -9,7 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { fetchLLMFeed, validateLLMFeed, type LLMFeed } from '@/lib/llmfeed'
-import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple, CheckCircle, ArrowUpRight, Lock } from '@phosphor-icons/react'
+import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple, CheckCircle, ArrowUpRight, Lock, CloudSlash } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
 import { GitHubSignIn } from './GitHubSignIn'
 import { UserProfile } from './UserProfile'
@@ -233,6 +233,44 @@ export function Archive() {
 
   const isPublishedToDirectory = (snapshotId: string) => {
     return (archivedFeeds || []).some(f => f.id === snapshotId)
+  }
+
+  const unpublishFromDirectory = (snapshot: ArchivedSnapshot) => {
+    if (!isAuthenticated || !user) {
+      toast.error('You must be signed in to unpublish')
+      return
+    }
+
+    const publishers = publishedBy || {}
+    const publisher = publishers[snapshot.id]
+    if (publisher !== user.login) {
+      toast.error('You can only unpublish feeds that you published', {
+        description: `This feed was published by @${publisher}`
+      })
+      return
+    }
+
+    setArchivedFeeds((currentFeeds) => {
+      const feeds = currentFeeds || []
+      return feeds.filter(f => f.id !== snapshot.id)
+    })
+
+    setPublishedBy((currentPublishers) => {
+      const updated = { ...currentPublishers }
+      delete updated[snapshot.id]
+      return updated
+    })
+
+    toast.success('Feed unpublished from directory', {
+      description: 'The feed has been removed from the public directory'
+    })
+  }
+
+  const canUnpublish = (snapshotId: string) => {
+    if (!isAuthenticated || !user) return false
+    const publishers = publishedBy || {}
+    const publisher = publishers[snapshotId]
+    return publisher === user.login
   }
 
   const formatTimestamp = (timestamp: number) => {
@@ -502,10 +540,23 @@ export function Archive() {
                   <h3 className="text-lg font-bold text-foreground">Snapshot Details</h3>
                   <div className="flex gap-2">
                     {isPublishedToDirectory(selectedSnapshot.id) ? (
-                      <Badge variant="default" className="bg-accent/20 text-accent border-accent/30 px-3 py-1">
-                        <CheckCircle size={16} className="mr-2" />
-                        Published to Directory
-                      </Badge>
+                      <>
+                        <Badge variant="default" className="bg-accent/20 text-accent border-accent/30 px-3 py-1">
+                          <CheckCircle size={16} className="mr-2" />
+                          Published to Directory
+                        </Badge>
+                        {canUnpublish(selectedSnapshot.id) && (
+                          <Button
+                            onClick={() => unpublishFromDirectory(selectedSnapshot)}
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                          >
+                            <CloudSlash size={16} className="mr-2" />
+                            Unpublish
+                          </Button>
+                        )}
+                      </>
                     ) : (
                       <Button
                         onClick={() => publishToDirectory(selectedSnapshot)}
