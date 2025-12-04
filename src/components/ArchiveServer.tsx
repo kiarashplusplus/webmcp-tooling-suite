@@ -71,10 +71,15 @@ export function ArchiveServer() {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="glass-card p-8 max-w-2xl text-center">
           <h1 className="text-2xl font-bold text-destructive mb-4">Archive Not Found</h1>
-          <p className="text-muted-foreground mb-6">
-            The requested snapshot ID <code className="font-mono glass px-2 py-1 rounded">{requestedId}</code> does not exist in the archive.
+          <p className="text-muted-foreground mb-4">
+            The requested snapshot ID <code className="font-mono glass px-2 py-1 rounded">{requestedId}</code> does not exist in your browser's local storage.
           </p>
-          <a href="/" className="text-primary hover:underline">
+          <div className="text-sm text-muted-foreground/80 mb-6 space-y-2">
+            <p><strong>Note:</strong> Archives are stored locally in your browser.</p>
+            <p>This URL only works on the same browser where the archive was created.</p>
+            <p>To share archives, use the <strong>Export</strong> button to download the JSON file.</p>
+          </div>
+          <a href="./" className="text-primary hover:underline">
             Return to Home
           </a>
         </div>
