@@ -63,6 +63,8 @@ function App() {
     if (feedUrl) {
       setDiscoveredFeedUrl(feedUrl)
     }
+    // Scroll to top when navigating between tabs
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
   const handleStepComplete = useCallback((stepId: string) => {
@@ -158,7 +160,7 @@ function App() {
 
               <TabsContent value="rag" className="mt-0">
                 <Suspense fallback={<TabLoadingSkeleton />}>
-                  <RAGPrep />
+                  <RAGPrep initialUrl={discoveredFeedUrl} />
                 </Suspense>
               </TabsContent>
             </Tabs>

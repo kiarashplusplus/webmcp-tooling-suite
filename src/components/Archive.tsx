@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
 
 interface ArchiveProps {
-  onNavigate?: (tab: string) => void
+  onNavigate?: (tab: string, feedUrl?: string) => void
   onComplete?: () => void
   initialUrl?: string
 }
@@ -719,7 +719,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
               <h4 className="font-bold text-foreground">Archives Ready!</h4>
               <p className="text-sm text-muted-foreground">Next, prepare your feeds for RAG systems and AI assistants.</p>
             </div>
-            <Button onClick={() => { onComplete?.(); onNavigate('rag'); }} className="gap-2">
+            <Button onClick={() => { onComplete?.(); onNavigate('rag', domain); }} className="gap-2">
               RAG Preparation
               <ArrowRight size={16} weight="bold" />
             </Button>

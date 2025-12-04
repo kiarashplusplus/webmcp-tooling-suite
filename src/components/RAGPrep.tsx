@@ -1,22 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { prepareForRAG, calculateTokenEstimate, type LLMFeed, type RAGIndexEntry } from '@/lib/llmfeed'
-import { Database, Download, Lightbulb, CheckCircle } from '@phosphor-icons/react'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { prepareForRAG, calculateTokenEstimate, fetchLLMFeed, type LLMFeed, type RAGIndexEntry } from '@/lib/llmfeed'
+import { Database, Download, Lightbulb, CheckCircle, CloudArrowDown } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
 import { toast } from 'sonner'
 
-export function RAGPrep() {
+interface RAGPrepProps {
+  initialUrl?: string
+}
+
+export function RAGPrep({ initialUrl }: RAGPrepProps) {
   const [feedInput, setFeedInput] = useState('')
+  const [feedUrl, setFeedUrl] = useState(initialUrl || '')
+  const [inputMode, setInputMode] = useState<'paste' | 'url'>(initialUrl ? 'url' : 'paste')
   const [processing, setProcessing] = useState(false)
   const [ragEntries, setRagEntries] = useState<RAGIndexEntry[] | null>(null)
   const [tokenStats, setTokenStats] = useState<{ total: number; perCapability: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handlePrepare = () => {
+  // Update feedUrl and inputMode when initialUrl changes
+  useEffect(() => {
+    if (initialUrl) {
+      setFeedUrl(initialUrl)
+      setInputMode('url')
+    }
+  }, [initialUrl])
+
+  const handlePrepareFromPaste = () => {
     setProcessing(true)
     setError(null)
     setRagEntries(null)
@@ -32,6 +48,30 @@ export function RAGPrep() {
       toast.success(`Prepared ${entries.length} entries for RAG indexing`)
     } catch (err) {
       setError(`Failed to prepare feed: ${err}`)
+      toast.error('Preparation failed')
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const handlePrepareFromUrl = async () => {
+    if (!feedUrl.trim()) return
+
+    setProcessing(true)
+    setError(null)
+    setRagEntries(null)
+    setTokenStats(null)
+
+    try {
+      const feed = await fetchLLMFeed(feedUrl)
+      const entries = prepareForRAG(feed)
+      const tokens = calculateTokenEstimate(feed)
+      
+      setRagEntries(entries)
+      setTokenStats(tokens)
+      toast.success(`Prepared ${entries.length} entries for RAG indexing`)
+    } catch (err) {
+      setError(`Failed to fetch/prepare feed: ${err}`)
       toast.error('Preparation failed')
     } finally {
       setProcessing(false)
@@ -81,45 +121,92 @@ export function RAGPrep() {
       </Alert>
 
       <Card className="p-6 gradient-border shadow-2xl">
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
-              Validated Feed JSON
-            </label>
-            <Textarea
-              value={feedInput}
-              onChange={(e) => setFeedInput(e.target.value)}
-              placeholder='Paste your validated mcp.llmfeed.json here...'
-              className="min-h-[300px] font-mono text-sm"
-              id="rag-feed-input"
-            />
-          </div>
+        <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as 'paste' | 'url')} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">\n            <TabsTrigger value="url" className="gap-2">
+              <CloudArrowDown size={16} />
+              From URL
+            </TabsTrigger>
+            <TabsTrigger value="paste" className="gap-2">
+              <Database size={16} />
+              Paste JSON
+            </TabsTrigger>
+          </TabsList>
 
-          <Button
-            onClick={handlePrepare}
-            disabled={!feedInput.trim() || processing}
-            className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
-            size="lg"
-          >
-            {processing ? (
-              <>
-                <div className="animate-spin mr-2 h-4 w-4 border-2 border-accent-foreground border-t-transparent rounded-full" />
-                Preparing...
-              </>
-            ) : (
-              <>
-                <Database className="mr-2" size={20} />
-                Prepare for RAG
-              </>
-            )}
-          </Button>
-
-          {error && (
-            <div className="p-4 rounded-xl glass-card border border-destructive/30 text-destructive">
-              {error}
+          <TabsContent value="url" className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
+                Feed URL or Domain
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  value={feedUrl}
+                  onChange={(e) => setFeedUrl(e.target.value)}
+                  placeholder="example.com or https://example.com/custom/feed.llmfeed.json"
+                  className="flex-1 font-mono text-sm"
+                  onKeyDown={(e) => e.key === 'Enter' && handlePrepareFromUrl()}
+                />
+              </div>
             </div>
-          )}
-        </div>
+            <Button
+              onClick={handlePrepareFromUrl}
+              disabled={!feedUrl.trim() || processing}
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
+              size="lg"
+            >
+              {processing ? (
+                <>
+                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-accent-foreground border-t-transparent rounded-full" />
+                  Fetching & Preparing...
+                </>
+              ) : (
+                <>
+                  <CloudArrowDown size={20} className="mr-2" />
+                  Fetch & Prepare for RAG
+                </>
+              )}
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="paste" className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
+                Validated Feed JSON
+              </label>
+              <Textarea
+                value={feedInput}
+                onChange={(e) => setFeedInput(e.target.value)}
+                placeholder='Paste your validated mcp.llmfeed.json here...'
+                className="min-h-[300px] font-mono text-sm"
+                id="rag-feed-input"
+              />
+            </div>
+
+            <Button
+              onClick={handlePrepareFromPaste}
+              disabled={!feedInput.trim() || processing}
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
+              size="lg"
+            >
+              {processing ? (
+                <>
+                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-accent-foreground border-t-transparent rounded-full" />
+                  Preparing...
+                </>
+              ) : (
+                <>
+                  <Database className="mr-2" size={20} />
+                  Prepare for RAG
+                </>
+              )}
+            </Button>
+          </TabsContent>
+        </Tabs>
+
+        {error && (
+          <div className="p-4 rounded-xl glass-card border border-destructive/30 text-destructive mt-4">
+            {error}
+          </div>
+        )}
       </Card>
 
       {ragEntries && tokenStats && (
