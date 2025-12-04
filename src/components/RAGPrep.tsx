@@ -1,0 +1,213 @@
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { prepareForRAG, calculateTokenEstimate, type LLMFeed, type RAGIndexEntry } from '@/lib/llmfeed'
+import { Database, Download, Lightbulb, CheckCircle } from '@phosphor-icons/react'
+import { JsonViewer } from './JsonViewer'
+import { toast } from 'sonner'
+
+export function RAGPrep() {
+  const [feedInput, setFeedInput] = useState('')
+  const [processing, setProcessing] = useState(false)
+  const [ragEntries, setRagEntries] = useState<RAGIndexEntry[] | null>(null)
+  const [tokenStats, setTokenStats] = useState<{ total: number; perCapability: number } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const handlePrepare = () => {
+    setProcessing(true)
+    setError(null)
+    setRagEntries(null)
+    setTokenStats(null)
+
+    try {
+      const feed: LLMFeed = JSON.parse(feedInput)
+      const entries = prepareForRAG(feed)
+      const tokens = calculateTokenEstimate(feed)
+      
+      setRagEntries(entries)
+      setTokenStats(tokens)
+      toast.success(`Prepared ${entries.length} entries for RAG indexing`)
+    } catch (err) {
+      setError(`Failed to prepare feed: ${err}`)
+      toast.error('Preparation failed')
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const handleExport = () => {
+    if (!ragEntries) return
+
+    const exportData = {
+      export_type: 'llmfeed_rag_index',
+      generated_at: new Date().toISOString(),
+      entry_count: ragEntries.length,
+      entries: ragEntries
+    }
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `llmfeed-rag-index-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('RAG index exported successfully')
+  }
+
+  const estimatedTokenSavings = tokenStats && ragEntries 
+    ? Math.round((tokenStats.total - (ragEntries.length * 50)) / tokenStats.total * 100)
+    : 0
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-foreground mb-2">RAG Indexing Preparation</h2>
+        <p className="text-muted-foreground">
+          Transform validated LLMFeed into structured format optimized for vector embeddings and semantic search.
+        </p>
+      </div>
+
+      <Alert className="border-primary/50 bg-primary/10">
+        <Lightbulb size={20} className="text-primary" />
+        <AlertTitle className="font-bold text-foreground">Mitigates Prompt Bloat</AlertTitle>
+        <AlertDescription className="text-foreground/80">
+          RAG-based tool retrieval reduces token consumption by 50%+ compared to including full tool catalogs in prompts.
+          This preparation generates semantic embeddings suitable for vector stores like Pinecone, Weaviate, or Chroma.
+        </AlertDescription>
+      </Alert>
+
+      <Card className="p-6 gradient-border">
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
+              Validated Feed JSON
+            </label>
+            <Textarea
+              value={feedInput}
+              onChange={(e) => setFeedInput(e.target.value)}
+              placeholder='Paste your validated mcp.llmfeed.json here...'
+              className="min-h-[300px] font-mono text-sm"
+              id="rag-feed-input"
+            />
+          </div>
+
+          <Button
+            onClick={handlePrepare}
+            disabled={!feedInput.trim() || processing}
+            className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
+            size="lg"
+          >
+            {processing ? (
+              <>
+                <div className="animate-spin mr-2 h-4 w-4 border-2 border-accent-foreground border-t-transparent rounded-full" />
+                Preparing...
+              </>
+            ) : (
+              <>
+                <Database className="mr-2" size={20} />
+                Prepare for RAG
+              </>
+            )}
+          </Button>
+
+          {error && (
+            <div className="p-4 rounded bg-destructive/10 border border-destructive/20 text-destructive">
+              {error}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {ragEntries && tokenStats && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <Card className="p-6 bg-accent/10 border-accent/30">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mb-2">RAG Entries</div>
+                <div className="text-4xl font-bold text-accent">{ragEntries.length}</div>
+                <div className="text-sm text-muted-foreground mt-1">Ready for embedding</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Original Tokens</div>
+                <div className="text-4xl font-bold text-warning">~{tokenStats.total}</div>
+                <div className="text-sm text-muted-foreground mt-1">Full feed size</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Estimated Savings</div>
+                <div className="text-4xl font-bold text-accent">{estimatedTokenSavings}%</div>
+                <div className="text-sm text-muted-foreground mt-1">With RAG retrieval</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-bold text-foreground">RAG Index Entries</h4>
+              <Button onClick={handleExport} variant="outline" size="sm">
+                <Download size={16} className="mr-2" />
+                Export Index
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {ragEntries.map((entry, idx) => (
+                <div key={idx} className="p-4 rounded bg-muted/30 border border-border hover:border-primary/50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={entry.type === 'capability' ? 'default' : 'secondary'}>
+                        {entry.type}
+                      </Badge>
+                      <span className="font-mono text-sm text-primary font-semibold">{entry.name}</span>
+                    </div>
+                    <CheckCircle size={16} className="text-accent" weight="fill" />
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground mb-3">{entry.description}</p>
+                  
+                  <div className="mb-3">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Embed Content</div>
+                    <code className="text-xs p-2 rounded bg-background/50 block text-foreground/80 font-mono">
+                      {entry.embedContent}
+                    </code>
+                  </div>
+
+                  <div className="text-xs text-muted-foreground">
+                    ID: <code className="font-mono">{entry.id}</code>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h4 className="font-bold text-foreground mb-4">Complete RAG Export Structure</h4>
+            <JsonViewer 
+              data={{
+                export_type: 'llmfeed_rag_index',
+                generated_at: new Date().toISOString(),
+                entry_count: ragEntries.length,
+                entries: ragEntries
+              }} 
+              maxHeight="400px" 
+            />
+          </Card>
+
+          <Alert className="border-accent/50 bg-accent/10">
+            <Database size={20} className="text-accent" />
+            <AlertTitle className="font-bold text-foreground">Next Steps: Vector Store Integration</AlertTitle>
+            <AlertDescription className="text-foreground/80 space-y-2">
+              <p>1. Export the RAG index using the button above</p>
+              <p>2. Use an embedding model (e.g., nomic-embed-text, OpenAI text-embedding-3-small) to vectorize the <code className="font-mono text-xs bg-background/50 px-1 py-0.5 rounded">embedContent</code> field</p>
+              <p>3. Store vectors in your vector database with associated metadata</p>
+              <p>4. Implement semantic search to retrieve relevant capabilities based on user intent</p>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+    </div>
+  )
+}

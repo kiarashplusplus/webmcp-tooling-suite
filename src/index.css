@@ -1,1 +1,151 @@
-/* This is where custom CSS goes */
+@import 'tailwindcss';
+@import "tw-animate-css";
+
+@layer base {
+  * {
+    @apply border-border
+  }
+  
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+:root {
+  --background: oklch(0.20 0.02 240);
+  --foreground: oklch(0.98 0 0);
+
+  --card: oklch(0.24 0.02 240);
+  --card-foreground: oklch(0.98 0 0);
+  
+  --popover: oklch(0.24 0.02 240);
+  --popover-foreground: oklch(0.98 0 0);
+
+  --primary: oklch(0.55 0.15 195);
+  --primary-foreground: oklch(0.98 0 0);
+  
+  --secondary: oklch(0.30 0.02 240);
+  --secondary-foreground: oklch(0.98 0 0);
+  
+  --muted: oklch(0.28 0.02 240);
+  --muted-foreground: oklch(0.65 0.01 240);
+  
+  --accent: oklch(0.75 0.20 130);
+  --accent-foreground: oklch(0.15 0 0);
+  
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  --warning: oklch(0.70 0.18 75);
+  --warning-foreground: oklch(0.15 0 0);
+
+  --success: oklch(0.75 0.20 130);
+  --success-foreground: oklch(0.15 0 0);
+  
+  --border: oklch(0.35 0.02 240);
+  --input: oklch(0.35 0.02 240);
+  --ring: oklch(0.55 0.15 195);
+
+  --radius: 0.5rem;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.5);
+  --radius-xl: calc(var(--radius) * 2);
+  --radius-2xl: calc(var(--radius) * 3);
+  --radius-full: 9999px;
+}
+
+.gradient-border {
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, oklch(0.55 0.15 195), oklch(0.75 0.20 130));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.json-syntax {
+  color: oklch(0.85 0.05 195);
+}
+
+.json-syntax .key {
+  color: oklch(0.55 0.15 195);
+}
+
+.json-syntax .string {
+  color: oklch(0.75 0.20 130);
+}
+
+.json-syntax .number {
+  color: oklch(0.70 0.18 75);
+}
+
+.json-syntax .boolean {
+  color: oklch(0.65 0.18 310);
+}
+
+.json-syntax .null {
+  color: oklch(0.50 0.10 25);
+}
+
+@keyframes pulse-success {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.pulse-success {
+  animation: pulse-success 400ms ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.shake {
+  animation: shake 300ms ease-in-out;
+}
