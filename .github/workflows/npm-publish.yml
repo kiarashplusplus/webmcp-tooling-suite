@@ -179,6 +179,29 @@ jobs:
         run: echo "⏭️ Skipping @25xcodes/llmfeed-signer - version already exists on npm"
 
       # ========================================
+      # Update Major Version Tag (v1, v2, etc.)
+      # ========================================
+      - name: Update major version tag
+        if: github.event_name == 'release' && github.event.inputs.dry-run != 'true'
+        run: |
+          # Extract major version from release tag (v1.0.0 -> v1)
+          RELEASE_TAG="${{ github.event.release.tag_name }}"
+          MAJOR_TAG=$(echo "$RELEASE_TAG" | grep -oE '^v[0-9]+')
+          
+          if [ -n "$MAJOR_TAG" ]; then
+            echo "📌 Updating $MAJOR_TAG tag to point to $RELEASE_TAG"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -f "$MAJOR_TAG" "$RELEASE_TAG"
+            git push -f origin "$MAJOR_TAG"
+            echo "✅ $MAJOR_TAG now points to $RELEASE_TAG"
+            echo "major_tag=$MAJOR_TAG" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Could not extract major version from $RELEASE_TAG"
+          fi
+        id: major-tag
+
+      # ========================================
       # Summary
       # ========================================
       - name: Summary
@@ -192,6 +215,14 @@ jobs:
             echo "**Mode:** 🚀 Published" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Show major tag update for releases
+          if [ "${{ github.event_name }}" = "release" ] && [ -n "${{ steps.major-tag.outputs.major_tag }}" ]; then
+            echo "### 🏷️ Version Tags" >> $GITHUB_STEP_SUMMARY
+            echo "- ${{ github.event.release.tag_name }}: Release tag" >> $GITHUB_STEP_SUMMARY
+            echo "- ${{ steps.major-tag.outputs.major_tag }}: ✅ Updated to point to ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
           
           echo "### 🎬 GitHub Action" >> $GITHUB_STEP_SUMMARY
           if [ "${{ steps.packages.outputs.github_action }}" = "true" ]; then
