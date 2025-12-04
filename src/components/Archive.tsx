@@ -8,9 +8,22 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { fetchLLMFeed, validateLLMFeed, type LLMFeed } from '@/lib/llmfeed'
-import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen } from '@phosphor-icons/react'
+import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
 import { toast } from 'sonner'
+
+interface FeedMetadata {
+  id: string
+  url: string
+  title: string
+  description: string
+  feed_type: string
+  domain: string
+  timestamp: number
+  capabilities_count?: number
+  version?: string
+  author?: string
+}
 
 export interface ArchivedSnapshot {
   id: string
@@ -29,6 +42,7 @@ export interface ArchivedFeed {
 
 export function Archive() {
   const [archives, setArchives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
+  const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
   const [domain, setDomain] = useState('')
   const [loading, setLoading] = useState(false)
   const [selectedSnapshot, setSelectedSnapshot] = useState<ArchivedSnapshot | null>(null)
@@ -153,6 +167,34 @@ export function Archive() {
     const canonicalUrl = `archive://${snapshot.domain}/${snapshot.id}`
     navigator.clipboard.writeText(canonicalUrl)
     toast.success('Canonical URL copied to clipboard')
+  }
+
+  const publishToDirectory = (snapshot: ArchivedSnapshot) => {
+    const feedUrl = snapshot.feed.metadata.origin || `https://${snapshot.domain}/.well-known/mcp.llmfeed.json`
+    
+    const feedMetadata: FeedMetadata = {
+      id: snapshot.id,
+      url: feedUrl,
+      title: snapshot.feed.metadata.title || snapshot.domain,
+      description: snapshot.feed.metadata.description || 'Published from archive',
+      feed_type: snapshot.feed.metadata.feed_type || 'webmcp',
+      domain: snapshot.domain,
+      timestamp: snapshot.timestamp,
+      capabilities_count: snapshot.feed.capabilities?.length,
+      version: snapshot.feed.metadata.version,
+      author: snapshot.feed.metadata.author
+    }
+
+    setArchivedFeeds((currentFeeds) => {
+      const feeds = currentFeeds || []
+      const exists = feeds.some(f => f.id === feedMetadata.id)
+      if (exists) {
+        toast.info('Feed already published to directory')
+        return feeds
+      }
+      toast.success(`Published "${feedMetadata.title}" to directory`)
+      return [...feeds, feedMetadata]
+    })
   }
 
   const formatTimestamp = (timestamp: number) => {
@@ -307,6 +349,18 @@ export function Archive() {
                                     <Button
                                       onClick={(e) => {
                                         e.stopPropagation()
+                                        publishToDirectory(snapshot)
+                                      }}
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-accent hover:text-accent hover:bg-accent/10"
+                                      title="Publish to Directory"
+                                    >
+                                      <UploadSimple size={12} />
+                                    </Button>
+                                    <Button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
                                         handleDeleteSnapshot(archive.domain, snapshot.id)
                                       }}
                                       variant="ghost"
@@ -352,6 +406,15 @@ export function Archive() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-foreground">Snapshot Details</h3>
                   <div className="flex gap-2">
+                    <Button
+                      onClick={() => publishToDirectory(selectedSnapshot)}
+                      variant="default"
+                      size="sm"
+                      className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                    >
+                      <UploadSimple size={16} className="mr-2" />
+                      Publish to Directory
+                    </Button>
                     <Button
                       onClick={() => copySnapshotUrl(selectedSnapshot)}
                       variant="outline"
