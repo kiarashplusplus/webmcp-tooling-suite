@@ -122,7 +122,8 @@ export function RAGPrep({ initialUrl }: RAGPrepProps) {
 
       <Card className="p-6 gradient-border shadow-2xl">
         <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as 'paste' | 'url')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">\n            <TabsTrigger value="url" className="gap-2">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="url" className="gap-2">
               <CloudArrowDown size={16} />
               From URL
             </TabsTrigger>
