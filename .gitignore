@@ -13,6 +13,9 @@ dist-ssr
 *-dist
 *.local
 
+# GitHub Action dist must be committed
+!packages/github-action/dist
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
