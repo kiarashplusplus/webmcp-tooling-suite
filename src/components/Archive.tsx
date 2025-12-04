@@ -180,7 +180,7 @@ export function Archive() {
         <ArchiveIcon size={18} className="text-primary" />
         <AlertTitle className="text-sm font-semibold">Persistent Feed Storage</AlertTitle>
         <AlertDescription className="text-xs text-muted-foreground">
-          Archive feeds to ensure availability even if the original site goes offline. Each snapshot is timestamped and versioned, 
+          Archive any LLMFeed from any URL to ensure availability even if the original site goes offline. Each snapshot is timestamped and versioned, 
           providing reproducibility for AI agents and research applications.
         </AlertDescription>
       </Alert>
@@ -189,34 +189,39 @@ export function Archive() {
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
-              Archive New Feed
+              Archive Feed from URL
             </label>
-            <div className="flex gap-2">
-              <Input
-                value={domain}
-                onChange={(e) => setDomain(e.target.value)}
-                placeholder="example.com or https://example.com/.well-known/mcp.llmfeed.json"
-                className="flex-1 font-mono text-sm"
-                onKeyDown={(e) => e.key === 'Enter' && handleArchiveFeed()}
-                id="archive-domain-input"
-              />
-              <Button
-                onClick={handleArchiveFeed}
-                disabled={!domain.trim() || loading}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
-                    Archiving...
-                  </>
-                ) : (
-                  <>
-                    <CloudArrowDown className="mr-2" size={20} />
-                    Archive Feed
-                  </>
-                )}
-              </Button>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  placeholder="example.com or https://example.com/custom/feed.llmfeed.json"
+                  className="flex-1 font-mono text-sm"
+                  onKeyDown={(e) => e.key === 'Enter' && handleArchiveFeed()}
+                  id="archive-domain-input"
+                />
+                <Button
+                  onClick={handleArchiveFeed}
+                  disabled={!domain.trim() || loading}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
+                      Archiving...
+                    </>
+                  ) : (
+                    <>
+                      <CloudArrowDown className="mr-2" size={20} />
+                      Archive Feed
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Enter a full URL to any .llmfeed.json file, or just a domain to archive from .well-known/mcp.llmfeed.json
+              </p>
             </div>
           </div>
         </div>

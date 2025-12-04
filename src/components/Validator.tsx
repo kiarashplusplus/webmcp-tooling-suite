@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
-import { validateLLMFeed, type ValidationResult, type LLMFeed } from '@/lib/llmfeed'
-import { ShieldCheck, ShieldWarning, XCircle, CheckCircle, Warning } from '@phosphor-icons/react'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { validateLLMFeed, fetchLLMFeed, type ValidationResult, type LLMFeed } from '@/lib/llmfeed'
+import { ShieldCheck, ShieldWarning, XCircle, CheckCircle, Warning, CloudArrowDown, FileArrowUp, Code } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
 import { SignatureDebugger } from './SignatureDebugger'
+import { toast } from 'sonner'
 
 const EXAMPLE_FEED = `{
   "feed_type": "mcp",
@@ -39,11 +42,13 @@ const EXAMPLE_FEED = `{
 
 export function Validator() {
   const [feedInput, setFeedInput] = useState('')
+  const [feedUrl, setFeedUrl] = useState('')
+  const [inputMode, setInputMode] = useState<'paste' | 'url' | 'file'>('paste')
   const [validating, setValidating] = useState(false)
   const [result, setResult] = useState<ValidationResult | null>(null)
   const [parsedFeed, setParsedFeed] = useState<LLMFeed | null>(null)
 
-  const handleValidate = async () => {
+  const handleValidateFromPaste = async () => {
     setValidating(true)
     setResult(null)
     setParsedFeed(null)
@@ -53,6 +58,7 @@ export function Validator() {
       setParsedFeed(feed)
       const validationResult = await validateLLMFeed(feed)
       setResult(validationResult)
+      toast.success('Feed validated successfully')
     } catch (error) {
       setResult({
         valid: false,
@@ -64,8 +70,81 @@ export function Validator() {
         warnings: [],
         score: 0
       })
+      toast.error('Failed to parse JSON')
     } finally {
       setValidating(false)
+    }
+  }
+
+  const handleValidateFromUrl = async () => {
+    if (!feedUrl.trim()) return
+
+    setValidating(true)
+    setResult(null)
+    setParsedFeed(null)
+
+    try {
+      const feed = await fetchLLMFeed(feedUrl)
+      setParsedFeed(feed)
+      setFeedInput(JSON.stringify(feed, null, 2))
+      const validationResult = await validateLLMFeed(feed)
+      setResult(validationResult)
+      toast.success('Feed fetched and validated')
+    } catch (error) {
+      setResult({
+        valid: false,
+        errors: [{
+          type: 'format',
+          message: `Failed to fetch feed: ${error}`,
+          severity: 'error'
+        }],
+        warnings: [],
+        score: 0
+      })
+      toast.error('Failed to fetch feed')
+    } finally {
+      setValidating(false)
+    }
+  }
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setValidating(true)
+    setResult(null)
+    setParsedFeed(null)
+
+    try {
+      const fileContent = await file.text()
+      const feed = JSON.parse(fileContent)
+      setFeedInput(fileContent)
+      setParsedFeed(feed)
+      const validationResult = await validateLLMFeed(feed)
+      setResult(validationResult)
+      toast.success(`File "${file.name}" validated successfully`)
+    } catch (error) {
+      setResult({
+        valid: false,
+        errors: [{
+          type: 'format',
+          message: `Invalid JSON in file: ${error}`,
+          severity: 'error'
+        }],
+        warnings: [],
+        score: 0
+      })
+      toast.error('Failed to parse file')
+    } finally {
+      setValidating(false)
+    }
+  }
+
+  const handleValidate = () => {
+    if (inputMode === 'url') {
+      handleValidateFromUrl()
+    } else {
+      handleValidateFromPaste()
     }
   }
 
@@ -84,64 +163,154 @@ export function Validator() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">LLMFeed Validator</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Universal Feed Validator</h2>
         <p className="text-muted-foreground">
-          Paste your mcp.llmfeed.json content below to validate structure, schemas, and Ed25519 signatures.
+          Validate any LLMFeed JSON from URL, file upload, or direct paste. Supports full structure, schema, and Ed25519 signature verification.
         </p>
       </div>
 
       <Alert className="border-primary/30 bg-primary/5">
         <ShieldCheck size={18} className="text-primary" />
-        <AlertTitle className="text-sm font-semibold">Signature Verification</AlertTitle>
+        <AlertTitle className="text-sm font-semibold">Universal Feed Support</AlertTitle>
         <AlertDescription className="text-xs text-muted-foreground">
-          For signature verification to work, your feed must include a <code className="font-mono bg-muted px-1 rounded">trust</code> block with <code className="font-mono bg-muted px-1 rounded">algorithm: "Ed25519"</code>, <code className="font-mono bg-muted px-1 rounded">signed_blocks</code> array, and <code className="font-mono bg-muted px-1 rounded">public_key_hint</code> URL, plus a <code className="font-mono bg-muted px-1 rounded">signature</code> block with the base64-encoded signature value.
+          This validator works with any valid .llmfeed.json file from any location - whether it's hosted at a .well-known URI, a custom URL, uploaded from your local machine, or pasted directly as JSON.
         </AlertDescription>
       </Alert>
 
       <Card className="p-6 gradient-border">
-        <div className="space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-foreground uppercase tracking-wide">
-                Feed JSON Content
-              </label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setFeedInput(EXAMPLE_FEED)}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Load Example
-              </Button>
-            </div>
-            <Textarea
-              value={feedInput}
-              onChange={(e) => setFeedInput(e.target.value)}
-              placeholder='{"feed_type": "mcp", "metadata": {...}, ...}'
-              className="min-h-[300px] font-mono text-sm"
-              id="feed-input"
-            />
-          </div>
+        <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as 'paste' | 'url' | 'file')} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="paste">
+              <Code size={18} className="mr-2" />
+              Paste JSON
+            </TabsTrigger>
+            <TabsTrigger value="url">
+              <CloudArrowDown size={18} className="mr-2" />
+              From URL
+            </TabsTrigger>
+            <TabsTrigger value="file">
+              <FileArrowUp size={18} className="mr-2" />
+              Upload File
+            </TabsTrigger>
+          </TabsList>
 
-          <Button
-            onClick={handleValidate}
-            disabled={!feedInput.trim() || validating}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
-            size="lg"
-          >
-            {validating ? (
-              <>
-                <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
-                Validating...
-              </>
-            ) : (
-              <>
-                <ShieldCheck className="mr-2" size={20} />
-                Validate Feed
-              </>
-            )}
-          </Button>
-        </div>
+          <TabsContent value="paste" className="space-y-4 mt-0">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-foreground uppercase tracking-wide">
+                  Feed JSON Content
+                </label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFeedInput(EXAMPLE_FEED)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Load Example
+                </Button>
+              </div>
+              <Textarea
+                value={feedInput}
+                onChange={(e) => setFeedInput(e.target.value)}
+                placeholder='{"feed_type": "mcp", "metadata": {...}, ...}'
+                className="min-h-[300px] font-mono text-sm"
+                id="feed-input"
+              />
+            </div>
+
+            <Button
+              onClick={handleValidate}
+              disabled={!feedInput.trim() || validating}
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+              size="lg"
+            >
+              {validating ? (
+                <>
+                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
+                  Validating...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="mr-2" size={20} />
+                  Validate Feed
+                </>
+              )}
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="url" className="space-y-4 mt-0">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
+                Feed URL
+              </label>
+              <div className="space-y-2">
+                <Input
+                  value={feedUrl}
+                  onChange={(e) => setFeedUrl(e.target.value)}
+                  placeholder="https://example.com/feed.llmfeed.json or example.com"
+                  className="font-mono text-sm"
+                  onKeyDown={(e) => e.key === 'Enter' && handleValidate()}
+                  id="feed-url-input"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter a full URL to a .llmfeed.json file, or just a domain to check the .well-known path
+                </p>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleValidate}
+              disabled={!feedUrl.trim() || validating}
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+              size="lg"
+            >
+              {validating ? (
+                <>
+                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
+                  Fetching & Validating...
+                </>
+              ) : (
+                <>
+                  <CloudArrowDown className="mr-2" size={20} />
+                  Fetch & Validate
+                </>
+              )}
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="file" className="space-y-4 mt-0">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
+                Upload .llmfeed.json File
+              </label>
+              <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
+                <FileArrowUp size={48} className="mx-auto mb-4 text-muted-foreground" />
+                <p className="text-sm text-foreground mb-4">
+                  Click to select a .llmfeed.json file from your computer
+                </p>
+                <input
+                  type="file"
+                  accept=".json,.llmfeed.json"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload-input"
+                />
+                <Button
+                  onClick={() => document.getElementById('file-upload-input')?.click()}
+                  variant="outline"
+                  disabled={validating}
+                  className="bg-secondary hover:bg-secondary/80"
+                >
+                  <FileArrowUp size={18} className="mr-2" />
+                  Choose File
+                </Button>
+                <p className="text-xs text-muted-foreground mt-4">
+                  Supported formats: .json, .llmfeed.json
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </Card>
 
       {result && (

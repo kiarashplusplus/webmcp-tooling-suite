@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { fetchLLMFeed, type LLMFeed, calculateTokenEstimate } from '@/lib/llmfeed'
 import { MagnifyingGlass, CloudArrowDown, Code, CheckCircle, Copy } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
+import { ExampleUrls } from './ExampleUrls'
 import { toast } from 'sonner'
 
 export function Discovery() {
@@ -44,44 +45,51 @@ export function Discovery() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Feed Discovery</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Universal Feed Discovery</h2>
         <p className="text-muted-foreground">
-          Discover and analyze LLMFeed from any WebMCP-enabled website via .well-known URIs.
+          Discover and analyze any LLMFeed from custom URLs or .well-known URIs. Works with any .llmfeed.json location.
         </p>
       </div>
+
+      <ExampleUrls />
 
       <Card className="p-6 gradient-border">
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
-              Domain or URL
+              Feed URL or Domain
             </label>
-            <div className="flex gap-2">
-              <Input
-                value={domain}
-                onChange={(e) => setDomain(e.target.value)}
-                placeholder="25x.codes or https://25x.codes/.well-known/mcp.llmfeed.json"
-                className="flex-1 font-mono text-sm"
-                onKeyDown={(e) => e.key === 'Enter' && handleDiscover()}
-                id="domain-input"
-              />
-              <Button
-                onClick={handleDiscover}
-                disabled={!domain.trim() || loading}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
-                    Discovering...
-                  </>
-                ) : (
-                  <>
-                    <MagnifyingGlass className="mr-2" size={20} />
-                    Discover
-                  </>
-                )}
-              </Button>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  placeholder="example.com or https://example.com/custom/feed.llmfeed.json"
+                  className="flex-1 font-mono text-sm"
+                  onKeyDown={(e) => e.key === 'Enter' && handleDiscover()}
+                  id="domain-input"
+                />
+                <Button
+                  onClick={handleDiscover}
+                  disabled={!domain.trim() || loading}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
+                      Discovering...
+                    </>
+                  ) : (
+                    <>
+                      <MagnifyingGlass className="mr-2" size={20} />
+                      Discover
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Enter a full URL to any .llmfeed.json file, or just a domain to check .well-known/mcp.llmfeed.json
+              </p>
             </div>
           </div>
 

@@ -16,14 +16,14 @@ function App() {
           <div className="container mx-auto px-4 py-8 max-w-6xl">
             <header className="mb-12 text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-3 font-mono tracking-tight">
-                WebMCP Tooling Suite
+                Universal LLMFeed Analyzer
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Comprehensive validation, discovery, and archival tools for LLMFeed-enabled websites
+                Comprehensive validation, discovery, and archival tools for any LLMFeed-enabled website or custom feed URL
               </p>
               <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <div className="h-px w-8 bg-border" />
-                <span className="uppercase tracking-wide">Addressing Critical Gaps in WebMCP Ecosystem</span>
+                <span className="uppercase tracking-wide">Works with Any .llmfeed.json File, Anywhere</span>
                 <div className="h-px w-8 bg-border" />
               </div>
             </header>
@@ -67,10 +67,10 @@ function App() {
 
             <footer className="mt-16 pt-8 border-t border-border text-center text-sm text-muted-foreground">
               <p className="mb-2">
-                Built for the WebMCP ecosystem • Addresses Gap 1 (Trust Validation), Gap 2 (RAG Indexing), and Gap 3 (Feed Archival)
+                Universal Feed Analyzer • Supports any .llmfeed.json file from any location
               </p>
               <p className="text-xs">
-                Based on comprehensive research of MCP, WebMCP, and LLMFeed specifications
+                Provides validation, discovery, archival, and RAG preparation for WebMCP/LLMFeed ecosystem
               </p>
             </footer>
           </div>

@@ -522,14 +522,14 @@ export function prepareForRAG(feed: LLMFeed): RAGIndexEntry[] {
   return entries
 }
 
-export async function fetchLLMFeed(domain: string): Promise<LLMFeed> {
-  let url = domain.trim()
+export async function fetchLLMFeed(input: string): Promise<LLMFeed> {
+  let url = input.trim()
   
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     url = 'https://' + url
   }
   
-  if (!url.includes('/.well-known/mcp.llmfeed.json')) {
+  if (!url.endsWith('.json') && !url.includes('/.well-known/')) {
     url = url.replace(/\/$/, '') + '/.well-known/mcp.llmfeed.json'
   }
 

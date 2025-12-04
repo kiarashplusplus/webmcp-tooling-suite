@@ -1,6 +1,6 @@
 # Planning Guide
 
-A comprehensive WebMCP/LLMFeed tooling suite that addresses critical gaps in feed validation, cryptographic trust verification, and archival indexing for AI agent-ready websites.
+A universal LLMFeed analyzer that addresses critical gaps in feed validation, cryptographic trust verification, and archival indexing for AI agent-ready websites - supporting any .llmfeed.json file from any location.
 
 **Experience Qualities**:
 1. **Technical Precision** - Every validation result must be unambiguous and actionable, providing developers with exact error locations and security findings
@@ -8,22 +8,22 @@ A comprehensive WebMCP/LLMFeed tooling suite that addresses critical gaps in fee
 3. **Developer Efficiency** - Complex multi-step validation workflows condensed into instant, visual feedback with exportable results
 
 **Complexity Level**: Light Application (multiple features with basic state)
-- Provides specialized tooling for WebMCP/LLMFeed ecosystem with focused features: feed validation, signature verification, schema analysis, and archival preparation
+- Provides specialized tooling for any LLMFeed with focused features: universal feed validation (from URL, file upload, or paste), discovery from any location, signature verification, schema analysis, and archival preparation
 
 ## Essential Features
 
-### LLMFeed Validator
-- **Functionality**: Comprehensive validation of mcp.llmfeed.json files including structure, schema conformance, and Ed25519 signature verification
-- **Purpose**: Addresses Gap 1 from research - prevents tool poisoning and supply chain attacks by enforcing cryptographic trust
-- **Trigger**: User pastes feed URL or JSON content, clicks validate
-- **Progression**: Input feed → Parse JSON → Validate structure → Verify schemas → Check Ed25519 signature → Display detailed results with security scoring
-- **Success criteria**: Correctly identifies malformed feeds, invalid signatures, and schema errors; provides actionable remediation guidance
+### Universal LLMFeed Validator
+- **Functionality**: Comprehensive validation of any .llmfeed.json file from URL, file upload, or direct paste - including structure, schema conformance, and Ed25519 signature verification
+- **Purpose**: Addresses Gap 1 from research - prevents tool poisoning and supply chain attacks by enforcing cryptographic trust, works with feeds from any location
+- **Trigger**: User pastes feed JSON, enters URL (custom or .well-known), or uploads file, then clicks validate
+- **Progression**: Input feed (paste/URL/file) → Parse JSON → Validate structure → Verify schemas → Check Ed25519 signature → Display detailed results with security scoring
+- **Success criteria**: Correctly identifies malformed feeds, invalid signatures, and schema errors; provides actionable remediation guidance; supports feeds from any location
 
-### Feed Discovery & Analysis
-- **Functionality**: Fetches feeds from .well-known URIs, analyzes capabilities, extracts metadata and agent guidance
-- **Trigger**: User enters domain (e.g., "25x.codes")
-- **Progression**: Enter domain → Fetch /.well-known/mcp.llmfeed.json → Parse and display metadata → List capabilities with schemas → Show invocation patterns
-- **Success criteria**: Successfully retrieves feeds, displays structured capability information, identifies available tools
+### Universal Feed Discovery & Analysis
+- **Functionality**: Fetches feeds from any URL (custom paths or .well-known URIs), analyzes capabilities, extracts metadata and agent guidance
+- **Trigger**: User enters domain or full URL to any .llmfeed.json file
+- **Progression**: Enter URL/domain → Fetch feed from specified location or .well-known path → Parse and display metadata → List capabilities with schemas → Show invocation patterns
+- **Success criteria**: Successfully retrieves feeds from any valid URL, displays structured capability information, identifies available tools
 
 ### Signature Verification Tool
 - **Functionality**: Isolated Ed25519 signature validator that verifies signed_blocks against public keys
@@ -43,12 +43,12 @@ A comprehensive WebMCP/LLMFeed tooling suite that addresses critical gaps in fee
 - **Progression**: Select capability → Display input/output schemas → Validate schema syntax → Generate sample invocation → Show JSON-RPC format
 - **Success criteria**: Renders schemas clearly, generates valid sample requests, identifies schema issues
 
-### WebMCP Archive
-- **Functionality**: Centralized, public archival system for LLM feeds and MCP manifests with versioning and persistence
-- **Purpose**: Addresses Gap 3 - provides resilience and reproducibility for feeds that may go offline or change over time
-- **Trigger**: User adds a domain to archive, or archives current discovered feed
-- **Progression**: Add domain → Fetch feed → Store timestamped snapshot → Display version history → Enable export/restoration of archived versions
-- **Success criteria**: Successfully stores multiple versions with timestamps, allows browsing historical snapshots, provides stable canonical URLs for each archived feed version
+### Universal WebMCP Archive
+- **Functionality**: Centralized, public archival system for any LLM feed or MCP manifest from any URL with versioning and persistence
+- **Purpose**: Addresses Gap 3 - provides resilience and reproducibility for feeds that may go offline or change over time, regardless of their hosting location
+- **Trigger**: User adds a URL (domain or full path) to archive, or archives current discovered feed
+- **Progression**: Add URL → Fetch feed from any location → Store timestamped snapshot → Display version history → Enable export/restoration of archived versions
+- **Success criteria**: Successfully stores multiple versions with timestamps, allows browsing historical snapshots, provides stable canonical URLs for each archived feed version, works with feeds from any URL
 
 ## Edge Case Handling
 
