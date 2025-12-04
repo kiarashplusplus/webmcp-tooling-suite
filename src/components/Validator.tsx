@@ -14,7 +14,7 @@ import { SignatureDebugger } from './SignatureDebugger'
 import { toast } from 'sonner'
 
 interface ValidatorProps {
-  onNavigate?: (tab: string) => void
+  onNavigate?: (tab: string, feedUrl?: string) => void
   onComplete?: () => void
   initialUrl?: string
 }
@@ -462,7 +462,7 @@ export function Validator({ onNavigate, onComplete, initialUrl }: ValidatorProps
                   <h4 className="font-bold text-foreground">Validation Passed!</h4>
                   <p className="text-sm text-muted-foreground">Next, create an archive snapshot of this feed.</p>
                 </div>
-                <Button onClick={() => onNavigate('archive')} className="gap-2">
+                <Button onClick={() => onNavigate('archive', feedUrl)} className="gap-2">
                   Archive Feed
                   <ArrowRight size={16} weight="bold" />
                 </Button>

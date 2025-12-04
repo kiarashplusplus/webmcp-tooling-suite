@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 interface ArchiveProps {
   onNavigate?: (tab: string) => void
   onComplete?: () => void
+  initialUrl?: string
 }
 
 interface FeedMetadata {
@@ -49,15 +50,22 @@ export interface ArchivedFeed {
   lastUpdated: number
 }
 
-export function Archive({ onNavigate, onComplete }: ArchiveProps) {
+export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
   const { user, loading: authLoading, isAuthenticated } = useAuth()
   const [archives, setArchives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
   const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
   const [publishedBy, setPublishedBy] = useKV<Record<string, string>>('feed-publishers', {})
-  const [domain, setDomain] = useState('')
+  const [domain, setDomain] = useState(initialUrl || '')
   const [loading, setLoading] = useState(false)
   const [selectedSnapshot, setSelectedSnapshot] = useState<ArchivedSnapshot | null>(null)
   const [showSignInDialog, setShowSignInDialog] = useState(false)
+
+  // Update domain when initialUrl changes
+  useEffect(() => {
+    if (initialUrl) {
+      setDomain(initialUrl)
+    }
+  }, [initialUrl])
 
   const archiveList = Object.values(archives || {}).sort((a, b) => b.lastUpdated - a.lastUpdated)
 

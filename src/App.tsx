@@ -148,7 +148,11 @@ function App() {
 
               <TabsContent value="archive" className="mt-0">
                 <Suspense fallback={<TabLoadingSkeleton />}>
-                  <Archive onNavigate={handleTabChange} onComplete={() => handleStepComplete('archive')} />
+                  <Archive 
+                    onNavigate={handleTabChange} 
+                    onComplete={() => handleStepComplete('archive')}
+                    initialUrl={discoveredFeedUrl}
+                  />
                 </Suspense>
               </TabsContent>
 
