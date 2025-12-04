@@ -4,6 +4,9 @@ A comprehensive toolkit for the **Web Model Context Protocol (WebMCP)** and **LL
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+[![npm](https://img.shields.io/npm/v/@25xcodes/llmfeed-validator)](https://npmjs.com/package/@25xcodes/llmfeed-validator)
+
+
 ## Project Summary
 
 The WebMCP Tooling Suite addresses critical gaps identified in the MCP/WebMCP/LLMFeed ecosystem:
