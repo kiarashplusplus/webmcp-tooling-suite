@@ -1,0 +1,101 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish'
+        required: true
+        type: choice
+        options:
+          - validator
+          - signer
+          - both
+      dry-run:
+        description: 'Dry run (skip actual publish)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Determine packages to publish
+        id: packages
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PACKAGE="${{ github.event.inputs.package }}"
+          else
+            # On release, publish both packages
+            PACKAGE="both"
+          fi
+          
+          if [ "$PACKAGE" = "both" ]; then
+            echo "packages=validator signer" >> $GITHUB_OUTPUT
+          else
+            echo "packages=$PACKAGE" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and publish @webmcp/validator
+        if: contains(steps.packages.outputs.packages, 'validator')
+        working-directory: packages/validator
+        run: |
+          npm ci
+          npm run build
+          
+          if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
+            echo "🏃 Dry run - skipping publish"
+            npm pack --dry-run
+          else
+            npm publish --access public --provenance
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Build and publish @webmcp/signer
+        if: contains(steps.packages.outputs.packages, 'signer')
+        working-directory: packages/signer
+        run: |
+          npm ci
+          npm run build
+          
+          if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
+            echo "🏃 Dry run - skipping publish"
+            npm pack --dry-run
+          else
+            npm publish --access public --provenance
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## 📦 npm Publish Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Packages:** ${{ steps.packages.outputs.packages }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
+            echo "**Mode:** 🏃 Dry run" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Mode:** 🚀 Published" >> $GITHUB_STEP_SUMMARY
+          fi
