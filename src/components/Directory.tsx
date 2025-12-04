@@ -353,6 +353,12 @@ export function FeedDirectory() {
               <span className="text-accent">Score: {feed.score}/100</span>
             </>
           )}
+          {feed.is_curated && !feed.score && (
+            <>
+              <Separator orientation="vertical" className="h-4" />
+              <span className="text-primary">⭐ Curated</span>
+            </>
+          )}
           {feed.signature_valid && (
             <>
               <Separator orientation="vertical" className="h-4" />

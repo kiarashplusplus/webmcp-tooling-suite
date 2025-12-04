@@ -1,4 +1,4 @@
-name: Publish to npm
+name: Publish Packages
 
 on:
   release:
@@ -12,7 +12,9 @@ on:
         options:
           - validator
           - signer
-          - both
+          - github-action
+          - npm-packages
+          - all
       dry-run:
         description: 'Dry run (skip actual publish)'
         required: false
@@ -23,12 +25,14 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -40,27 +44,106 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
+      - name: Run tests
+        run: npm run test:run
+
+      - name: Check if versions already exist on npm
+        id: version-check
+        run: |
+          VALIDATOR_VERSION=$(node -p "require('./packages/validator/package.json').version")
+          SIGNER_VERSION=$(node -p "require('./packages/signer/package.json').version")
+          
+          # Check validator
+          if npm view @webmcp/validator@$VALIDATOR_VERSION version 2>/dev/null; then
+            echo "validator_exists=true" >> $GITHUB_OUTPUT
+            echo "⚠️ @webmcp/validator@$VALIDATOR_VERSION already exists on npm"
+          else
+            echo "validator_exists=false" >> $GITHUB_OUTPUT
+            echo "✅ @webmcp/validator@$VALIDATOR_VERSION is new"
+          fi
+          
+          # Check signer
+          if npm view @webmcp/signer@$SIGNER_VERSION version 2>/dev/null; then
+            echo "signer_exists=true" >> $GITHUB_OUTPUT
+            echo "⚠️ @webmcp/signer@$SIGNER_VERSION already exists on npm"
+          else
+            echo "signer_exists=false" >> $GITHUB_OUTPUT
+            echo "✅ @webmcp/signer@$SIGNER_VERSION is new"
+          fi
+
       - name: Determine packages to publish
         id: packages
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             PACKAGE="${{ github.event.inputs.package }}"
           else
-            # On release, publish both packages
-            PACKAGE="both"
+            # On release, publish all packages
+            PACKAGE="all"
           fi
           
-          if [ "$PACKAGE" = "both" ]; then
-            echo "packages=validator signer" >> $GITHUB_OUTPUT
+          case "$PACKAGE" in
+            all)
+              echo "npm_packages=validator signer" >> $GITHUB_OUTPUT
+              echo "github_action=true" >> $GITHUB_OUTPUT
+              ;;
+            npm-packages)
+              echo "npm_packages=validator signer" >> $GITHUB_OUTPUT
+              echo "github_action=false" >> $GITHUB_OUTPUT
+              ;;
+            github-action)
+              echo "npm_packages=" >> $GITHUB_OUTPUT
+              echo "github_action=true" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "npm_packages=$PACKAGE" >> $GITHUB_OUTPUT
+              echo "github_action=false" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      # ========================================
+      # GitHub Action Build & Commit
+      # ========================================
+      - name: Build @webmcp/github-action
+        if: steps.packages.outputs.github_action == 'true'
+        working-directory: packages/github-action
+        run: npm run build
+
+      - name: Check for GitHub Action changes
+        if: steps.packages.outputs.github_action == 'true'
+        id: action-changes
+        working-directory: packages/github-action
+        run: |
+          if git diff --quiet dist/; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "✅ No changes to GitHub Action dist/"
           else
-            echo "packages=$PACKAGE" >> $GITHUB_OUTPUT
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "📦 GitHub Action dist/ has changes"
           fi
 
+      - name: Commit GitHub Action build
+        if: steps.packages.outputs.github_action == 'true' && steps.action-changes.outputs.changed == 'true' && github.event.inputs.dry-run != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/github-action/dist/
+          git commit -m "chore: build @webmcp/github-action dist [skip ci]"
+          git push
+          echo "✅ Committed GitHub Action build to repository"
+
+      - name: Dry run - GitHub Action
+        if: steps.packages.outputs.github_action == 'true' && github.event.inputs.dry-run == 'true'
+        run: |
+          echo "🏃 Dry run - would commit GitHub Action build"
+          git diff --stat packages/github-action/dist/ || echo "No changes"
+
+      # ========================================
+      # npm Package Publishing
+      # ========================================
       - name: Build and publish @webmcp/validator
-        if: contains(steps.packages.outputs.packages, 'validator')
+        if: contains(steps.packages.outputs.npm_packages, 'validator') && steps.version-check.outputs.validator_exists != 'true'
         working-directory: packages/validator
         run: |
-          npm ci
           npm run build
           
           if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
@@ -71,12 +154,15 @@ jobs:
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Skip @webmcp/validator (already published)
+        if: contains(steps.packages.outputs.npm_packages, 'validator') && steps.version-check.outputs.validator_exists == 'true'
+        run: echo "⏭️ Skipping @webmcp/validator - version already exists on npm"
 
       - name: Build and publish @webmcp/signer
-        if: contains(steps.packages.outputs.packages, 'signer')
+        if: contains(steps.packages.outputs.npm_packages, 'signer') && steps.version-check.outputs.signer_exists != 'true'
         working-directory: packages/signer
         run: |
-          npm ci
           npm run build
           
           if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
@@ -88,14 +174,49 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Skip @webmcp/signer (already published)
+        if: contains(steps.packages.outputs.npm_packages, 'signer') && steps.version-check.outputs.signer_exists == 'true'
+        run: echo "⏭️ Skipping @webmcp/signer - version already exists on npm"
+
+      # ========================================
+      # Summary
+      # ========================================
       - name: Summary
         run: |
-          echo "## 📦 npm Publish Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Publish Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Packages:** ${{ steps.packages.outputs.packages }}" >> $GITHUB_STEP_SUMMARY
           echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
             echo "**Mode:** 🏃 Dry run" >> $GITHUB_STEP_SUMMARY
           else
             echo "**Mode:** 🚀 Published" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 🎬 GitHub Action" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.packages.outputs.github_action }}" = "true" ]; then
+            if [ "${{ steps.action-changes.outputs.changed }}" = "true" ]; then
+              echo "- @webmcp/github-action: ✅ Built & committed" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- @webmcp/github-action: ⏭️ No changes" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "- @webmcp/github-action: ⏭️ Skipped" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 npm Packages" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.packages.outputs.npm_packages }}" ]; then
+            if [ "${{ steps.version-check.outputs.validator_exists }}" = "true" ]; then
+              echo "- @webmcp/validator: ⏭️ Skipped (already exists)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- @webmcp/validator: ✅ Published" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ "${{ steps.version-check.outputs.signer_exists }}" = "true" ]; then
+              echo "- @webmcp/signer: ⏭️ Skipped (already exists)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- @webmcp/signer: ✅ Published" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "- No npm packages selected" >> $GITHUB_STEP_SUMMARY
           fi

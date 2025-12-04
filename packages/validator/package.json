@@ -1,6 +1,6 @@
 {
   "name": "@webmcp/validator",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "LLMFeed validation library with Ed25519 signature verification",
   "type": "module",
   "main": "./dist/index.cjs",

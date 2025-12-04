@@ -1,6 +1,6 @@
 {
   "name": "@webmcp/github-action",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "GitHub Action for validating LLMFeed JSON files with Ed25519 signature verification",
   "main": "dist/index.js",
   "scripts": {
