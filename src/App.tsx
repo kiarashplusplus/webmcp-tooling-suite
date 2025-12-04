@@ -177,6 +177,26 @@ function App() {
               </TabsContent>
             </Tabs>
 
+            {/* Submit Your Feed CTA - Separate from main workflow */}
+            {activeTab !== 'submit' && (
+              <div className="mt-12 mb-8">
+                <div className="glass-card rounded-2xl p-6 border border-primary/20 bg-primary/5">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground font-mono">Own a WebMCP-enabled site?</h3>
+                      <p className="text-sm text-muted-foreground">Get listed in our directory and earn verification badges</p>
+                    </div>
+                    <button
+                      onClick={() => handleTabChange('submit')}
+                      className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap"
+                    >
+                      Submit Your Feed →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Feed Directory - Always visible for scrapers & AI bots */}
             <div className="mt-12">
               <FeedDirectory />
