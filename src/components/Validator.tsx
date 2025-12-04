@@ -430,7 +430,7 @@ export function Validator() {
           )}
 
           {result && result.signatureValid === false && feedInput && (
-            <SignatureDebugger feedJson={feedInput} />
+            <SignatureDebugger feedJson={feedInput} diagnostics={result.signatureDiagnostics} />
           )}
         </div>
       )}

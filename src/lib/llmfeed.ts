@@ -73,6 +73,7 @@ export interface ValidationResult {
   warnings: ValidationWarning[]
   score: number
   signatureValid?: boolean
+  signatureDiagnostics?: SignatureVerificationResult
 }
 
 export interface ValidationError {
@@ -86,6 +87,67 @@ export interface ValidationWarning {
   type: string
   message: string
   field?: string
+}
+
+/**
+ * Comprehensive signature verification result with detailed diagnostics
+ */
+export interface SignatureVerificationResult {
+  valid: boolean
+  error?: string
+  
+  // Step-by-step verification status
+  steps: SignatureVerificationStep[]
+  
+  // Signature details
+  signature?: {
+    raw: string
+    bytes: number
+    validLength: boolean
+    createdAt?: string
+  }
+  
+  // Trust block details
+  trust?: {
+    algorithm: string
+    signedBlocks: string[]
+    publicKeyHint: string
+    trustLevel?: string
+  }
+  
+  // Public key fetch status
+  publicKey?: {
+    url: string
+    fetchSuccess: boolean
+    fetchError?: string
+    bytes?: number
+    validLength?: boolean
+  }
+  
+  // Canonical payload info - critical for debugging
+  canonicalPayload?: {
+    json: string
+    bytes: number
+    hash?: string  // SHA-256 of payload for comparison
+  }
+  
+  // Detected issues and recommendations
+  detectedIssues: SignatureIssue[]
+}
+
+export interface SignatureVerificationStep {
+  step: string
+  status: 'success' | 'failed' | 'skipped'
+  message: string
+  details?: Record<string, any>
+}
+
+export interface SignatureIssue {
+  type: 'critical' | 'warning' | 'info'
+  code: string
+  title: string
+  description: string
+  recommendation?: string
 }
 
 export interface RAGIndexEntry {
@@ -248,89 +310,462 @@ function deepSortObject(obj: any): any {
   return sorted
 }
 
+/**
+ * Detect common signing implementation bugs by analyzing the canonical payload
+ */
+function detectSigningIssues(
+  feed: LLMFeed,
+  canonicalPayload: string,
+  signedBlocks: string[]
+): SignatureIssue[] {
+  const issues: SignatureIssue[] = []
+
+  // Check for empty nested objects - common bug with JSON.stringify(obj, keys) misuse
+  const parsed = JSON.parse(canonicalPayload)
+  
+  for (const block of signedBlocks) {
+    const blockData = parsed[block]
+    if (blockData !== undefined) {
+      const originalBlock = feed[block]
+      
+      // Check if nested content is missing (the 25x.codes bug)
+      if (typeof originalBlock === 'object' && originalBlock !== null) {
+        const originalStr = JSON.stringify(originalBlock)
+        const canonicalBlockStr = JSON.stringify(blockData)
+        
+        // If canonical is much smaller, likely has empty objects
+        if (originalStr.length > 50 && canonicalBlockStr.length < originalStr.length * 0.3) {
+          issues.push({
+            type: 'critical',
+            code: 'EMPTY_NESTED_CONTENT',
+            title: 'Possible broken canonical JSON implementation',
+            description: `The "${block}" block in the signed payload appears to have empty nested objects. ` +
+              `Original block has ${originalStr.length} characters but canonical only has ${canonicalBlockStr.length}. ` +
+              `This is often caused by using JSON.stringify(obj, keysArray) which treats the array as a whitelist filter.`,
+            recommendation: 'Use a proper deep-sort function that preserves all nested content. ' +
+              'The signing server should sort keys recursively, not use JSON.stringify replacer parameter.'
+          })
+        }
+        
+        // Check for empty objects/arrays that should have content
+        if (Array.isArray(blockData) && blockData.length > 0 && Array.isArray(originalBlock)) {
+          const emptyItems = blockData.filter((item: any) => 
+            typeof item === 'object' && 
+            item !== null && 
+            Object.keys(item).length === 0
+          )
+          if (emptyItems.length > 0 && originalBlock[0] && Object.keys(originalBlock[0]).length > 0) {
+            issues.push({
+              type: 'critical',
+              code: 'EMPTY_ARRAY_ITEMS',
+              title: 'Array items contain empty objects',
+              description: `The "${block}" array has ${emptyItems.length} empty object(s) that should contain data. ` +
+                `Original items have content, but signed payload has {} placeholders.`,
+              recommendation: 'The signing implementation is stripping nested object content. ' +
+                'Use recursive key sorting: function deepSort(obj) { if (Array.isArray(obj)) return obj.map(deepSort); ... }'
+            })
+          }
+        }
+      }
+    }
+  }
+
+  // Check if signature timestamps suggest key rotation issues
+  if (feed.signature?.created_at) {
+    const signedDate = new Date(feed.signature.created_at)
+    const now = new Date()
+    const daysSinceSigning = (now.getTime() - signedDate.getTime()) / (1000 * 60 * 60 * 24)
+    
+    if (daysSinceSigning > 365) {
+      issues.push({
+        type: 'warning',
+        code: 'OLD_SIGNATURE',
+        title: 'Signature is over a year old',
+        description: `Feed was signed ${Math.floor(daysSinceSigning)} days ago on ${signedDate.toISOString()}`,
+        recommendation: 'Consider re-signing the feed periodically, especially if content has changed.'
+      })
+    }
+  }
+
+  // Check for missing blocks that are declared as signed
+  for (const block of signedBlocks) {
+    if (feed[block] === undefined) {
+      issues.push({
+        type: 'warning',
+        code: 'MISSING_SIGNED_BLOCK',
+        title: `Declared signed block "${block}" is missing`,
+        description: `The trust.signed_blocks array includes "${block}" but this field doesn't exist in the feed.`,
+        recommendation: 'Either add the missing block or remove it from signed_blocks.'
+      })
+    }
+  }
+
+  return issues
+}
+
+/**
+ * Compute SHA-256 hash of a string for comparison
+ */
+async function sha256(text: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(text)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
 export async function verifyEd25519Signature(
   feed: LLMFeed
-): Promise<{ valid: boolean; error?: string }> {
-  if (!feed.trust || !feed.signature) {
-    return { valid: false, error: 'Missing trust block or signature' }
+): Promise<SignatureVerificationResult> {
+  const result: SignatureVerificationResult = {
+    valid: false,
+    steps: [],
+    detectedIssues: []
   }
 
+  // Step 1: Check for trust block
+  if (!feed.trust) {
+    result.steps.push({
+      step: 'Check trust block',
+      status: 'failed',
+      message: 'Missing trust block in feed'
+    })
+    result.error = 'Missing trust block'
+    return result
+  }
+  
+  result.trust = {
+    algorithm: feed.trust.algorithm || 'unknown',
+    signedBlocks: feed.trust.signed_blocks || [],
+    publicKeyHint: feed.trust.public_key_hint || '',
+    trustLevel: feed.trust.trust_level
+  }
+  
+  result.steps.push({
+    step: 'Check trust block',
+    status: 'success',
+    message: 'Trust block found',
+    details: { algorithm: result.trust.algorithm, signedBlocks: result.trust.signedBlocks }
+  })
+
+  // Step 2: Check for signature
+  if (!feed.signature) {
+    result.steps.push({
+      step: 'Check signature block',
+      status: 'failed',
+      message: 'Missing signature block in feed'
+    })
+    result.error = 'Missing signature block'
+    return result
+  }
+
+  result.steps.push({
+    step: 'Check signature block',
+    status: 'success',
+    message: 'Signature block found',
+    details: { createdAt: feed.signature.created_at }
+  })
+
+  // Step 3: Verify algorithm
   if (feed.trust.algorithm !== 'Ed25519') {
-    return { valid: false, error: `Unsupported algorithm: ${feed.trust.algorithm}` }
+    result.steps.push({
+      step: 'Verify algorithm',
+      status: 'failed',
+      message: `Unsupported algorithm: ${feed.trust.algorithm}. Only Ed25519 is supported.`
+    })
+    result.error = `Unsupported algorithm: ${feed.trust.algorithm}`
+    return result
   }
 
+  result.steps.push({
+    step: 'Verify algorithm',
+    status: 'success',
+    message: 'Algorithm is Ed25519 ✓'
+  })
+
+  // Step 4: Check signature value
   if (!feed.signature.value) {
-    return { valid: false, error: 'Missing signature value' }
+    result.steps.push({
+      step: 'Check signature value',
+      status: 'failed',
+      message: 'Missing signature.value field'
+    })
+    result.error = 'Missing signature value'
+    return result
   }
 
+  let signatureBytes: Uint8Array
   try {
-    const signedBlocks = feed.trust.signed_blocks || []
-    if (signedBlocks.length === 0) {
-      return { valid: false, error: 'No signed_blocks specified in trust block' }
+    signatureBytes = base64ToUint8Array(feed.signature.value)
+    result.signature = {
+      raw: feed.signature.value,
+      bytes: signatureBytes.length,
+      validLength: signatureBytes.length === 64,
+      createdAt: feed.signature.created_at
     }
-
-    const payloadParts: Record<string, any> = {}
     
-    for (const block of signedBlocks) {
-      if (feed[block] !== undefined) {
-        payloadParts[block] = feed[block]
-      }
-    }
-
-    const sortedPayload = deepSortObject(payloadParts)
-    const canonicalPayload = JSON.stringify(sortedPayload)
-    
-    const encoder = new TextEncoder()
-    const messageBytes = encoder.encode(canonicalPayload)
-    
-    let signatureBytes: Uint8Array
-    try {
-      signatureBytes = base64ToUint8Array(feed.signature.value)
-      if (signatureBytes.length !== 64) {
-        return { valid: false, error: `Invalid signature length: expected 64 bytes, got ${signatureBytes.length}` }
-      }
-    } catch (error) {
-      return { valid: false, error: `Invalid base64 signature: ${error}` }
-    }
-
-    if (!feed.trust.public_key_hint) {
-      return { valid: false, error: 'Missing public_key_hint for verification' }
-    }
-
-    let publicKeyPem: string
-    try {
-      const response = await fetch(feed.trust.public_key_hint, {
-        mode: 'cors',
-        cache: 'no-cache'
+    if (signatureBytes.length !== 64) {
+      result.steps.push({
+        step: 'Decode signature',
+        status: 'failed',
+        message: `Invalid signature length: expected 64 bytes, got ${signatureBytes.length}`,
+        details: { expected: 64, actual: signatureBytes.length }
       })
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-      publicKeyPem = await response.text()
-      
-      if (!publicKeyPem.includes('BEGIN PUBLIC KEY')) {
-        return { valid: false, error: 'Invalid public key format (missing PEM headers)' }
-      }
-    } catch (error) {
-      return { valid: false, error: `Failed to fetch public key from ${feed.trust.public_key_hint}: ${error}` }
+      result.error = `Invalid signature length: ${signatureBytes.length} bytes (expected 64)`
+      result.detectedIssues.push({
+        type: 'critical',
+        code: 'INVALID_SIGNATURE_LENGTH',
+        title: 'Signature has wrong byte length',
+        description: `Ed25519 signatures must be exactly 64 bytes, but this signature is ${signatureBytes.length} bytes.`,
+        recommendation: 'Check the signing process - the signature may be truncated or padded incorrectly.'
+      })
+      return result
     }
 
-    let publicKeyBytes: Uint8Array
-    try {
-      publicKeyBytes = pemToPublicKey(publicKeyPem)
-      if (publicKeyBytes.length !== 32) {
-        return { valid: false, error: `Invalid public key length: expected 32 bytes, got ${publicKeyBytes.length}` }
-      }
-    } catch (error) {
-      return { valid: false, error: `Failed to parse public key: ${error}` }
+    result.steps.push({
+      step: 'Decode signature',
+      status: 'success',
+      message: 'Signature decoded: 64 bytes ✓',
+      details: { bytes: 64 }
+    })
+  } catch (error) {
+    result.steps.push({
+      step: 'Decode signature',
+      status: 'failed',
+      message: `Invalid base64 signature: ${error}`
+    })
+    result.error = `Invalid base64 signature: ${error}`
+    result.detectedIssues.push({
+      type: 'critical',
+      code: 'INVALID_BASE64',
+      title: 'Signature is not valid Base64',
+      description: `The signature.value could not be decoded as Base64: ${error}`,
+      recommendation: 'Ensure the signature is properly Base64 encoded without line breaks or invalid characters.'
+    })
+    return result
+  }
+
+  // Step 5: Check signed_blocks
+  const signedBlocks = feed.trust.signed_blocks || []
+  if (signedBlocks.length === 0) {
+    result.steps.push({
+      step: 'Check signed_blocks',
+      status: 'failed',
+      message: 'No signed_blocks specified in trust block'
+    })
+    result.error = 'No signed_blocks specified in trust block'
+    result.detectedIssues.push({
+      type: 'critical',
+      code: 'EMPTY_SIGNED_BLOCKS',
+      title: 'No blocks specified to sign',
+      description: 'The trust.signed_blocks array is empty or missing.',
+      recommendation: 'Add blocks to sign, typically: ["metadata", "capabilities", "agent_guidance"]'
+    })
+    return result
+  }
+
+  result.steps.push({
+    step: 'Check signed_blocks',
+    status: 'success',
+    message: `Signed blocks: ${signedBlocks.join(', ')}`,
+    details: { blocks: signedBlocks }
+  })
+
+  // Step 6: Build canonical payload
+  const payloadParts: Record<string, any> = {}
+  for (const block of signedBlocks) {
+    if (feed[block] !== undefined) {
+      payloadParts[block] = feed[block]
     }
-    
+  }
+
+  const sortedPayload = deepSortObject(payloadParts)
+  const canonicalPayload = JSON.stringify(sortedPayload)
+  const payloadHash = await sha256(canonicalPayload)
+  
+  result.canonicalPayload = {
+    json: canonicalPayload,
+    bytes: new TextEncoder().encode(canonicalPayload).length,
+    hash: payloadHash
+  }
+
+  result.steps.push({
+    step: 'Build canonical payload',
+    status: 'success',
+    message: `Built canonical JSON payload (${result.canonicalPayload.bytes} bytes)`,
+    details: { 
+      bytes: result.canonicalPayload.bytes,
+      sha256: payloadHash,
+      includedBlocks: Object.keys(payloadParts)
+    }
+  })
+
+  // Detect signing issues from the canonical payload
+  const signingIssues = detectSigningIssues(feed, canonicalPayload, signedBlocks)
+  result.detectedIssues.push(...signingIssues)
+
+  // Step 7: Check public_key_hint
+  if (!feed.trust.public_key_hint) {
+    result.steps.push({
+      step: 'Check public_key_hint',
+      status: 'failed',
+      message: 'Missing public_key_hint for verification'
+    })
+    result.error = 'Missing public_key_hint for verification'
+    return result
+  }
+
+  result.publicKey = {
+    url: feed.trust.public_key_hint,
+    fetchSuccess: false
+  }
+
+  result.steps.push({
+    step: 'Check public_key_hint',
+    status: 'success',
+    message: `Public key URL: ${feed.trust.public_key_hint}`
+  })
+
+  // Step 8: Fetch public key
+  let publicKeyPem: string
+  try {
+    const response = await fetch(feed.trust.public_key_hint, {
+      mode: 'cors',
+      cache: 'no-cache'
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    publicKeyPem = await response.text()
+    result.publicKey.fetchSuccess = true
+
+    if (!publicKeyPem.includes('BEGIN PUBLIC KEY')) {
+      result.steps.push({
+        step: 'Fetch public key',
+        status: 'failed',
+        message: 'Invalid public key format (missing PEM headers)'
+      })
+      result.error = 'Invalid public key format (missing PEM headers)'
+      result.detectedIssues.push({
+        type: 'critical',
+        code: 'INVALID_PEM_FORMAT',
+        title: 'Public key is not in PEM format',
+        description: 'The fetched key does not contain "BEGIN PUBLIC KEY" header.',
+        recommendation: 'Ensure the public key file contains proper PEM format with BEGIN/END markers.'
+      })
+      return result
+    }
+
+    result.steps.push({
+      step: 'Fetch public key',
+      status: 'success',
+      message: 'Public key fetched successfully',
+      details: { url: feed.trust.public_key_hint }
+    })
+  } catch (error) {
+    result.publicKey.fetchError = String(error)
+    result.steps.push({
+      step: 'Fetch public key',
+      status: 'failed',
+      message: `Failed to fetch public key: ${error}`,
+      details: { url: feed.trust.public_key_hint, error: String(error) }
+    })
+    result.error = `Failed to fetch public key from ${feed.trust.public_key_hint}: ${error}`
+    result.detectedIssues.push({
+      type: 'critical',
+      code: 'PUBLIC_KEY_FETCH_FAILED',
+      title: 'Could not fetch public key',
+      description: `Failed to fetch public key from ${feed.trust.public_key_hint}: ${error}`,
+      recommendation: 'Ensure the public key URL is accessible with CORS enabled. Check for network issues or incorrect URL.'
+    })
+    return result
+  }
+
+  // Step 9: Parse public key
+  let publicKeyBytes: Uint8Array
+  try {
+    publicKeyBytes = pemToPublicKey(publicKeyPem)
+    result.publicKey.bytes = publicKeyBytes.length
+    result.publicKey.validLength = publicKeyBytes.length === 32
+
+    if (publicKeyBytes.length !== 32) {
+      result.steps.push({
+        step: 'Parse public key',
+        status: 'failed',
+        message: `Invalid public key length: expected 32 bytes, got ${publicKeyBytes.length}`,
+        details: { expected: 32, actual: publicKeyBytes.length }
+      })
+      result.error = `Invalid public key length: expected 32 bytes, got ${publicKeyBytes.length}`
+      return result
+    }
+
+    result.steps.push({
+      step: 'Parse public key',
+      status: 'success',
+      message: 'Public key parsed: 32 bytes ✓',
+      details: { bytes: 32 }
+    })
+  } catch (error) {
+    result.steps.push({
+      step: 'Parse public key',
+      status: 'failed',
+      message: `Failed to parse public key: ${error}`
+    })
+    result.error = `Failed to parse public key: ${error}`
+    return result
+  }
+
+  // Step 10: Verify signature
+  const encoder = new TextEncoder()
+  const messageBytes = encoder.encode(canonicalPayload)
+  
+  try {
     const isValid = await verifyEd25519Native(messageBytes, signatureBytes, publicKeyBytes)
     
-    return { valid: isValid, error: isValid ? undefined : 'Signature verification failed - signature does not match' }
+    if (isValid) {
+      result.valid = true
+      result.steps.push({
+        step: 'Verify signature',
+        status: 'success',
+        message: 'Signature verification PASSED ✓'
+      })
+    } else {
+      result.steps.push({
+        step: 'Verify signature',
+        status: 'failed',
+        message: 'Signature verification FAILED - signature does not match payload',
+        details: {
+          payloadHash,
+          payloadBytes: messageBytes.length,
+          signatureBytes: 64
+        }
+      })
+      result.error = 'Signature verification failed - signature does not match'
+      
+      // Check if we detected signing issues that explain the failure
+      if (result.detectedIssues.some(i => i.code === 'EMPTY_NESTED_CONTENT' || i.code === 'EMPTY_ARRAY_ITEMS')) {
+        result.detectedIssues.push({
+          type: 'info',
+          code: 'SIGNING_BUG_LIKELY_CAUSE',
+          title: 'Signing implementation bug is likely cause',
+          description: 'The signature verification failed, and we detected that the canonical payload ' +
+            'has empty nested objects. This strongly suggests the signing server has a bug in how it ' +
+            'creates canonical JSON. The signature is probably valid, but it was computed over a broken payload.',
+          recommendation: 'Contact the feed provider to fix their signing implementation. ' +
+            'They should use a proper recursive deep-sort function, not JSON.stringify replacer.'
+        })
+      }
+    }
   } catch (error) {
-    return { valid: false, error: `Verification failed: ${error}` }
+    result.steps.push({
+      step: 'Verify signature',
+      status: 'failed',
+      message: `Verification threw error: ${error}`
+    })
+    result.error = `Verification failed: ${error}`
   }
+
+  return result
 }
 
 function base64ToUint8Array(base64: string): Uint8Array {
@@ -424,16 +859,38 @@ export async function validateLLMFeed(feed: any): Promise<ValidationResult> {
   }
 
   let signatureValid: boolean | undefined = undefined
+  let signatureDiagnostics: SignatureVerificationResult | undefined = undefined
 
   if (feed.trust && feed.signature) {
     const sigResult = await verifyEd25519Signature(feed)
     signatureValid = sigResult.valid
+    signatureDiagnostics = sigResult
+    
     if (!sigResult.valid) {
+      // Build a more helpful error message
+      let errorMessage = sigResult.error || 'Signature verification failed'
+      
+      // If we detected specific issues, append them
+      const criticalIssues = sigResult.detectedIssues.filter(i => i.type === 'critical')
+      if (criticalIssues.length > 0) {
+        errorMessage += `. Detected issue: ${criticalIssues[0].title}`
+      }
+      
       errors.push({
         type: 'signature',
         field: 'signature',
-        message: sigResult.error || 'Signature verification failed',
+        message: errorMessage,
         severity: 'error'
+      })
+    }
+    
+    // Add warnings for non-critical issues
+    const warningIssues = sigResult.detectedIssues.filter(i => i.type === 'warning')
+    for (const issue of warningIssues) {
+      warnings.push({
+        type: 'signature',
+        message: `${issue.title}: ${issue.description}`,
+        field: issue.code
       })
     }
   }
@@ -457,7 +914,8 @@ export async function validateLLMFeed(feed: any): Promise<ValidationResult> {
     errors,
     warnings,
     score,
-    signatureValid
+    signatureValid,
+    signatureDiagnostics
   }
 }
 
