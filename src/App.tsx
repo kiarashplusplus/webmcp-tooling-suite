@@ -138,9 +138,33 @@ function App() {
               <p className="mb-3 text-foreground/90 font-medium">
                 Universal Feed Analyzer • Supports any .llmfeed.json file from any location
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground mb-6">
                 Provides validation, discovery, archival, and RAG preparation for WebMCP/LLMFeed ecosystem
               </p>
+              <div className="pt-6 border-t border-border/50">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Created by{' '}
+                  <a 
+                    href="https://25x.codes/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-accent transition-colors font-semibold"
+                  >
+                    Kiarash Adl
+                  </a>
+                </p>
+                <p className="text-xs text-muted-foreground/80">
+                  Open source •{' '}
+                  <a 
+                    href="https://github.com/websearch-via-camera/webmcp-tooling-suite" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary/80 hover:text-accent transition-colors underline underline-offset-2"
+                  >
+                    View on GitHub
+                  </a>
+                </p>
+              </div>
             </div>
           </footer>
         </div>
