@@ -4,60 +4,135 @@ A phased approach to growing the WebMCP/LLMFeed ecosystem through organic adopti
 
 ---
 
-## Phase 1: Foundation ✅ COMPLETE
+## Phase 0: Foundation ✅ COMPLETE
 
 ### ✅ Completed
-- [x] Curated directory with verified feeds pre-populated (4 feeds)
+- [x] Curated directory with verified feeds pre-populated (4 hardcoded feeds)
 - [x] Feed validation and signature verification tools
 - [x] GitHub Action for CI/CD validation
-- [x] Archive system for feed snapshots
+- [x] Archive system for feed snapshots (localStorage per-user)
 - [x] GitHub OAuth for authenticated publishing
-- [x] **Submit Your Feed** workflow (3-step: validate → sign in → submit)
-- [x] **Embeddable Verification Badges** (verified, signed, score, curated)
+- [x] Submit Feed UI workflow (3-step: validate → sign in → submit)
+- [x] Embeddable verification badge generator
 
-### Implementation Details
-
-#### Submit Feed Workflow (`/src/components/SubmitFeed.tsx`)
-A 3-step guided submission process:
-1. **Validate** — Enter URL, auto-detect `.well-known` path, run full validation
-2. **Sign In** — GitHub OAuth authentication (prevents spam)
-3. **Submit & Get Badges** — Add to directory, receive embeddable badge code
-
-#### Badge Generator (`/src/lib/badge-generator.ts`)
-Generates SVG badges that site owners can embed:
-
-```markdown
-![WebMCP Verified](https://wellknownmcp.org/badge/verified.svg)
-![LLMFeed Enabled](https://wellknownmcp.org/badge/llmfeed.svg)
-![Signature Valid](https://wellknownmcp.org/badge/signed.svg)
-```
-
-**Badge Types Generated:**
-- 🟢 **Verified** — Feed exists and passes validation
-- 🔐 **Signed** — Ed25519 signature verified
-- ⭐ **Score** — Shows validation score (e.g., 95/100)
-- ✨ **Curated** — Featured in official directory
-
-**Badge Formats:**
-- HTML `<img>` tag for websites
-- Markdown syntax for README files
-- Direct SVG for custom integrations
-
-**Why badges work:**
-- Organic discovery (visitors see badge → search "WebMCP")
-- Social proof for early adopters
-- Gamification encourages best practices
-
-### 🎯 Phase 1 Stretch Goals (Optional)
-
-#### Enhanced Directory Features
-- Search and filter by feed_type, capabilities, domain
-- "Trending" section based on validation frequency
-- Public API for directory data (`/api/directory.json`)
+### ⚠️ Current Limitation
+All user data is stored in **browser localStorage** — not shared across users.
+The "directory" only shows hardcoded `CURATED_FEEDS` + each user's own local submissions.
 
 ---
 
-## Phase 2: Growth
+## Phase 1: Persistent Database 🎯 CURRENT
+
+### Goal
+Implement a **shared, persistent directory** so submitted feeds are visible to all visitors.
+
+### Architecture Decision
+
+| Option | Pros | Cons | Cost |
+|--------|------|------|------|
+| **Cloudflare D1** ✅ | SQL queries, generous free tier | Requires Worker proxy | Free: 5M reads, 100K writes/day |
+| Cloudflare KV | Simple key-value | No queries, limited writes | Free: 100K reads, 1K writes/day |
+| Cloudflare R2 | Large file storage | Not a database, no queries | Free: 10GB, 1M reads/mo |
+| GitHub Gist | Already integrated | Personal only, not shared | Free but rate limited |
+| Supabase | Full Postgres | External dependency | Free tier available |
+
+**Recommended: Cloudflare D1 + Worker**
+
+### Implementation Plan
+
+#### 1. Database Schema (D1)
+
+```sql
+-- feeds table
+CREATE TABLE feeds (
+  id TEXT PRIMARY KEY,
+  url TEXT UNIQUE NOT NULL,
+  domain TEXT NOT NULL,
+  title TEXT,
+  description TEXT,
+  feed_type TEXT DEFAULT 'mcp',
+  capabilities_count INTEGER DEFAULT 0,
+  version TEXT,
+  score INTEGER,
+  signature_valid BOOLEAN DEFAULT FALSE,
+  submitted_by TEXT,  -- GitHub username
+  submitted_at INTEGER NOT NULL,
+  last_validated INTEGER,
+  is_curated BOOLEAN DEFAULT FALSE,
+  is_active BOOLEAN DEFAULT TRUE
+);
+
+-- validation_history table (optional, for trending)
+CREATE TABLE validation_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  feed_id TEXT REFERENCES feeds(id),
+  validated_at INTEGER NOT NULL,
+  score INTEGER,
+  signature_valid BOOLEAN
+);
+
+-- Indexes
+CREATE INDEX idx_feeds_domain ON feeds(domain);
+CREATE INDEX idx_feeds_submitted_at ON feeds(submitted_at DESC);
+CREATE INDEX idx_feeds_score ON feeds(score DESC);
+```
+
+#### 2. Directory API Worker (`/workers/directory/`)
+
+```
+POST /api/feeds          - Submit new feed (requires GitHub auth)
+GET  /api/feeds          - List all feeds (paginated)
+GET  /api/feeds/:id      - Get single feed
+GET  /api/feeds/curated  - Get curated feeds only
+GET  /api/feeds/search?q=  - Search feeds
+DELETE /api/feeds/:id    - Remove feed (owner or admin only)
+```
+
+#### 3. Frontend Changes
+
+- Update `useKV` calls to use API instead of localStorage for directory data
+- Keep localStorage for personal archives/preferences
+- Add loading states for API calls
+- Handle offline gracefully (show cached + sync indicator)
+
+#### 4. Migration Path
+
+1. Deploy D1 database + Worker
+2. Seed with current `CURATED_FEEDS`
+3. Update frontend to read from API
+4. Update Submit workflow to POST to API
+5. Remove hardcoded `CURATED_FEEDS` array
+
+### Files to Create/Modify
+
+```
+workers/
+  directory/
+    src/
+      index.ts        # Hono/itty-router API
+      db.ts           # D1 queries
+      auth.ts         # GitHub token validation
+    wrangler.toml     # D1 binding config
+    schema.sql        # Database schema
+
+src/
+  hooks/
+    use-directory.ts  # New hook for API calls
+  components/
+    Directory.tsx     # Update to use API
+    SubmitFeed.tsx    # Update to POST to API
+```
+
+### Estimated Effort
+- **D1 + Worker setup:** 2-3 hours
+- **API implementation:** 3-4 hours  
+- **Frontend integration:** 2-3 hours
+- **Testing + migration:** 2 hours
+- **Total:** ~10-12 hours
+
+---
+
+## Phase 2: Growth & Discovery
 
 ### Crawler + Indexing System
 Build an automated crawler that:
@@ -131,17 +206,19 @@ A GitHub App that site owners **choose to install** (not unsolicited PRs):
 
 ## Success Metrics
 
-### Phase 1 (Months 1-3)
-- [ ] 20+ feeds in curated directory
+### Phase 1 (Week 1-2)
+- [ ] D1 database deployed and seeded
+- [ ] Directory API live at `/api/feeds`
+- [ ] Frontend reads from API
+- [ ] Submit workflow writes to API
+
+### Phase 2 (Months 1-3)
+- [ ] 50+ feeds in shared directory
 - [ ] Badge embed on 10+ sites
 - [ ] 100+ GitHub Action installations
-
-### Phase 2 (Months 4-6)
-- [ ] 100+ indexed feeds
 - [ ] First ecosystem report published
-- [ ] 500+ unique validators/month
 
-### Phase 3 (Months 7-12)
+### Phase 3 (Months 4-8)
 - [ ] 500+ indexed feeds
 - [ ] 3+ registry partnerships
 - [ ] GitHub App with 50+ installations
@@ -173,9 +250,9 @@ Opening PRs on repos without consent:
 
 | Priority | Feature | Effort | Impact | Status |
 |----------|---------|--------|--------|--------|
-| P0 | Submit Feed workflow | Medium | High | ✅ Done |
-| P0 | Verification badges | Low | High | ✅ Done |
-| P1 | Directory API | Low | Medium | ⏳ Next |
+| P0 | Persistent D1 Database | Medium | Critical | 🎯 Phase 1 |
+| P0 | Directory API Worker | Medium | Critical | 🎯 Phase 1 |
+| P1 | Frontend API integration | Medium | High | 🎯 Phase 1 |
 | P1 | Crawler MVP | High | High | ⏳ Phase 2 |
 | P2 | GitHub App | High | Medium | ⏳ Phase 3 |
 | P2 | Partnership outreach | Medium | High | ⏳ Phase 2 |
@@ -185,13 +262,19 @@ Opening PRs on repos without consent:
 
 ## Next Actions
 
-### ✅ Completed (Phase 1)
+### ✅ Completed (Phase 0)
 1. ~~Implement badge generation~~ → `src/lib/badge-generator.ts`
-2. ~~Add "Submit Your Feed" workflow~~ → `src/components/SubmitFeed.tsx`
+2. ~~Add "Submit Your Feed" UI~~ → `src/components/SubmitFeed.tsx`
 3. ~~Integrate into main app~~ → Added to WorkflowStepper as step 5
 
-### 🚀 Up Next (Phase 2 Prep)
-1. **This Week:** Add "Get Listed" marketing callout to Directory
-2. **This Week:** Create `/api/directory.json` endpoint
-3. **Next Sprint:** Build crawler prototype
-4. **Ongoing:** Outreach to awesome-mcp-servers maintainers
+### 🎯 Current (Phase 1 - Persistent Database)
+1. **Create D1 database** with feeds schema
+2. **Build directory Worker** with CRUD API
+3. **Update frontend** to use API instead of localStorage
+4. **Migrate curated feeds** to database
+5. **Test end-to-end** submission flow
+
+### 🚀 Up Next (Phase 2)
+1. Build crawler prototype
+2. Add search/filter to directory
+3. Outreach to awesome-mcp-servers maintainers
