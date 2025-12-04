@@ -231,6 +231,23 @@ export function validateCapabilitySchemas(feed: LLMFeed): ValidationError[] {
   return errors
 }
 
+function deepSortObject(obj: any): any {
+  if (obj === null || typeof obj !== 'object') {
+    return obj
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => deepSortObject(item))
+  }
+
+  const sortedKeys = Object.keys(obj).sort()
+  const sorted: Record<string, any> = {}
+  for (const key of sortedKeys) {
+    sorted[key] = deepSortObject(obj[key])
+  }
+  return sorted
+}
+
 export async function verifyEd25519Signature(
   feed: LLMFeed
 ): Promise<{ valid: boolean; error?: string }> {
@@ -260,12 +277,7 @@ export async function verifyEd25519Signature(
       }
     }
 
-    const sortedKeys = Object.keys(payloadParts).sort()
-    const sortedPayload: Record<string, any> = {}
-    for (const key of sortedKeys) {
-      sortedPayload[key] = payloadParts[key]
-    }
-
+    const sortedPayload = deepSortObject(payloadParts)
     const canonicalPayload = JSON.stringify(sortedPayload)
     
     const encoder = new TextEncoder()

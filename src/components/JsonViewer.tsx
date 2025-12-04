@@ -23,12 +23,10 @@ export function JsonViewer({ data, className, maxHeight = '500px' }: JsonViewerP
   }
 
   return (
-    <div className={cn("w-full rounded-md border border-border overflow-hidden", className)} style={{ maxHeight }}>
-      <ScrollArea className="h-full">
-        <pre className="p-4 text-sm font-mono text-foreground/90 whitespace-pre-wrap break-words">
-          <code dangerouslySetInnerHTML={{ __html: highlightJson(jsonString) }} />
-        </pre>
-      </ScrollArea>
-    </div>
+    <ScrollArea className={cn("w-full rounded-md border border-border", className)} style={{ height: maxHeight }}>
+      <pre className="p-4 text-sm font-mono text-foreground/90 whitespace-pre-wrap break-words">
+        <code dangerouslySetInnerHTML={{ __html: highlightJson(jsonString) }} />
+      </pre>
+    </ScrollArea>
   )
 }

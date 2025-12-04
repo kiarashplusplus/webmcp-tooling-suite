@@ -21,6 +21,23 @@ interface DebugInfo {
   payloadLength?: number
 }
 
+function deepSortObject(obj: any): any {
+  if (obj === null || typeof obj !== 'object') {
+    return obj
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => deepSortObject(item))
+  }
+
+  const sortedKeys = Object.keys(obj).sort()
+  const sorted: Record<string, any> = {}
+  for (const key of sortedKeys) {
+    sorted[key] = deepSortObject(obj[key])
+  }
+  return sorted
+}
+
 export function SignatureDebugger({ feedJson }: { feedJson: string }) {
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
   const [debugging, setDebugging] = useState(false)
@@ -72,11 +89,7 @@ export function SignatureDebugger({ feedJson }: { feedJson: string }) {
             payloadParts[block] = feed[block]
           }
         }
-        const sortedKeys = Object.keys(payloadParts).sort()
-        const sortedPayload: Record<string, any> = {}
-        for (const key of sortedKeys) {
-          sortedPayload[key] = payloadParts[key]
-        }
+        const sortedPayload = deepSortObject(payloadParts)
         info.canonicalPayload = JSON.stringify(sortedPayload)
         info.payloadLength = info.canonicalPayload.length
       }
