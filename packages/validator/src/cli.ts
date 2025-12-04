@@ -189,20 +189,25 @@ async function main(): Promise<void> {
   try {
     let feed: unknown
 
-    // Check if it's a local file
-    if (existsSync(target) || target.endsWith('.json')) {
+    // Check if it's a URL first (before checking file)
+    const isUrl = target.startsWith('http://') || target.startsWith('https://')
+    
+    // Check if it's a local file (only if not a URL)
+    if (!isUrl && (existsSync(target) || target.endsWith('.json'))) {
       const filePath = resolve(target)
       if (!flags.json) {
         console.log(colorize('Source:', 'dim'), 'Local file')
       }
       const content = readFileSync(filePath, 'utf-8')
       feed = JSON.parse(content)
-    } else {
+    } else if (isUrl) {
       // Fetch from URL
       if (!flags.json) {
         console.log(colorize('Source:', 'dim'), 'Remote URL')
       }
       feed = await fetchLLMFeed(target, { timeout: flags.timeout })
+    } else {
+      throw new Error(`Target "${target}" is not a valid URL or existing file`)
     }
 
     // Validate
