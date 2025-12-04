@@ -65,8 +65,11 @@ function App() {
     if (feedUrl) {
       setDiscoveredFeedUrl(feedUrl)
     }
-    // Scroll to top when navigating between tabs
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    // Scroll to the developer workflow section when navigating between tabs
+    const workflowSection = document.getElementById('developer-workflow')
+    if (workflowSection) {
+      workflowSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
   }, [])
 
   const handleStepComplete = useCallback((stepId: string) => {
@@ -117,7 +120,7 @@ function App() {
 
           <main>
             {/* Developer Workflow Tools */}
-            <div className="mb-8">
+            <div className="mb-8" id="developer-workflow">
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
