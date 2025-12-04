@@ -4,10 +4,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { useKV } from '@github/spark/hooks'
-import { JsonViewer } from './JsonViewer'
 import type { ArchivedFeed } from './Archive'
+import { toast } from 'sonner'
 import { 
   TrendUp, 
   Clock, 
@@ -16,8 +15,7 @@ import {
   Tag,
   Calendar,
   ArrowUpRight,
-  Archive,
-  X
+  Archive
 } from '@phosphor-icons/react'
 
 interface FeedMetadata {
@@ -112,7 +110,6 @@ export function Directory() {
   const [archivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
   const [archives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
   const [allFeeds, setAllFeeds] = useState<FeedMetadata[]>(SAMPLE_FEEDS)
-  const [viewingSnapshot, setViewingSnapshot] = useState<{ feed: any; metadata: FeedMetadata } | null>(null)
 
   useEffect(() => {
     const combined = [...SAMPLE_FEEDS, ...(archivedFeeds || [])]
@@ -156,10 +153,23 @@ export function Directory() {
     return null
   }
 
-  const handleViewArchivedMirror = (feed: FeedMetadata) => {
+  const handleDownloadArchivedMirror = (feed: FeedMetadata) => {
     const snapshot = findArchivedSnapshot(feed.id)
     if (snapshot) {
-      setViewingSnapshot({ feed: snapshot.feed, metadata: feed })
+      const blob = new Blob([JSON.stringify(snapshot.feed, null, 2)], { 
+        type: 'application/json' 
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${feed.domain}-archived-${feed.id}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('Archived feed downloaded', {
+        description: `${feed.title} mirror saved as JSON`
+      })
+    } else {
+      toast.error('Archived snapshot not found')
     }
   }
 
@@ -243,7 +253,7 @@ export function Directory() {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => handleViewArchivedMirror(feed)}
+              onClick={() => handleDownloadArchivedMirror(feed)}
               data-archived-feed-json-url={getArchivedSnapshotUrl(feed.id)}
               className="flex-1 glass-strong hover:border-accent/50 text-accent hover:text-accent transition-all"
             >
@@ -320,65 +330,9 @@ export function Directory() {
           All feed JSON URLs are marked with <code className="font-mono text-xs glass px-2 py-1 rounded">data-feed-json-url</code> attributes 
           for easy programmatic discovery. Click any feed URL to view the raw JSON schema directly.
           Archived feeds include a <code className="font-mono text-xs glass px-2 py-1 rounded">data-archived-feed-json-url</code> attribute 
-          linking to the archived mirror snapshot.
+          and clicking "Archived Mirror" will download the JSON with proper <code className="font-mono text-xs glass px-2 py-1 rounded">application/json</code> content-type headers.
         </p>
       </div>
-
-      <Dialog open={!!viewingSnapshot} onOpenChange={(open) => !open && setViewingSnapshot(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] glass-strong">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-2xl font-mono">
-              <Archive size={24} className="text-accent" />
-              Archived Feed Mirror
-            </DialogTitle>
-            <DialogDescription>
-              {viewingSnapshot?.metadata.title} • {viewingSnapshot?.metadata.domain}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Calendar size={14} />
-              <span>Archived: {viewingSnapshot && formatTimestamp(viewingSnapshot.metadata.timestamp)}</span>
-            </div>
-            
-            <ScrollArea className="h-[60vh] rounded-lg glass p-4">
-              {viewingSnapshot && <JsonViewer data={viewingSnapshot.feed} />}
-            </ScrollArea>
-
-            <div className="flex gap-2 justify-end pt-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  if (viewingSnapshot) {
-                    const blob = new Blob([JSON.stringify(viewingSnapshot.feed, null, 2)], { type: 'application/json' })
-                    const url = URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = url
-                    a.download = `${viewingSnapshot.metadata.domain}-archived.json`
-                    a.click()
-                    URL.revokeObjectURL(url)
-                  }
-                }}
-                className="glass"
-              >
-                <FileJs size={16} className="mr-2" />
-                Download JSON
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setViewingSnapshot(null)}
-                className="glass-strong"
-              >
-                <X size={16} className="mr-2" />
-                Close
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
