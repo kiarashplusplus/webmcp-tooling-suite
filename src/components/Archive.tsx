@@ -9,7 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { fetchLLMFeed, validateLLMFeed, type LLMFeed } from '@/lib/llmfeed'
-import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple, CheckCircle, ArrowUpRight, Lock, CloudSlash, ArrowRight } from '@phosphor-icons/react'
+import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, FolderOpen, UploadSimple, CheckCircle, Lock, CloudSlash, ArrowRight } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
 import { GitHubSignIn } from './GitHubSignIn'
 import { UserProfile } from './UserProfile'
@@ -181,16 +181,6 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
     a.click()
     URL.revokeObjectURL(url)
     toast.success('All archives exported')
-  }
-
-  const copySnapshotUrl = (snapshot: ArchivedSnapshot) => {
-    // Get the base path from current URL (handles subdirectory deployments)
-    const basePath = window.location.pathname.replace(/\/(archive\/.*)?$/, '')
-    const archiveUrl = `${window.location.origin}${basePath}/archive/${snapshot.id}.json`
-    navigator.clipboard.writeText(archiveUrl)
-    toast.success('Archive URL copied to clipboard', {
-      description: 'Share this URL with scrapers and AI bots'
-    })
   }
 
   const publishToDirectory = (snapshot: ArchivedSnapshot) => {
@@ -590,28 +580,6 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
                         )}
                       </Button>
                     )}
-                    <Button
-                      onClick={() => {
-                        // Get the base path from current URL (handles subdirectory deployments)
-                        const basePath = window.location.pathname.replace(/\/(archive\/.*)?$/, '')
-                        const archiveUrl = `${window.location.origin}${basePath}/archive/${selectedSnapshot.id}.json`
-                        window.open(archiveUrl, '_blank')
-                      }}
-                      variant="outline"
-                      size="sm"
-                      title="View served archive in new tab"
-                    >
-                      <ArrowUpRight size={16} className="mr-2" />
-                      View
-                    </Button>
-                    <Button
-                      onClick={() => copySnapshotUrl(selectedSnapshot)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <Copy size={16} className="mr-2" />
-                      Copy URL
-                    </Button>
                     <Button
                       onClick={() => handleExportSnapshot(selectedSnapshot)}
                       variant="outline"
