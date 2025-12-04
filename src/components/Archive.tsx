@@ -241,8 +241,7 @@ export function Archive() {
       return
     }
 
-    const publishers = publishedBy || {}
-    const publisher = publishers[snapshot.id]
+    const publisher = publishedBy[snapshot.id]
     if (publisher !== user.login) {
       toast.error('You can only unpublish feeds that you published', {
         description: `This feed was published by @${publisher}`
@@ -268,9 +267,10 @@ export function Archive() {
 
   const canUnpublish = (snapshotId: string) => {
     if (!isAuthenticated || !user) return false
-    const publishers = publishedBy || {}
-    const publisher = publishers[snapshotId]
+    const publisher = publishedBy[snapshotId]
     return publisher === user.login
+  }
+
   }
 
   const formatTimestamp = (timestamp: number) => {
