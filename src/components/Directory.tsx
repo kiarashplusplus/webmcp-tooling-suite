@@ -18,8 +18,14 @@ import {
   ArrowUpRight,
   Archive,
   Trash,
-  Info
+  Info,
+  ArrowRight
 } from '@phosphor-icons/react'
+
+interface DirectoryProps {
+  onNavigate?: (tab: string) => void
+  onComplete?: () => void
+}
 
 interface FeedMetadata {
   id: string
@@ -48,7 +54,7 @@ const REFERENCE_FEED: FeedMetadata = {
   author: 'Kiarash Adl'
 }
 
-export function Directory() {
+export function Directory({ onNavigate, onComplete }: DirectoryProps) {
   const { user, isAuthenticated } = useAuth()
   const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
   const [archives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
@@ -345,6 +351,15 @@ export function Directory() {
 
   return (
     <div className="space-y-8">
+      {/* Section Label for Scrapers & AI Bots */}
+      <div className="flex items-center gap-3">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
+          For Scrapers & AI Bots
+        </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+      </div>
+
       <section 
         className="glass-strong rounded-2xl p-8"
         aria-labelledby="top-feeds-heading"
@@ -460,6 +475,22 @@ export function Directory() {
           Click "View Mirror" to open the served JSON in a new tab, or use the download button to save locally.
         </p>
       </aside>
+
+      {/* Next Step Navigation */}
+      {onNavigate && (
+        <Card className="p-6 glass-card shadow-xl border-primary/30 bg-primary/5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-foreground">Ready for AI Integration?</h4>
+              <p className="text-sm text-muted-foreground">Prepare your feeds for RAG systems and AI assistants.</p>
+            </div>
+            <Button onClick={() => { onComplete?.(); onNavigate('rag'); }} className="gap-2">
+              RAG Preparation
+              <ArrowRight size={16} weight="bold" />
+            </Button>
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

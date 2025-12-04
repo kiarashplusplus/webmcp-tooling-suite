@@ -9,12 +9,17 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { fetchLLMFeed, validateLLMFeed, type LLMFeed } from '@/lib/llmfeed'
-import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple, CheckCircle, ArrowUpRight, Lock, CloudSlash } from '@phosphor-icons/react'
+import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple, CheckCircle, ArrowUpRight, Lock, CloudSlash, ArrowRight } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
 import { GitHubSignIn } from './GitHubSignIn'
 import { UserProfile } from './UserProfile'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
+
+interface ArchiveProps {
+  onNavigate?: (tab: string) => void
+  onComplete?: () => void
+}
 
 interface FeedMetadata {
   id: string
@@ -44,7 +49,7 @@ export interface ArchivedFeed {
   lastUpdated: number
 }
 
-export function Archive() {
+export function Archive({ onNavigate, onComplete }: ArchiveProps) {
   const { user, loading: authLoading, isAuthenticated } = useAuth()
   const [archives, setArchives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
   const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
@@ -697,6 +702,22 @@ export function Archive() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Next Step Navigation - Show when archives exist */}
+      {Object.keys(archives).length > 0 && onNavigate && (
+        <Card className="p-6 glass-card shadow-xl border-primary/30 bg-primary/5 mt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-foreground">Archives Ready!</h4>
+              <p className="text-sm text-muted-foreground">Next, publish your feed to the public directory.</p>
+            </div>
+            <Button onClick={() => { onComplete?.(); onNavigate('directory'); }} className="gap-2">
+              Publish to Directory
+              <ArrowRight size={16} weight="bold" />
+            </Button>
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

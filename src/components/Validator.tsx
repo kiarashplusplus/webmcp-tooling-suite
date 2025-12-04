@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -8,10 +8,15 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { validateLLMFeed, fetchLLMFeed, type ValidationResult, type LLMFeed } from '@/lib/llmfeed'
-import { ShieldCheck, ShieldWarning, XCircle, CheckCircle, Warning, CloudArrowDown, FileArrowUp, Code } from '@phosphor-icons/react'
+import { ShieldCheck, ShieldWarning, XCircle, CheckCircle, Warning, CloudArrowDown, FileArrowUp, Code, ArrowRight } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
 import { SignatureDebugger } from './SignatureDebugger'
 import { toast } from 'sonner'
+
+interface ValidatorProps {
+  onNavigate?: (tab: string) => void
+  onComplete?: () => void
+}
 
 const EXAMPLE_FEED = `{
   "feed_type": "mcp",
@@ -40,13 +45,20 @@ const EXAMPLE_FEED = `{
   ]
 }`
 
-export function Validator() {
+export function Validator({ onNavigate, onComplete }: ValidatorProps) {
   const [feedInput, setFeedInput] = useState('')
   const [feedUrl, setFeedUrl] = useState('')
   const [inputMode, setInputMode] = useState<'paste' | 'url' | 'file'>('paste')
   const [validating, setValidating] = useState(false)
   const [result, setResult] = useState<ValidationResult | null>(null)
   const [parsedFeed, setParsedFeed] = useState<LLMFeed | null>(null)
+
+  // Mark step as complete when validation succeeds
+  useEffect(() => {
+    if (result?.valid && onComplete) {
+      onComplete()
+    }
+  }, [result, onComplete])
 
   const handleValidateFromPaste = async () => {
     setValidating(true)
@@ -431,6 +443,22 @@ export function Validator() {
 
           {result && result.signatureValid === false && feedInput && (
             <SignatureDebugger feedJson={feedInput} diagnostics={result.signatureDiagnostics} />
+          )}
+
+          {/* Next Step Navigation */}
+          {result?.valid && onNavigate && (
+            <Card className="p-6 glass-card shadow-xl border-primary/30 bg-primary/5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-foreground">Validation Passed!</h4>
+                  <p className="text-sm text-muted-foreground">Next, create an archive snapshot of this feed.</p>
+                </div>
+                <Button onClick={() => onNavigate('archive')} className="gap-2">
+                  Archive Feed
+                  <ArrowRight size={16} weight="bold" />
+                </Button>
+              </div>
+            </Card>
           )}
         </div>
       )}

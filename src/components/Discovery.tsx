@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -6,19 +6,31 @@ import { Badge } from '@/components/ui/badge'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { fetchLLMFeed, type LLMFeed, type Capability, calculateTokenEstimate } from '@/lib/llmfeed'
-import { MagnifyingGlass, CloudArrowDown, Code, CheckCircle, Copy, ArrowsOutSimple } from '@phosphor-icons/react'
+import { MagnifyingGlass, CloudArrowDown, Code, CheckCircle, Copy, ArrowsOutSimple, ArrowRight } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
 import { ExampleUrls } from './ExampleUrls'
 import { CapabilityInspector } from './CapabilityInspector'
 import { toast } from 'sonner'
 
-export function Discovery() {
+interface DiscoveryProps {
+  onNavigate?: (tab: string) => void
+  onComplete?: () => void
+}
+
+export function Discovery({ onNavigate, onComplete }: DiscoveryProps) {
   const [domain, setDomain] = useState('')
   const [loading, setLoading] = useState(false)
   const [feed, setFeed] = useState<LLMFeed | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selectedCapability, setSelectedCapability] = useState<Capability | null>(null)
   const [inspectorOpen, setInspectorOpen] = useState(false)
+
+  // Mark step as complete when a feed is discovered
+  useEffect(() => {
+    if (feed && onComplete) {
+      onComplete()
+    }
+  }, [feed, onComplete])
 
   const handleDiscover = async () => {
     if (!domain.trim()) return
@@ -315,6 +327,22 @@ export function Discovery() {
               Copy Complete Feed
             </Button>
           </Card>
+
+          {/* Next Step Navigation */}
+          {onNavigate && (
+            <Card className="p-6 glass-card shadow-xl border-primary/30 bg-primary/5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-foreground">Feed Discovered!</h4>
+                  <p className="text-sm text-muted-foreground">Next, validate the feed to check its integrity and signature.</p>
+                </div>
+                <Button onClick={() => onNavigate('validator')} className="gap-2">
+                  Validate Feed
+                  <ArrowRight size={16} weight="bold" />
+                </Button>
+              </div>
+            </Card>
+          )}
         </div>
       )}
 

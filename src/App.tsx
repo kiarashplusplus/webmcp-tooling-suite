@@ -1,12 +1,14 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { lazy, Suspense, useState, useEffect } from 'react'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { lazy, Suspense, useState, useEffect, useCallback } from 'react'
 import { ArchiveServer } from '@/components/ArchiveServer'
 import { FeedStructuredData } from '@/components/FeedStructuredData'
 import { SitemapGenerator } from '@/components/SitemapGenerator'
 import { SEOMetaTags } from '@/components/SEOMetaTags'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import { WorkflowStepper } from '@/components/WorkflowStepper'
+import { TermsOfService } from '@/components/TermsOfService'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Toaster } from '@/components/ui/sonner'
-import { ShieldCheck, MagnifyingGlass, Database, Archive as ArchiveIcon, FolderOpen } from '@phosphor-icons/react'
 
 // Lazy load tab content components for code splitting
 const Validator = lazy(() => import('@/components/Validator').then(m => ({ default: m.Validator })))
@@ -32,6 +34,9 @@ function TabLoadingSkeleton() {
 
 function App() {
   const [isArchiveRoute, setIsArchiveRoute] = useState(false)
+  const [activeTab, setActiveTab] = useState('discovery')
+  const [completedSteps, setCompletedSteps] = useState<string[]>([])
+  const [showTerms, setShowTerms] = useState(false)
 
   useEffect(() => {
     const checkRoute = () => {
@@ -42,7 +47,22 @@ function App() {
     checkRoute()
     window.addEventListener('popstate', checkRoute)
     
-    return () => window.removeEventListener('popstate', checkRoute)
+    // Listen for terms dialog trigger
+    const handleShowTerms = () => setShowTerms(true)
+    window.addEventListener('show-terms', handleShowTerms)
+    
+    return () => {
+      window.removeEventListener('popstate', checkRoute)
+      window.removeEventListener('show-terms', handleShowTerms)
+    }
+  }, [])
+
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value)
+  }, [])
+
+  const handleStepComplete = useCallback((stepId: string) => {
+    setCompletedSteps(prev => prev.includes(stepId) ? prev : [...prev, stepId])
   }, [])
 
   if (isArchiveRoute) {
@@ -88,71 +108,45 @@ function App() {
           </header>
 
           <main>
-            <Tabs defaultValue="directory" className="w-full">
-              <TabsList className="grid w-full grid-cols-5 mb-10 glass-strong p-2 rounded-2xl" role="tablist" aria-label="Main navigation">
-                <TabsTrigger 
-                  value="directory" 
-                  className="data-[state=active]:glass-strong data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-semibold rounded-xl transition-all duration-300"
-                  aria-label="Feed Directory"
-                >
-                  <FolderOpen size={18} className="mr-2" aria-hidden="true" />
-                  <span className="hidden sm:inline">Directory</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="validator" 
-                  className="data-[state=active]:glass-strong data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-semibold rounded-xl transition-all duration-300"
-                  aria-label="Feed Validator"
-                >
-                  <ShieldCheck size={18} className="mr-2" aria-hidden="true" />
-                  <span className="hidden sm:inline">Validator</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="discovery" 
-                  className="data-[state=active]:glass-strong data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-semibold rounded-xl transition-all duration-300"
-                  aria-label="Feed Discovery"
-                >
-                  <MagnifyingGlass size={18} className="mr-2" aria-hidden="true" />
-                  <span className="hidden sm:inline">Discovery</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="archive" 
-                  className="data-[state=active]:glass-strong data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-semibold rounded-xl transition-all duration-300"
-                  aria-label="Feed Archive"
-                >
-                  <ArchiveIcon size={18} className="mr-2" aria-hidden="true" />
-                  <span className="hidden sm:inline">Archive</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="rag" 
-                  className="data-[state=active]:glass-strong data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg font-semibold rounded-xl transition-all duration-300"
-                  aria-label="RAG Preparation"
-                >
-                  <Database size={18} className="mr-2" aria-hidden="true" />
-                  <span className="hidden sm:inline">RAG Prep</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="directory" className="mt-0">
+            {/* Developer Workflow Tools */}
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
+                  For Developers
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+              </div>
+              
+              <WorkflowStepper 
+                currentStep={activeTab} 
+                onStepClick={handleTabChange}
+                completedSteps={completedSteps}
+              />
+            </div>
+            
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+              <TabsContent value="discovery" className="mt-0">
                 <Suspense fallback={<TabLoadingSkeleton />}>
-                  <Directory />
+                  <Discovery onNavigate={handleTabChange} onComplete={() => handleStepComplete('discovery')} />
                 </Suspense>
               </TabsContent>
 
               <TabsContent value="validator" className="mt-0">
                 <Suspense fallback={<TabLoadingSkeleton />}>
-                  <Validator />
-                </Suspense>
-              </TabsContent>
-
-              <TabsContent value="discovery" className="mt-0">
-                <Suspense fallback={<TabLoadingSkeleton />}>
-                  <Discovery />
+                  <Validator onNavigate={handleTabChange} onComplete={() => handleStepComplete('validator')} />
                 </Suspense>
               </TabsContent>
 
               <TabsContent value="archive" className="mt-0">
                 <Suspense fallback={<TabLoadingSkeleton />}>
-                  <Archive />
+                  <Archive onNavigate={handleTabChange} onComplete={() => handleStepComplete('archive')} />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="directory" className="mt-0">
+                <Suspense fallback={<TabLoadingSkeleton />}>
+                  <Directory onNavigate={handleTabChange} onComplete={() => handleStepComplete('directory')} />
                 </Suspense>
               </TabsContent>
 
@@ -184,7 +178,7 @@ function App() {
                     Kiarash Adl
                   </a>
                 </p>
-                <p className="text-xs text-muted-foreground/80">
+                <p className="text-xs text-muted-foreground/80 mb-2">
                   Open source •{' '}
                   <a 
                     href="https://github.com/kiarashplusplus/webmcp-tooling-suite" 
@@ -195,11 +189,31 @@ function App() {
                     View on GitHub
                   </a>
                 </p>
+                <p className="text-xs text-muted-foreground/60">
+                  <button 
+                    onClick={() => setShowTerms(true)}
+                    className="text-primary/60 hover:text-accent transition-colors underline underline-offset-2"
+                  >
+                    Terms of Service
+                  </button>
+                  {' • '}
+                  Software provided "as-is" without warranty
+                </p>
               </div>
             </div>
           </footer>
         </div>
       </div>
+
+      {/* Terms of Service Dialog */}
+      <Dialog open={showTerms} onOpenChange={setShowTerms}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto glass-strong border-primary/20">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Terms of Service</DialogTitle>
+          </DialogHeader>
+          <TermsOfService embedded />
+        </DialogContent>
+      </Dialog>
 
       <Toaster position="bottom-right" />
     </div>
