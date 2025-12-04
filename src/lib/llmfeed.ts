@@ -248,7 +248,11 @@ export async function verifyEd25519Signature(
 
   try {
     const signedBlocks = feed.trust.signed_blocks || []
-    const payloadParts: any = {}
+    if (signedBlocks.length === 0) {
+      return { valid: false, error: 'No signed_blocks specified in trust block' }
+    }
+
+    const payloadParts: Record<string, any> = {}
     
     for (const block of signedBlocks) {
       if (feed[block] !== undefined) {
@@ -256,12 +260,26 @@ export async function verifyEd25519Signature(
       }
     }
 
-    const canonicalPayload = JSON.stringify(payloadParts, null, 0)
+    const sortedKeys = Object.keys(payloadParts).sort()
+    const sortedPayload: Record<string, any> = {}
+    for (const key of sortedKeys) {
+      sortedPayload[key] = payloadParts[key]
+    }
+
+    const canonicalPayload = JSON.stringify(sortedPayload)
     
     const encoder = new TextEncoder()
     const messageBytes = encoder.encode(canonicalPayload)
     
-    const signatureBytes = base64ToUint8Array(feed.signature.value)
+    let signatureBytes: Uint8Array
+    try {
+      signatureBytes = base64ToUint8Array(feed.signature.value)
+      if (signatureBytes.length !== 64) {
+        return { valid: false, error: `Invalid signature length: expected 64 bytes, got ${signatureBytes.length}` }
+      }
+    } catch (error) {
+      return { valid: false, error: `Invalid base64 signature: ${error}` }
+    }
 
     if (!feed.trust.public_key_hint) {
       return { valid: false, error: 'Missing public_key_hint for verification' }
@@ -269,20 +287,35 @@ export async function verifyEd25519Signature(
 
     let publicKeyPem: string
     try {
-      const response = await fetch(feed.trust.public_key_hint)
+      const response = await fetch(feed.trust.public_key_hint, {
+        mode: 'cors',
+        cache: 'no-cache'
+      })
       if (!response.ok) {
-        throw new Error(`Failed to fetch public key: ${response.statusText}`)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
       publicKeyPem = await response.text()
+      
+      if (!publicKeyPem.includes('BEGIN PUBLIC KEY')) {
+        return { valid: false, error: 'Invalid public key format (missing PEM headers)' }
+      }
     } catch (error) {
-      return { valid: false, error: `Failed to fetch public key: ${error}` }
+      return { valid: false, error: `Failed to fetch public key from ${feed.trust.public_key_hint}: ${error}` }
     }
 
-    const publicKeyBytes = pemToPublicKey(publicKeyPem)
+    let publicKeyBytes: Uint8Array
+    try {
+      publicKeyBytes = pemToPublicKey(publicKeyPem)
+      if (publicKeyBytes.length !== 32) {
+        return { valid: false, error: `Invalid public key length: expected 32 bytes, got ${publicKeyBytes.length}` }
+      }
+    } catch (error) {
+      return { valid: false, error: `Failed to parse public key: ${error}` }
+    }
     
     const isValid = await verifyEd25519Native(messageBytes, signatureBytes, publicKeyBytes)
     
-    return { valid: isValid }
+    return { valid: isValid, error: isValid ? undefined : 'Signature verification failed - signature does not match' }
   } catch (error) {
     return { valid: false, error: `Verification failed: ${error}` }
   }

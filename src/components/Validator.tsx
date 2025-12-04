@@ -8,6 +8,34 @@ import { Progress } from '@/components/ui/progress'
 import { validateLLMFeed, type ValidationResult, type LLMFeed } from '@/lib/llmfeed'
 import { ShieldCheck, ShieldWarning, XCircle, CheckCircle, Warning } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
+import { SignatureDebugger } from './SignatureDebugger'
+
+const EXAMPLE_FEED = `{
+  "feed_type": "mcp",
+  "metadata": {
+    "title": "Example MCP Server",
+    "origin": "https://example.com",
+    "description": "A sample MCP server for testing",
+    "version": "1.0.0"
+  },
+  "capabilities": [
+    {
+      "name": "greet",
+      "type": "tool",
+      "description": "Greet a user by name",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name to greet"
+          }
+        },
+        "required": ["name"]
+      }
+    }
+  ]
+}`
 
 export function Validator() {
   const [feedInput, setFeedInput] = useState('')
@@ -62,12 +90,30 @@ export function Validator() {
         </p>
       </div>
 
+      <Alert className="border-primary/30 bg-primary/5">
+        <ShieldCheck size={18} className="text-primary" />
+        <AlertTitle className="text-sm font-semibold">Signature Verification</AlertTitle>
+        <AlertDescription className="text-xs text-muted-foreground">
+          For signature verification to work, your feed must include a <code className="font-mono bg-muted px-1 rounded">trust</code> block with <code className="font-mono bg-muted px-1 rounded">algorithm: "Ed25519"</code>, <code className="font-mono bg-muted px-1 rounded">signed_blocks</code> array, and <code className="font-mono bg-muted px-1 rounded">public_key_hint</code> URL, plus a <code className="font-mono bg-muted px-1 rounded">signature</code> block with the base64-encoded signature value.
+        </AlertDescription>
+      </Alert>
+
       <Card className="p-6 gradient-border">
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-foreground mb-2 block uppercase tracking-wide">
-              Feed JSON Content
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-foreground uppercase tracking-wide">
+                Feed JSON Content
+              </label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFeedInput(EXAMPLE_FEED)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Load Example
+              </Button>
+            </div>
             <Textarea
               value={feedInput}
               onChange={(e) => setFeedInput(e.target.value)}
@@ -141,7 +187,16 @@ export function Validator() {
               <AlertDescription>
                 {result.signatureValid
                   ? 'The Ed25519 cryptographic signature is valid. This feed is authentic and has not been tampered with.'
-                  : 'The Ed25519 signature could not be verified. Do not trust this feed for production use.'}
+                  : (
+                    <div className="space-y-2">
+                      <p>The Ed25519 signature could not be verified. Do not trust this feed for production use.</p>
+                      {result.errors.find(e => e.type === 'signature') && (
+                        <p className="text-xs font-mono bg-destructive/20 p-2 rounded mt-2">
+                          {result.errors.find(e => e.type === 'signature')?.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
               </AlertDescription>
             </Alert>
           )}
@@ -203,6 +258,10 @@ export function Validator() {
               <h4 className="font-bold text-foreground mb-4">Parsed Feed Structure</h4>
               <JsonViewer data={parsedFeed} maxHeight="400px" />
             </Card>
+          )}
+
+          {result && result.signatureValid === false && feedInput && (
+            <SignatureDebugger feedJson={feedInput} />
           )}
         </div>
       )}
