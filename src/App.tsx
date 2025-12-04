@@ -2,8 +2,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Validator } from '@/components/Validator'
 import { Discovery } from '@/components/Discovery'
 import { RAGPrep } from '@/components/RAGPrep'
+import { Archive } from '@/components/Archive'
 import { Toaster } from '@/components/ui/sonner'
-import { ShieldCheck, MagnifyingGlass, Database } from '@phosphor-icons/react'
+import { ShieldCheck, MagnifyingGlass, Database, Archive as ArchiveIcon } from '@phosphor-icons/react'
 
 function App() {
   return (
@@ -28,7 +29,7 @@ function App() {
             </header>
 
             <Tabs defaultValue="validator" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1">
+              <TabsList className="grid w-full grid-cols-4 mb-8 bg-muted/50 p-1">
                 <TabsTrigger value="validator" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold">
                   <ShieldCheck size={18} className="mr-2" />
                   <span className="hidden sm:inline">Validator</span>
@@ -36,6 +37,10 @@ function App() {
                 <TabsTrigger value="discovery" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold">
                   <MagnifyingGlass size={18} className="mr-2" />
                   <span className="hidden sm:inline">Discovery</span>
+                </TabsTrigger>
+                <TabsTrigger value="archive" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold">
+                  <ArchiveIcon size={18} className="mr-2" />
+                  <span className="hidden sm:inline">Archive</span>
                 </TabsTrigger>
                 <TabsTrigger value="rag" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold">
                   <Database size={18} className="mr-2" />
@@ -51,6 +56,10 @@ function App() {
                 <Discovery />
               </TabsContent>
 
+              <TabsContent value="archive" className="mt-0">
+                <Archive />
+              </TabsContent>
+
               <TabsContent value="rag" className="mt-0">
                 <RAGPrep />
               </TabsContent>
@@ -58,7 +67,7 @@ function App() {
 
             <footer className="mt-16 pt-8 border-t border-border text-center text-sm text-muted-foreground">
               <p className="mb-2">
-                Built for the WebMCP ecosystem • Addresses Gap 1 (Trust Validation) and Gap 2 (RAG Indexing)
+                Built for the WebMCP ecosystem • Addresses Gap 1 (Trust Validation), Gap 2 (RAG Indexing), and Gap 3 (Feed Archival)
               </p>
               <p className="text-xs">
                 Based on comprehensive research of MCP, WebMCP, and LLMFeed specifications

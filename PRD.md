@@ -43,6 +43,13 @@ A comprehensive WebMCP/LLMFeed tooling suite that addresses critical gaps in fee
 - **Progression**: Select capability → Display input/output schemas → Validate schema syntax → Generate sample invocation → Show JSON-RPC format
 - **Success criteria**: Renders schemas clearly, generates valid sample requests, identifies schema issues
 
+### WebMCP Archive
+- **Functionality**: Centralized, public archival system for LLM feeds and MCP manifests with versioning and persistence
+- **Purpose**: Addresses Gap 3 - provides resilience and reproducibility for feeds that may go offline or change over time
+- **Trigger**: User adds a domain to archive, or archives current discovered feed
+- **Progression**: Add domain → Fetch feed → Store timestamped snapshot → Display version history → Enable export/restoration of archived versions
+- **Success criteria**: Successfully stores multiple versions with timestamps, allows browsing historical snapshots, provides stable canonical URLs for each archived feed version
+
 ## Edge Case Handling
 
 - **Invalid JSON**: Graceful parsing errors with line/column indicators using syntax highlighting
@@ -93,14 +100,14 @@ Animations should reinforce validation states and guide attention to critical se
 ## Component Selection
 
 - **Components**: 
-  - `Tabs` for switching between Validator/Discovery/RAG tools
+  - `Tabs` for switching between Validator/Discovery/Archive/RAG tools
   - `Card` with custom gradient borders for feed display sections
   - `Badge` for validation states (verified, invalid, warning)
-  - `Accordion` for collapsible capability lists
+  - `Accordion` for collapsible capability lists and snapshot histories
   - `Textarea` for JSON input with monospace styling
   - `Button` with distinct variants for validation actions vs navigation
   - `Alert` for critical security warnings (signature failures)
-  - `ScrollArea` for large JSON feed display
+  - `ScrollArea` for large JSON feed display and archive lists
   - `Progress` for multi-step validation workflows
   - `Tooltip` for schema field explanations
   - `Separator` to divide validation sections
@@ -123,6 +130,10 @@ Animations should reinforce validation states and guide attention to critical se
   - CloudArrowDown for feed fetching
   - CheckCircle/XCircle for validation results
   - Database for RAG indexing
+  - Archive for feed archival and version history
+  - Clock for timestamp displays
+  - Trash for deletion actions
+  - Download/Copy for export and clipboard operations
   
 - **Spacing**: 
   - Section padding: `p-6` for cards, `p-8` for page container
@@ -131,7 +142,8 @@ Animations should reinforce validation states and guide attention to critical se
   
 - **Mobile**: 
   - Tabs convert to stacked buttons on <768px
-  - Two-column layouts (feed + analysis) stack vertically on mobile
+  - Two-column layouts (feed + analysis, archive list + details) stack vertically on mobile
   - JSON display switches to horizontally scrollable with reduced font size
-  - Floating action button for quick validation on mobile
-  - Bottom sheet for capability details instead of side panels
+  - Floating action button for quick validation/archival on mobile
+  - Bottom sheet for capability details and snapshot viewers instead of side panels
+  - Archive list becomes full-width with collapsible snapshot details
