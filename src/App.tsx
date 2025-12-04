@@ -7,6 +7,7 @@ import { SEOMetaTags } from '@/components/SEOMetaTags'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { WorkflowStepper } from '@/components/WorkflowStepper'
 import { TermsOfService } from '@/components/TermsOfService'
+import { FeedDirectory } from '@/components/Directory'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -15,7 +16,6 @@ const Validator = lazy(() => import('@/components/Validator').then(m => ({ defau
 const Discovery = lazy(() => import('@/components/Discovery').then(m => ({ default: m.Discovery })))
 const RAGPrep = lazy(() => import('@/components/RAGPrep').then(m => ({ default: m.RAGPrep })))
 const Archive = lazy(() => import('@/components/Archive').then(m => ({ default: m.Archive })))
-const Directory = lazy(() => import('@/components/Directory').then(m => ({ default: m.Directory })))
 
 // Loading skeleton for tab content
 function TabLoadingSkeleton() {
@@ -144,18 +144,17 @@ function App() {
                 </Suspense>
               </TabsContent>
 
-              <TabsContent value="directory" className="mt-0">
-                <Suspense fallback={<TabLoadingSkeleton />}>
-                  <Directory onNavigate={handleTabChange} onComplete={() => handleStepComplete('directory')} />
-                </Suspense>
-              </TabsContent>
-
               <TabsContent value="rag" className="mt-0">
                 <Suspense fallback={<TabLoadingSkeleton />}>
                   <RAGPrep />
                 </Suspense>
               </TabsContent>
             </Tabs>
+
+            {/* Feed Directory - Always visible for scrapers & AI bots */}
+            <div className="mt-12">
+              <FeedDirectory />
+            </div>
           </main>
 
           <footer className="mt-20 pt-10 text-center">

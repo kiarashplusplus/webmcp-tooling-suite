@@ -709,10 +709,10 @@ export function Archive({ onNavigate, onComplete }: ArchiveProps) {
           <div className="flex items-center justify-between">
             <div>
               <h4 className="font-bold text-foreground">Archives Ready!</h4>
-              <p className="text-sm text-muted-foreground">Next, publish your feed to the public directory.</p>
+              <p className="text-sm text-muted-foreground">Next, prepare your feeds for RAG systems and AI assistants.</p>
             </div>
-            <Button onClick={() => { onComplete?.(); onNavigate('directory'); }} className="gap-2">
-              Publish to Directory
+            <Button onClick={() => { onComplete?.(); onNavigate('rag'); }} className="gap-2">
+              RAG Preparation
               <ArrowRight size={16} weight="bold" />
             </Button>
           </div>

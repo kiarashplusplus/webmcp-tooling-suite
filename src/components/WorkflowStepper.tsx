@@ -10,8 +10,7 @@ export interface WorkflowStep {
 const WORKFLOW_STEPS: WorkflowStep[] = [
   { id: 'discovery', label: 'Discovery', description: 'Find & explore feeds' },
   { id: 'validator', label: 'Validate', description: 'Check feed integrity' },
-  { id: 'archive', label: 'Archive', description: 'Save feed snapshot' },
-  { id: 'directory', label: 'Publish', description: 'Add to directory' },
+  { id: 'archive', label: 'Archive & Publish', description: 'Save & publish feed' },
   { id: 'rag', label: 'RAG Prep', description: 'Prepare for AI' },
 ]
 
