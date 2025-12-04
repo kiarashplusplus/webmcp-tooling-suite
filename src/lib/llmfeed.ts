@@ -626,13 +626,10 @@ export async function verifyEd25519Signature(
     message: `Public key URL: ${feed.trust.public_key_hint}`
   })
 
-  // Step 8: Fetch public key
+  // Step 8: Fetch public key (using CORS proxy if needed)
   let publicKeyPem: string
   try {
-    const response = await fetch(feed.trust.public_key_hint, {
-      mode: 'cors',
-      cache: 'no-cache'
-    })
+    const response = await fetchWithCorsProxy(feed.trust.public_key_hint)
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
@@ -1014,6 +1011,32 @@ function isSameOriginOrLocal(url: string): boolean {
   }
 }
 
+/**
+ * Fetch a URL, using CORS proxy if needed for cross-origin requests.
+ * Returns the Response object.
+ */
+export async function fetchWithCorsProxy(url: string): Promise<Response> {
+  const corsProxyUrl = getCorsProxyUrl()
+  const needsProxy = !isSameOriginOrLocal(url)
+  
+  let fetchUrl = url
+  if (needsProxy && corsProxyUrl) {
+    fetchUrl = `${corsProxyUrl}?url=${encodeURIComponent(url)}`
+  }
+
+  try {
+    const response = await fetch(fetchUrl)
+    return response
+  } catch (error) {
+    // If proxy fetch fails, try direct as fallback
+    if (needsProxy && corsProxyUrl && fetchUrl !== url) {
+      console.warn('CORS proxy failed, attempting direct fetch:', error)
+      return fetch(url)
+    }
+    throw error
+  }
+}
+
 export async function fetchLLMFeed(input: string): Promise<LLMFeed> {
   let url = input.trim()
   
@@ -1025,36 +1048,13 @@ export async function fetchLLMFeed(input: string): Promise<LLMFeed> {
     url = url.replace(/\/$/, '') + '/.well-known/mcp.llmfeed.json'
   }
 
-  // Determine if we need to use the CORS proxy
-  const corsProxyUrl = getCorsProxyUrl()
-  const needsProxy = !isSameOriginOrLocal(url)
-  
-  let fetchUrl = url
-  if (needsProxy && corsProxyUrl) {
-    // Route through CORS proxy
-    fetchUrl = `${corsProxyUrl}?url=${encodeURIComponent(url)}`
+  const response = await fetchWithCorsProxy(url)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch feed: ${response.status} ${response.statusText}`)
   }
 
-  try {
-    const response = await fetch(fetchUrl)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch feed: ${response.status} ${response.statusText}`)
-    }
-
-    const feed = await response.json()
-    return feed
-  } catch (error) {
-    // If proxy fetch fails, try direct as fallback (might work if server has CORS enabled)
-    if (needsProxy && corsProxyUrl && fetchUrl !== url) {
-      console.warn('CORS proxy failed, attempting direct fetch:', error)
-      const directResponse = await fetch(url)
-      if (!directResponse.ok) {
-        throw new Error(`Failed to fetch feed: ${directResponse.status} ${directResponse.statusText}`)
-      }
-      return directResponse.json()
-    }
-    throw error
-  }
+  const feed = await response.json()
+  return feed
 }
 
 export function calculateTokenEstimate(feed: LLMFeed): { total: number; perCapability: number } {

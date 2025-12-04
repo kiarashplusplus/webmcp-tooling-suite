@@ -97,14 +97,16 @@ export default {
       })
     }
 
-    // Security: Only allow .json files or well-known paths
+    // Security: Only allow specific file types
     const isJsonFile = parsedUrl.pathname.endsWith('.json')
+    const isPemFile = parsedUrl.pathname.endsWith('.pem')
     const isWellKnown = parsedUrl.pathname.includes('.well-known')
     const isLLMFeed = parsedUrl.pathname.includes('llmfeed')
+    const isPublicKey = parsedUrl.pathname.includes('public') || parsedUrl.pathname.includes('key')
     
-    if (!isJsonFile && !isWellKnown && !isLLMFeed) {
+    if (!isJsonFile && !isPemFile && !isWellKnown && !isLLMFeed && !isPublicKey) {
       return new Response(JSON.stringify({ 
-        error: 'Only .json files or .well-known paths are allowed' 
+        error: 'Only .json, .pem files or .well-known paths are allowed' 
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -152,23 +154,31 @@ export default {
       // Get the response body
       const body = await response.text()
 
-      // Try to parse as JSON to validate
-      try {
-        JSON.parse(body)
-      } catch {
-        return new Response(JSON.stringify({ 
-          error: 'Response is not valid JSON' 
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
-        })
+      // Determine content type based on request
+      const isPemRequest = parsedUrl.pathname.endsWith('.pem') || 
+                          parsedUrl.pathname.includes('public') || 
+                          parsedUrl.pathname.includes('key')
+      
+      // Only validate JSON for JSON requests
+      if (!isPemRequest) {
+        try {
+          JSON.parse(body)
+        } catch {
+          return new Response(JSON.stringify({ 
+            error: 'Response is not valid JSON' 
+          }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+          })
+        }
       }
 
       // Return the proxied response with CORS headers
+      const contentType = isPemRequest ? 'text/plain' : 'application/json'
       return new Response(body, {
         status: 200,
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': contentType,
           'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
           'X-Proxied-From': parsedUrl.origin,
           ...corsHeaders(origin),
