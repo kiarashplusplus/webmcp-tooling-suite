@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { useKV } from '@github/spark/hooks'
+import { useAuth } from '@/hooks/use-auth'
 import type { ArchivedFeed } from './Archive'
 import { toast } from 'sonner'
 import { 
@@ -15,7 +16,8 @@ import {
   Tag,
   Calendar,
   ArrowUpRight,
-  Archive
+  Archive,
+  Trash
 } from '@phosphor-icons/react'
 
 interface FeedMetadata {
@@ -107,8 +109,10 @@ const SAMPLE_FEEDS: FeedMetadata[] = [
 ]
 
 export function Directory() {
-  const [archivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
+  const { user, isAuthenticated } = useAuth()
+  const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
   const [archives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
+  const [publishedBy, setPublishedBy] = useKV<Record<string, string>>('feed-publishers', {})
   const [allFeeds, setAllFeeds] = useState<FeedMetadata[]>(SAMPLE_FEEDS)
 
   useEffect(() => {
@@ -190,6 +194,49 @@ export function Directory() {
     }
   }
 
+  const handleUnpublish = (feed: FeedMetadata) => {
+    if (!isAuthenticated || !user) {
+      toast.error('Sign in required to unpublish')
+      return
+    }
+
+    const publisher = publishedBy?.[feed.id]
+    const currentUserLogin = user.login
+
+    if (!publisher) {
+      toast.error('Cannot determine publisher of this feed')
+      return
+    }
+
+    if (publisher !== currentUserLogin) {
+      toast.error('Permission denied', {
+        description: `Only @${publisher} can unpublish this feed`
+      })
+      return
+    }
+
+    setArchivedFeeds((currentFeeds) => {
+      const updated = (currentFeeds || []).filter(f => f.id !== feed.id)
+      return updated
+    })
+
+    setPublishedBy((currentPublishers) => {
+      const updated = { ...currentPublishers }
+      delete updated[feed.id]
+      return updated
+    })
+
+    toast.success(`Unpublished "${feed.title}"`, {
+      description: 'This feed has been removed from the public directory'
+    })
+  }
+
+  const canUnpublish = (feedId: string) => {
+    if (!isAuthenticated || !user) return false
+    const publisher = publishedBy?.[feedId]
+    return publisher === user.login
+  }
+
   const FeedCard = ({ feed, isFromArchive }: { feed: FeedMetadata; isFromArchive?: boolean }) => (
     <Card 
       className="glass-card p-6 hover:glass-strong transition-all duration-300 group"
@@ -226,13 +273,26 @@ export function Directory() {
             <meta itemProp="encodingFormat" content="application/json" />
             <meta itemProp="datePublished" content={new Date(feed.timestamp).toISOString()} />
           </div>
-          <Badge 
-            variant="outline" 
-            className="shrink-0 glass text-primary border-primary/30"
-          >
-            <Tag size={14} className="mr-1" />
-            <span itemProp="genre">{feed.feed_type}</span>
-          </Badge>
+          <div className="flex items-start gap-2">
+            <Badge 
+              variant="outline" 
+              className="shrink-0 glass text-primary border-primary/30"
+            >
+              <Tag size={14} className="mr-1" />
+              <span itemProp="genre">{feed.feed_type}</span>
+            </Badge>
+            {isFromArchive && canUnpublish(feed.id) && (
+              <Button
+                onClick={() => handleUnpublish(feed)}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                title="Unpublish from directory"
+              >
+                <Trash size={16} />
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -256,6 +316,12 @@ export function Directory() {
             <>
               <Separator orientation="vertical" className="h-4" />
               <span itemProp="creator">{feed.author}</span>
+            </>
+          )}
+          {isFromArchive && publishedBy?.[feed.id] && (
+            <>
+              <Separator orientation="vertical" className="h-4" />
+              <span className="text-accent">Published by @{publishedBy[feed.id]}</span>
             </>
           )}
         </div>

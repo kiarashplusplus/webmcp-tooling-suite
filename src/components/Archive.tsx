@@ -48,6 +48,7 @@ export function Archive() {
   const { user, loading: authLoading, isAuthenticated } = useAuth()
   const [archives, setArchives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
   const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
+  const [publishedBy, setPublishedBy] = useKV<Record<string, string>>('feed-publishers', {})
   const [domain, setDomain] = useState('')
   const [loading, setLoading] = useState(false)
   const [selectedSnapshot, setSelectedSnapshot] = useState<ArchivedSnapshot | null>(null)
@@ -187,6 +188,11 @@ export function Archive() {
       return
     }
 
+    if (!user) {
+      toast.error('User information not available')
+      return
+    }
+
     const feedUrl = snapshot.feed.metadata.origin || `https://${snapshot.domain}/.well-known/mcp.llmfeed.json`
     
     const feedMetadata: FeedMetadata = {
@@ -212,9 +218,16 @@ export function Archive() {
         return feeds
       }
       toast.success(`Published "${feedMetadata.title}" to directory`, {
-        description: `Published by @${user?.login || 'user'} • View it in the Directory tab`
+        description: `Published by @${user.login} • View it in the Directory tab`
       })
       return [...feeds, feedMetadata]
+    })
+
+    setPublishedBy((currentPublishers) => {
+      return {
+        ...currentPublishers,
+        [snapshot.id]: user.login
+      }
     })
   }
 
