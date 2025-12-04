@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Validate LLMFeed
-        uses: websearch-via-camera/webmcp-tooling-suite/packages/github-action@v1
+        uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
         with:
           feed: '.well-known/mcp.llmfeed.json'
 ```
@@ -53,7 +53,7 @@ jobs:
       
       - name: Validate LLMFeed
         id: validate
-        uses: websearch-via-camera/webmcp-tooling-suite/packages/github-action@v1
+        uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
         with:
           feed: 'mcp.llmfeed.json'
           create-badge: 'true'
@@ -78,7 +78,7 @@ Then add to your README:
 
 ```yaml
 - name: Validate Remote Feed
-  uses: websearch-via-camera/webmcp-tooling-suite/packages/github-action@v1
+  uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
   with:
     feed: 'https://example.com/.well-known/mcp.llmfeed.json'
 ```
@@ -87,7 +87,7 @@ Then add to your README:
 
 ```yaml
 - name: Strict Validation
-  uses: websearch-via-camera/webmcp-tooling-suite/packages/github-action@v1
+  uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
   with:
     feed: 'mcp.llmfeed.json'
     fail-on-warning: 'true'
@@ -97,7 +97,7 @@ Then add to your README:
 
 ```yaml
 - name: Structure-Only Validation
-  uses: websearch-via-camera/webmcp-tooling-suite/packages/github-action@v1
+  uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
   with:
     feed: 'mcp.llmfeed.json'
     skip-signature: 'true'
@@ -108,7 +108,7 @@ Then add to your README:
 ```yaml
 - name: Validate
   id: validate
-  uses: websearch-via-camera/webmcp-tooling-suite/packages/github-action@v1
+  uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
   with:
     feed: 'mcp.llmfeed.json'
 
@@ -126,7 +126,7 @@ Then add to your README:
 ```yaml
 - name: Validate
   id: validate
-  uses: websearch-via-camera/webmcp-tooling-suite/packages/github-action@v1
+  uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
   with:
     feed: 'mcp.llmfeed.json'
 

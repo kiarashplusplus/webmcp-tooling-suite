@@ -123,7 +123,7 @@ Set these environment variables:
 
 ```bash
 # Clone the repository
-git clone https://github.com/websearch-via-camera/webmcp-tooling-suite.git
+git clone https://github.com/kiarashplusplus/webmcp-tooling-suite.git
 cd webmcp-tooling-suite
 
 # Install dependencies
@@ -179,7 +179,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: websearch-via-camera/webmcp-tooling-suite/packages/github-action@v1
+      - uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
         with:
           feed: '.well-known/mcp.llmfeed.json'
           create-badge: 'true'

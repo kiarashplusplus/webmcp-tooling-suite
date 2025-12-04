@@ -289,5 +289,5 @@ async function verifyEd25519Signature(
 ## Support
 
 For issues or questions:
-- GitHub: [webmcp-tooling-suite](https://github.com/websearch-via-camera/webmcp-tooling-suite)
+- GitHub: [webmcp-tooling-suite](https://github.com/kiarashplusplus/webmcp-tooling-suite)
 - Created by: [Kiarash Adl](https://25x.codes/)

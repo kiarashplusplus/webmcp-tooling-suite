@@ -187,7 +187,7 @@ function App() {
                 <p className="text-xs text-muted-foreground/80">
                   Open source •{' '}
                   <a 
-                    href="https://github.com/websearch-via-camera/webmcp-tooling-suite" 
+                    href="https://github.com/kiarashplusplus/webmcp-tooling-suite" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-primary/80 hover:text-accent transition-colors underline underline-offset-2"
