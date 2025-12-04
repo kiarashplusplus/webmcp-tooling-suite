@@ -165,40 +165,43 @@ See [packages/validator/README.md](packages/validator/README.md) and [packages/s
 
 ### ✅ Completed
 
-1. **CLI/API Validator Package** — `@webmcp/validator`
-   - ✅ Full Ed25519 signature verification
-   - ✅ Structural and schema validation
-   - ✅ Security scoring with detailed diagnostics
-   - ✅ JSON output mode for scripting
+1. **CLI Validator Package** — `@webmcp/validator`
+   - Full Ed25519 signature verification
+   - Structural and schema validation  
+   - Security scoring with detailed diagnostics
+   - JSON output mode for CI/CD scripting
 
 2. **Feed Signing Tool** — `@webmcp/signer`
-   - ✅ Ed25519 keypair generation (PKCS#8 format)
-   - ✅ Feed signing with configurable signed_blocks
-   - ✅ PEM and base64 key formats
-   - ✅ CI/CD-friendly CLI
-
-### 🔄 In Progress
-
-3. **Vector Store Integrations** — Direct export to popular vector DBs
-   - Pinecone, Weaviate, Chroma, Qdrant connectors
-   - Automated re-indexing on feed updates
-   - Embedding model selection (nomic-embed-text, OpenAI, etc.)
+   - Ed25519 keypair generation (PKCS#8 format)
+   - Feed signing with configurable `signed_blocks`
+   - PEM and base64 key formats
+   - CI/CD-friendly CLI interface
 
 ### 📋 Planned
 
-4. **Feed Registry API** — RESTful API for directory operations
-   - Search by capabilities, domain, topics
-   - Webhook notifications for feed updates
-   - GraphQL interface for flexible queries
+3. **GitHub Action for Feed Validation**
+   - Pre-built action: `webmcp/validate-feed@v1`
+   - Automatic PR checks for feed changes
+   - Signature verification in CI pipelines
+   - Badge generation for feed trust status
 
-5. **WebMCP Client SDK** — Browser SDK for consuming feeds
-   - navigator.modelContext polyfill (MCP-B compatibility)
-   - JSON-RPC client with retry/timeout handling
-   - TypeScript-first with full type inference
+4. **Feed Schema Generator**
+   - Generate LLMFeed from OpenAPI/Swagger specs
+   - Import from existing MCP server definitions
+   - TypeScript type generation from feed schemas
+   - Reduce manual feed authoring friction
 
-6. **Feed Diff & Migration Tools** — Track changes between feed versions
-7. **Health Monitoring Dashboard** — Track feed availability and response times
-8. **Certification Program** — Verified publisher badges for trusted feeds
+5. **Multi-Feed Aggregator**
+   - Combine multiple feeds into unified index
+   - Namespace collision detection
+   - Cross-feed capability search
+   - Agent-optimized merged output
+
+6. **Feed Health Monitor** (Community Interest)
+   - Uptime tracking for registered feeds
+   - Signature expiration warnings
+   - Broken public_key_hint detection
+   - Optional status badges
 
 ## Reference Implementation
 
@@ -207,6 +210,7 @@ This project validates against the **25x.codes** reference feed:
 ```
 https://25x.codes/.well-known/mcp.llmfeed.json
 ```
+
 
 Key features demonstrated:
 - Full Ed25519 signature with trust block
