@@ -109,30 +109,82 @@ npm install
 
 # Start development server
 npm run dev
+
+# Build all packages
+npm run build:packages
 ```
 
-## Future Roadmap
+## CLI Packages
 
-Based on research findings and PRD analysis, the following priorities are recommended:
+The tooling suite includes standalone CLI packages for CI/CD integration:
 
-### High Priority (Security Critical)
+### @webmcp/validator
 
-1. **CLI/API Package** — Extract validation logic into standalone `@webmcp/validator` package
-   - Enable CI/CD integration for feed signing pipelines
-   - Provide programmatic validation for server-side consumption
-   - Support offline validation scenarios
+Validate LLMFeed files with full Ed25519 signature verification.
 
-2. **Feed Signing Tool** — Generate Ed25519 keypairs and sign feeds
-   - Key management with secure storage
-   - Automated signing in deployment workflows
-   - Key rotation support
+```bash
+# Install globally
+npm install -g @webmcp/validator
 
-### Medium Priority (Ecosystem Growth)
+# Validate a feed from URL
+llmfeed-validate https://25x.codes/.well-known/mcp.llmfeed.json
+
+# Validate local file with verbose output
+llmfeed-validate ./feed.json --verbose
+
+# JSON output for scripting
+llmfeed-validate ./feed.json --json
+
+# Skip signature verification
+llmfeed-validate ./feed.json --skip-signature
+```
+
+### @webmcp/signer
+
+Generate Ed25519 keypairs and sign LLMFeed files.
+
+```bash
+# Install globally
+npm install -g @webmcp/signer
+
+# Generate a new keypair
+llmfeed-sign keygen -o ./keys -n mysite
+
+# Sign a feed
+llmfeed-sign sign mcp.llmfeed.json \
+  --key ./keys/mysite.private.pem \
+  --public-url https://example.com/.well-known/public.pem
+
+# Verify a signed feed
+llmfeed-sign verify signed.json --key ./keys/mysite.public.pem
+```
+
+See [packages/validator/README.md](packages/validator/README.md) and [packages/signer/README.md](packages/signer/README.md) for complete documentation.
+
+## Roadmap
+
+### ✅ Completed
+
+1. **CLI/API Validator Package** — `@webmcp/validator`
+   - ✅ Full Ed25519 signature verification
+   - ✅ Structural and schema validation
+   - ✅ Security scoring with detailed diagnostics
+   - ✅ JSON output mode for scripting
+
+2. **Feed Signing Tool** — `@webmcp/signer`
+   - ✅ Ed25519 keypair generation (PKCS#8 format)
+   - ✅ Feed signing with configurable signed_blocks
+   - ✅ PEM and base64 key formats
+   - ✅ CI/CD-friendly CLI
+
+### 🔄 In Progress
 
 3. **Vector Store Integrations** — Direct export to popular vector DBs
    - Pinecone, Weaviate, Chroma, Qdrant connectors
    - Automated re-indexing on feed updates
    - Embedding model selection (nomic-embed-text, OpenAI, etc.)
+
+### 📋 Planned
 
 4. **Feed Registry API** — RESTful API for directory operations
    - Search by capabilities, domain, topics
@@ -143,8 +195,6 @@ Based on research findings and PRD analysis, the following priorities are recomm
    - navigator.modelContext polyfill (MCP-B compatibility)
    - JSON-RPC client with retry/timeout handling
    - TypeScript-first with full type inference
-
-### Lower Priority (Nice-to-Have)
 
 6. **Feed Diff & Migration Tools** — Track changes between feed versions
 7. **Health Monitoring Dashboard** — Track feed availability and response times

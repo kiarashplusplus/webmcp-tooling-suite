@@ -1,12 +1,16 @@
 {
-    "name": "spark-template",
+    "name": "webmcp-tooling-suite",
     "private": true,
     "version": "0.0.0",
     "type": "module",
+    "workspaces": [
+        "packages/*"
+    ],
     "scripts": {
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
+        "build:packages": "npm run build -w @webmcp/validator && npm run build -w @webmcp/signer",
         "lint": "eslint .",
         "optimize": "vite optimize",
         "preview": "vite preview"
@@ -88,10 +92,5 @@
         "typescript": "~5.7.2",
         "typescript-eslint": "^8.38.0",
         "vite": "^7.2.6"
-    },
-    "workspaces": {
-        "packages": [
-            "packages/*"
-        ]
     }
 }
