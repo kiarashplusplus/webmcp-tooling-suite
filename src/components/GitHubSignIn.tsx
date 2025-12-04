@@ -2,6 +2,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { GithubLogo, Info, Lock } from '@phosphor-icons/react'
+import { useAuth } from '@/hooks/use-auth'
 
 interface GitHubSignInProps {
   onClose?: () => void
@@ -9,8 +10,10 @@ interface GitHubSignInProps {
 }
 
 export function GitHubSignIn({ onClose, context = 'general' }: GitHubSignInProps) {
+  const { signIn } = useAuth()
+
   const handleSignIn = () => {
-    window.location.href = '/api/auth/github'
+    signIn()
   }
 
   return (

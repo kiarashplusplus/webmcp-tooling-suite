@@ -93,9 +93,31 @@ Feed → Trust Block → Public Key Hint → Signature Verification
 
 - **Framework**: React 18 + TypeScript + Vite
 - **UI**: Radix UI primitives + Tailwind CSS v4 + shadcn/ui
-- **Auth**: GitHub OAuth via @github/spark
+- **Storage**: localStorage (default) + GitHub Gist sync (optional)
+- **Auth**: GitHub OAuth (optional, via Cloudflare Worker)
 - **Crypto**: Web Crypto API (native Ed25519)
-- **State**: @tanstack/react-query + Spark KV store
+- **State**: @tanstack/react-query + localStorage
+
+## Deployment
+
+This is a fully static site that can be deployed to:
+
+- **GitHub Pages** - Zero configuration needed
+- **Cloudflare Pages** - Connect repo and deploy
+- **Netlify** - Automatic deploys from GitHub
+
+### Optional: GitHub OAuth
+
+For authenticated publishing to the directory, deploy a Cloudflare Worker:
+
+```bash
+# In a separate worker project
+npx wrangler init webmcp-auth
+```
+
+Set these environment variables:
+- `VITE_GITHUB_OAUTH_URL` - OAuth initiation endpoint
+- `VITE_GITHUB_TOKEN_URL` - Token exchange endpoint
 
 ## Installation
 

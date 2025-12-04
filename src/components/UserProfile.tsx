@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { SignOut, Crown } from '@phosphor-icons/react'
-import type { UserInfo } from '@/hooks/use-auth'
+import { useAuth, type UserInfo } from '@/hooks/use-auth'
 
 interface UserProfileProps {
   user: UserInfo
@@ -12,8 +12,10 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ user, onSignOut, compact = false }: UserProfileProps) {
+  const { signOut } = useAuth()
+  
   const handleSignOut = () => {
-    window.location.href = '/api/auth/signout'
+    signOut()
     onSignOut?.()
   }
 
