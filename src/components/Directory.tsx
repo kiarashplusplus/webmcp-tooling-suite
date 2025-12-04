@@ -4,8 +4,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useKV } from '@/hooks/use-kv'
 import { useAuth } from '@/hooks/use-auth'
+import { useDirectory, type DirectoryFeed } from '@/hooks/use-directory'
 import type { ArchivedFeed } from './Archive'
 import { toast } from 'sonner'
 import { 
@@ -18,7 +20,9 @@ import {
   ArrowUpRight,
   Archive,
   Trash,
-  Info
+  Info,
+  Warning,
+  ArrowClockwise
 } from '@phosphor-icons/react'
 
 interface FeedMetadata {
@@ -32,10 +36,32 @@ interface FeedMetadata {
   capabilities_count?: number
   version?: string
   author?: string
+  is_curated?: boolean
+  signature_valid?: boolean
+  score?: number
 }
 
-// Reference implementation feeds - verified, curated feeds for launch
-const CURATED_FEEDS: FeedMetadata[] = [
+// Convert DirectoryFeed to FeedMetadata for backward compatibility
+function directoryFeedToMetadata(feed: DirectoryFeed): FeedMetadata {
+  return {
+    id: feed.id,
+    url: feed.url,
+    title: feed.title || feed.domain,
+    description: feed.description || 'No description available',
+    feed_type: feed.feed_type,
+    domain: feed.domain,
+    timestamp: feed.submitted_at,
+    capabilities_count: feed.capabilities_count,
+    version: feed.version || undefined,
+    author: feed.submitted_by || undefined,
+    is_curated: feed.is_curated,
+    signature_valid: feed.signature_valid,
+    score: feed.score || undefined,
+  }
+}
+
+// Fallback curated feeds for when API is unavailable
+const FALLBACK_CURATED_FEEDS: FeedMetadata[] = [
   {
     id: 'reference-25x-codes',
     url: 'https://25x.codes/.well-known/mcp.llmfeed.json',
@@ -46,7 +72,8 @@ const CURATED_FEEDS: FeedMetadata[] = [
     timestamp: Date.now() - 1000 * 60 * 60 * 24 * 7,
     capabilities_count: 8,
     version: '2.0.0',
-    author: 'Kiarash Adl'
+    author: 'Kiarash Adl',
+    is_curated: true
   },
   {
     id: 'wellknownmcp-org',
@@ -58,7 +85,8 @@ const CURATED_FEEDS: FeedMetadata[] = [
     timestamp: Date.now() - 1000 * 60 * 60 * 24 * 3,
     capabilities_count: 12,
     version: '2.0.0',
-    author: 'WellKnownMCP'
+    author: 'WellKnownMCP',
+    is_curated: true
   },
   {
     id: 'llmca-org',
@@ -70,7 +98,8 @@ const CURATED_FEEDS: FeedMetadata[] = [
     timestamp: Date.now() - 1000 * 60 * 60 * 24 * 2,
     capabilities_count: 10,
     version: '2.1.0',
-    author: 'LLMCA'
+    author: 'LLMCA',
+    is_curated: true
   },
   {
     id: 'wellknownmcp-llm-index',
@@ -82,28 +111,37 @@ const CURATED_FEEDS: FeedMetadata[] = [
     timestamp: Date.now() - 1000 * 60 * 60 * 24 * 1,
     capabilities_count: 7,
     version: '2.2.0',
-    author: 'WellKnownMCP'
+    author: 'WellKnownMCP',
+    is_curated: true
   }
 ]
 
 // Legacy reference for backward compatibility
-const REFERENCE_FEED: FeedMetadata = CURATED_FEEDS[0]
+const REFERENCE_FEED: FeedMetadata = FALLBACK_CURATED_FEEDS[0]
 
 export function FeedDirectory() {
   const { user, isAuthenticated } = useAuth()
-  const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
+  const { 
+    feeds: apiFeeds, 
+    curatedFeeds: apiCuratedFeeds, 
+    loading: apiLoading, 
+    error: apiError,
+    deleteFeed,
+    refresh
+  } = useDirectory()
+  
+  // Local archives for viewing archived snapshots
   const [archives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
-  const [publishedBy, setPublishedBy] = useKV<Record<string, string>>('feed-publishers', {})
-  const [allFeeds, setAllFeeds] = useState<FeedMetadata[]>(CURATED_FEEDS)
-
-  useEffect(() => {
-    // Combine curated feeds with user-published feeds
-    const combined = [...CURATED_FEEDS, ...(archivedFeeds || [])]
-    const unique = Array.from(
-      new Map(combined.map(feed => [feed.id, feed])).values()
-    )
-    setAllFeeds(unique)
-  }, [archivedFeeds])
+  
+  // Convert API feeds to FeedMetadata format
+  const allFeeds: FeedMetadata[] = apiError 
+    ? FALLBACK_CURATED_FEEDS 
+    : apiFeeds.map(directoryFeedToMetadata)
+  
+  // Determine which feeds are published by the current user
+  const publishedByUser = new Set(
+    apiFeeds.filter(f => f.submitted_by === user?.login).map(f => f.id)
+  )
 
   const topFeeds = [...allFeeds]
     .sort((a, b) => (b.capabilities_count || 0) - (a.capabilities_count || 0))
@@ -176,52 +214,46 @@ export function FeedDirectory() {
     }
   }
 
-  const handleUnpublish = (feed: FeedMetadata) => {
+  const handleUnpublish = async (feed: FeedMetadata) => {
     if (!isAuthenticated || !user) {
       toast.error('Sign in required to unpublish')
       return
     }
 
-    const publisher = publishedBy?.[feed.id]
-    const currentUserLogin = user.login
-
-    if (!publisher) {
-      toast.error('Cannot determine publisher of this feed')
-      return
-    }
-
-    if (publisher !== currentUserLogin) {
+    // Check if user owns this feed
+    if (!publishedByUser.has(feed.id)) {
       toast.error('Permission denied', {
-        description: `Only @${publisher} can unpublish this feed`
+        description: `You can only unpublish feeds you submitted`
       })
       return
     }
 
-    setArchivedFeeds((currentFeeds) => {
-      const updated = (currentFeeds || []).filter(f => f.id !== feed.id)
-      return updated
-    })
-
-    setPublishedBy((currentPublishers) => {
-      const updated = { ...currentPublishers }
-      delete updated[feed.id]
-      return updated
-    })
-
-    toast.success(`Unpublished "${feed.title}"`, {
-      description: 'This feed has been removed from the public directory'
-    })
+    try {
+      const success = await deleteFeed(feed.id)
+      if (success) {
+        toast.success(`Unpublished "${feed.title}"`, {
+          description: 'This feed has been removed from the public directory'
+        })
+      }
+    } catch (error) {
+      toast.error('Failed to unpublish', {
+        description: error instanceof Error ? error.message : 'Unknown error'
+      })
+    }
   }
 
   const canUnpublish = (feedId: string) => {
     if (!isAuthenticated || !user) return false
-    // Can't unpublish curated/reference feeds
-    if (CURATED_FEEDS.some(f => f.id === feedId)) return false
-    const publisher = publishedBy?.[feedId]
-    return publisher === user.login
+    // Can't unpublish curated feeds
+    const feed = allFeeds.find(f => f.id === feedId)
+    if (feed?.is_curated) return false
+    return publishedByUser.has(feedId)
   }
 
-  const isCuratedFeed = (feedId: string) => CURATED_FEEDS.some(f => f.id === feedId)
+  const isCuratedFeed = (feedId: string) => {
+    const feed = allFeeds.find(f => f.id === feedId)
+    return feed?.is_curated ?? false
+  }
 
   const FeedCard = ({ feed, isFromArchive }: { feed: FeedMetadata; isFromArchive?: boolean }) => {
     const isCurated = isCuratedFeed(feed.id)
@@ -312,13 +344,19 @@ export function FeedDirectory() {
           {feed.author && (
             <>
               <Separator orientation="vertical" className="h-4" />
-              <span itemProp="creator">{feed.author}</span>
+              <span itemProp="creator">by @{feed.author}</span>
             </>
           )}
-          {isFromArchive && publishedBy?.[feed.id] && (
+          {feed.score && (
             <>
               <Separator orientation="vertical" className="h-4" />
-              <span className="text-accent">Published by @{publishedBy[feed.id]}</span>
+              <span className="text-accent">Score: {feed.score}/100</span>
+            </>
+          )}
+          {feed.signature_valid && (
+            <>
+              <Separator orientation="vertical" className="h-4" />
+              <span className="text-green-500">🔐 Signed</span>
             </>
           )}
         </div>
@@ -392,6 +430,28 @@ export function FeedDirectory() {
 
   return (
     <div className="space-y-8">
+      {/* API Error Banner */}
+      {apiError && (
+        <div className="glass-strong rounded-xl p-4 border border-yellow-500/30 bg-yellow-500/5">
+          <div className="flex items-center gap-3">
+            <Warning size={20} className="text-yellow-500 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-yellow-500">Directory API unavailable</p>
+              <p className="text-xs text-muted-foreground">Showing cached curated feeds. {apiError}</p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => refresh()}
+              className="shrink-0"
+            >
+              <ArrowClockwise size={14} className="mr-1" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Section Label for Scrapers & AI Bots */}
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
@@ -425,7 +485,23 @@ export function FeedDirectory() {
           </div>
         </div>
 
-        {topFeeds.length === 0 ? (
+        {apiLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <Card key={i} className="glass-card p-6">
+                <div className="space-y-3">
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <div className="flex gap-2 pt-2">
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : topFeeds.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Info size={48} className="text-muted-foreground/50 mb-4" />
             <p className="text-muted-foreground">No feeds published yet</p>
@@ -441,7 +517,7 @@ export function FeedDirectory() {
                   <meta itemProp="position" content={String(index + 1)} />
                   <FeedCard 
                     feed={feed}
-                    isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
+                    isFromArchive={!feed.is_curated}
                   />
                 </div>
               ))}
@@ -474,7 +550,23 @@ export function FeedDirectory() {
           </div>
         </div>
 
-        {latestFeeds.length === 0 ? (
+        {apiLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <Card key={i} className="glass-card p-6">
+                <div className="space-y-3">
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <div className="flex gap-2 pt-2">
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : latestFeeds.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Info size={48} className="text-muted-foreground/50 mb-4" />
             <p className="text-muted-foreground">No feeds published yet</p>
@@ -490,7 +582,7 @@ export function FeedDirectory() {
                   <meta itemProp="position" content={String(index + 1)} />
                   <FeedCard 
                     feed={feed}
-                    isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
+                    isFromArchive={!feed.is_curated}
                   />
                 </div>
               ))}

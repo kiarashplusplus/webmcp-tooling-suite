@@ -15,13 +15,9 @@ A phased approach to growing the WebMCP/LLMFeed ecosystem through organic adopti
 - [x] Submit Feed UI workflow (3-step: validate → sign in → submit)
 - [x] Embeddable verification badge generator
 
-### ⚠️ Current Limitation
-All user data is stored in **browser localStorage** — not shared across users.
-The "directory" only shows hardcoded `CURATED_FEEDS` + each user's own local submissions.
-
 ---
 
-## Phase 1: Persistent Database 🎯 CURRENT
+## Phase 1: Persistent Database ✅ IMPLEMENTED
 
 ### Goal
 Implement a **shared, persistent directory** so submitted feeds are visible to all visitors.
@@ -36,14 +32,46 @@ Implement a **shared, persistent directory** so submitted feeds are visible to a
 | GitHub Gist | Already integrated | Personal only, not shared | Free but rate limited |
 | Supabase | Full Postgres | External dependency | Free tier available |
 
-**Recommended: Cloudflare D1 + Worker**
+**Implemented: Cloudflare D1 + Worker**
 
-### Implementation Plan
+### Implementation Status
 
-#### 1. Database Schema (D1)
+#### ✅ Completed Files
+
+| File | Description |
+|------|-------------|
+| `workers/directory/wrangler.toml` | Worker config with D1 binding |
+| `workers/directory/schema.sql` | Database schema + seed data |
+| `workers/directory/src/index.ts` | REST API (GET/POST/DELETE feeds) |
+| `workers/directory/README.md` | Deployment documentation |
+| `src/hooks/use-directory.ts` | React hook for API calls |
+| `src/hooks/use-auth.ts` | Added `token` export |
+| `src/components/Directory.tsx` | Updated to use API with loading states |
+| `src/components/SubmitFeed.tsx` | Updated to POST to API |
+| `.env.example` | Environment variable template |
+
+#### 🚀 Deployment Steps
+
+```bash
+# 1. Create the D1 database
+cd workers/directory
+wrangler d1 create webmcp-directory
+
+# 2. Update wrangler.toml with the returned database_id
+
+# 3. Apply schema to production
+wrangler d1 execute webmcp-directory --file=./schema.sql
+
+# 4. Deploy the worker
+wrangler deploy
+
+# 5. Update frontend .env
+echo "VITE_DIRECTORY_API_URL=https://webmcp-directory.YOUR-SUBDOMAIN.workers.dev" >> .env
+```
+
+### Database Schema
 
 ```sql
--- feeds table
 CREATE TABLE feeds (
   id TEXT PRIMARY KEY,
   url TEXT UNIQUE NOT NULL,
@@ -54,81 +82,24 @@ CREATE TABLE feeds (
   capabilities_count INTEGER DEFAULT 0,
   version TEXT,
   score INTEGER,
-  signature_valid BOOLEAN DEFAULT FALSE,
-  submitted_by TEXT,  -- GitHub username
+  signature_valid INTEGER DEFAULT 0,
+  submitted_by TEXT,
   submitted_at INTEGER NOT NULL,
   last_validated INTEGER,
-  is_curated BOOLEAN DEFAULT FALSE,
-  is_active BOOLEAN DEFAULT TRUE
+  is_curated INTEGER DEFAULT 0,
+  is_active INTEGER DEFAULT 1
 );
-
--- validation_history table (optional, for trending)
-CREATE TABLE validation_history (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  feed_id TEXT REFERENCES feeds(id),
-  validated_at INTEGER NOT NULL,
-  score INTEGER,
-  signature_valid BOOLEAN
-);
-
--- Indexes
-CREATE INDEX idx_feeds_domain ON feeds(domain);
-CREATE INDEX idx_feeds_submitted_at ON feeds(submitted_at DESC);
-CREATE INDEX idx_feeds_score ON feeds(score DESC);
 ```
 
-#### 2. Directory API Worker (`/workers/directory/`)
+### API Endpoints
 
-```
-POST /api/feeds          - Submit new feed (requires GitHub auth)
-GET  /api/feeds          - List all feeds (paginated)
-GET  /api/feeds/:id      - Get single feed
-GET  /api/feeds/curated  - Get curated feeds only
-GET  /api/feeds/search?q=  - Search feeds
-DELETE /api/feeds/:id    - Remove feed (owner or admin only)
-```
-
-#### 3. Frontend Changes
-
-- Update `useKV` calls to use API instead of localStorage for directory data
-- Keep localStorage for personal archives/preferences
-- Add loading states for API calls
-- Handle offline gracefully (show cached + sync indicator)
-
-#### 4. Migration Path
-
-1. Deploy D1 database + Worker
-2. Seed with current `CURATED_FEEDS`
-3. Update frontend to read from API
-4. Update Submit workflow to POST to API
-5. Remove hardcoded `CURATED_FEEDS` array
-
-### Files to Create/Modify
-
-```
-workers/
-  directory/
-    src/
-      index.ts        # Hono/itty-router API
-      db.ts           # D1 queries
-      auth.ts         # GitHub token validation
-    wrangler.toml     # D1 binding config
-    schema.sql        # Database schema
-
-src/
-  hooks/
-    use-directory.ts  # New hook for API calls
-  components/
-    Directory.tsx     # Update to use API
-    SubmitFeed.tsx    # Update to POST to API
-```
-
-### Estimated Effort
-- **D1 + Worker setup:** 2-3 hours
-- **API implementation:** 3-4 hours  
-- **Frontend integration:** 2-3 hours
-- **Testing + migration:** 2 hours
-- **Total:** ~10-12 hours
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/feeds` | List all feeds (paginated, searchable) |
+| GET | `/api/feeds/curated` | Get curated feeds only |
+| GET | `/api/feeds/:id` | Get single feed |
+| POST | `/api/feeds` | Submit new feed (requires GitHub auth) |
+| DELETE | `/api/feeds/:id` | Remove feed (owner only) |
 
 ---
 
@@ -206,11 +177,12 @@ A GitHub App that site owners **choose to install** (not unsolicited PRs):
 
 ## Success Metrics
 
-### Phase 1 (Week 1-2)
-- [ ] D1 database deployed and seeded
-- [ ] Directory API live at `/api/feeds`
-- [ ] Frontend reads from API
-- [ ] Submit workflow writes to API
+### Phase 1 ✅ IMPLEMENTED
+- [x] D1 database schema created
+- [x] Directory API Worker implemented
+- [x] Frontend reads from API with loading states
+- [x] Submit workflow POSTs to API
+- [ ] **Deploy worker to Cloudflare** (manual step)
 
 ### Phase 2 (Months 1-3)
 - [ ] 50+ feeds in shared directory
@@ -250,9 +222,9 @@ Opening PRs on repos without consent:
 
 | Priority | Feature | Effort | Impact | Status |
 |----------|---------|--------|--------|--------|
-| P0 | Persistent D1 Database | Medium | Critical | 🎯 Phase 1 |
-| P0 | Directory API Worker | Medium | Critical | 🎯 Phase 1 |
-| P1 | Frontend API integration | Medium | High | 🎯 Phase 1 |
+| P0 | Persistent D1 Database | Medium | Critical | ✅ Done |
+| P0 | Directory API Worker | Medium | Critical | ✅ Done |
+| P1 | Frontend API integration | Medium | High | ✅ Done |
 | P1 | Crawler MVP | High | High | ⏳ Phase 2 |
 | P2 | GitHub App | High | Medium | ⏳ Phase 3 |
 | P2 | Partnership outreach | Medium | High | ⏳ Phase 2 |
@@ -262,17 +234,21 @@ Opening PRs on repos without consent:
 
 ## Next Actions
 
-### ✅ Completed (Phase 0)
+### ✅ Completed (Phase 0 + Phase 1)
 1. ~~Implement badge generation~~ → `src/lib/badge-generator.ts`
 2. ~~Add "Submit Your Feed" UI~~ → `src/components/SubmitFeed.tsx`
-3. ~~Integrate into main app~~ → Added to WorkflowStepper as step 5
+3. ~~Create D1 schema~~ → `workers/directory/schema.sql`
+4. ~~Build Directory API~~ → `workers/directory/src/index.ts`
+5. ~~Update frontend~~ → `src/hooks/use-directory.ts`, `Directory.tsx`, `SubmitFeed.tsx`
 
-### 🎯 Current (Phase 1 - Persistent Database)
-1. **Create D1 database** with feeds schema
-2. **Build directory Worker** with CRUD API
-3. **Update frontend** to use API instead of localStorage
-4. **Migrate curated feeds** to database
-5. **Test end-to-end** submission flow
+### 🎯 Deploy (One-time setup)
+```bash
+cd workers/directory
+wrangler d1 create webmcp-directory  # Get database_id
+# Update wrangler.toml with database_id
+wrangler d1 execute webmcp-directory --file=./schema.sql
+wrangler deploy
+```
 
 ### 🚀 Up Next (Phase 2)
 1. Build crawler prototype

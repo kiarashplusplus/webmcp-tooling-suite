@@ -1,0 +1,22 @@
+name = "webmcp-directory"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+FRONTEND_URL = "https://kiarashplusplus.github.io/webmcp-tooling-suite"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "webmcp-directory"
+database_id = "34a580ec-7436-468d-8c29-c4ff5766b22f"
+
+# To create the database:
+# wrangler d1 create webmcp-directory
+# Then update database_id above with the returned ID
+
+# To apply schema:
+# wrangler d1 execute webmcp-directory --file=./schema.sql
+
+# To deploy:
+# wrangler deploy

@@ -192,6 +192,7 @@ export function useAuth() {
     user,
     loading,
     isAuthenticated: !!user,
+    token: typeof window !== 'undefined' ? localStorage.getItem('webmcp-github-token') : null,
     signIn,
     signOut,
     handleOAuthCallback,

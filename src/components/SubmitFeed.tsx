@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/hooks/use-auth'
-import { useKV } from '@/hooks/use-kv'
+import { useDirectory } from '@/hooks/use-directory'
 import { validateLLMFeed, fetchWithCorsProxy, type ValidationResult, type LLMFeed } from '@/lib/llmfeed'
 import { generateAllBadges } from '@/lib/badge-generator'
 import { toast } from 'sonner'
@@ -24,23 +24,9 @@ import {
   ArrowRight
 } from '@phosphor-icons/react'
 
-interface FeedMetadata {
-  id: string
-  url: string
-  title: string
-  description: string
-  feed_type: string
-  domain: string
-  timestamp: number
-  capabilities_count?: number
-  version?: string
-  author?: string
-}
-
 export function SubmitFeed() {
   const { user, isAuthenticated, signIn, loading: authLoading } = useAuth()
-  const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
-  const [publishedBy, setPublishedBy] = useKV<Record<string, string>>('feed-publishers', {})
+  const { submitFeed, submitting: apiSubmitting, error: apiError } = useDirectory()
   
   const [feedUrl, setFeedUrl] = useState('')
   const [isValidating, setIsValidating] = useState(false)
@@ -113,38 +99,24 @@ export function SubmitFeed() {
     setIsSubmitting(true)
 
     try {
-      const domain = new URL(feedUrl).hostname
-      const feedId = `${domain}-${Date.now()}`
-
-      const newFeed: FeedMetadata = {
-        id: feedId,
+      // Submit to API
+      const result = await submitFeed({
         url: feedUrl,
-        title: parsedFeed.metadata?.title || domain,
-        description: parsedFeed.metadata?.description || 'No description available',
+        title: parsedFeed.metadata?.title || undefined,
+        description: parsedFeed.metadata?.description || undefined,
         feed_type: parsedFeed.feed_type || 'mcp',
-        domain,
-        timestamp: Date.now(),
         capabilities_count: parsedFeed.capabilities?.length || 0,
-        version: parsedFeed.metadata?.version,
-        author: user.login
-      }
-
-      // Check if already submitted
-      const existing = archivedFeeds?.find(f => f.url === feedUrl)
-      if (existing) {
-        toast.error('This feed has already been submitted')
-        setIsSubmitting(false)
-        return
-      }
-
-      // Add to directory
-      setArchivedFeeds(prev => [...(prev || []), newFeed])
-      setPublishedBy(prev => ({ ...prev, [feedId]: user.login }))
-
-      setSubmitted(true)
-      toast.success('Feed submitted successfully!', {
-        description: 'Your feed is now visible in the directory'
+        version: parsedFeed.metadata?.version || undefined,
+        score: validationResult.score,
+        signature_valid: validationResult.signatureValid,
       })
+
+      if (result) {
+        setSubmitted(true)
+        toast.success('Feed submitted successfully!', {
+          description: 'Your feed is now visible in the public directory'
+        })
+      }
     } catch (error) {
       toast.error('Submission failed', {
         description: error instanceof Error ? error.message : 'Unknown error'
