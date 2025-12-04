@@ -10,7 +10,7 @@
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
-        "build:packages": "npm run build -w @webmcp/validator && npm run build -w @webmcp/signer",
+        "build:packages": "npm run build -w @webmcp/validator && npm run build -w @webmcp/signer && npm run build -w @webmcp/github-action",
         "lint": "eslint .",
         "optimize": "vite optimize",
         "preview": "vite preview"

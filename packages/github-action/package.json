@@ -1,0 +1,36 @@
+{
+  "name": "@webmcp/github-action",
+  "version": "0.1.0",
+  "description": "GitHub Action for validating LLMFeed JSON files with Ed25519 signature verification",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build src/index.ts -o dist --source-map --license licenses.txt",
+    "dev": "ncc build src/index.ts -o dist --source-map --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "github-action",
+    "llmfeed",
+    "webmcp",
+    "mcp",
+    "validation",
+    "ed25519",
+    "signature"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/websearch-via-camera/webmcp-tooling-suite.git",
+    "directory": "packages/github-action"
+  },
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "@vercel/ncc": "^0.38.3",
+    "typescript": "^5.8.3"
+  }
+}

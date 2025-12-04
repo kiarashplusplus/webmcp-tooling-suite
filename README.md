@@ -114,52 +114,62 @@ npm run dev
 npm run build:packages
 ```
 
-## CLI Packages
+## Packages
 
-The tooling suite includes standalone CLI packages for CI/CD integration:
+The tooling suite includes standalone packages for CI/CD integration:
 
-### @webmcp/validator
+### @webmcp/validator (CLI)
 
 Validate LLMFeed files with full Ed25519 signature verification.
 
 ```bash
-# Install globally
 npm install -g @webmcp/validator
 
-# Validate a feed from URL
 llmfeed-validate https://25x.codes/.well-known/mcp.llmfeed.json
-
-# Validate local file with verbose output
-llmfeed-validate ./feed.json --verbose
-
-# JSON output for scripting
-llmfeed-validate ./feed.json --json
-
-# Skip signature verification
-llmfeed-validate ./feed.json --skip-signature
+llmfeed-validate ./feed.json --verbose --json
 ```
 
-### @webmcp/signer
+### @webmcp/signer (CLI)
 
 Generate Ed25519 keypairs and sign LLMFeed files.
 
 ```bash
-# Install globally
 npm install -g @webmcp/signer
 
-# Generate a new keypair
 llmfeed-sign keygen -o ./keys -n mysite
-
-# Sign a feed
-llmfeed-sign sign mcp.llmfeed.json \
-  --key ./keys/mysite.private.pem \
+llmfeed-sign sign feed.json --key ./keys/mysite.private.pem \
   --public-url https://example.com/.well-known/public.pem
-
-# Verify a signed feed
-llmfeed-sign verify signed.json --key ./keys/mysite.public.pem
 ```
 
-See [packages/validator/README.md](packages/validator/README.md) and [packages/signer/README.md](packages/signer/README.md) for complete documentation.
+### @webmcp/github-action
+
+GitHub Action for automated feed validation in CI/CD pipelines.
+
+```yaml
+# .github/workflows/validate-feed.yml
+name: Validate LLMFeed
+on:
+  push:
+    paths: ['**/*.llmfeed.json']
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: websearch-via-camera/webmcp-tooling-suite/packages/github-action@v1
+        with:
+          feed: '.well-known/mcp.llmfeed.json'
+          create-badge: 'true'
+```
+
+**Features:**
+- ✅ Automatic PR checks for feed changes
+- ✅ Ed25519 signature verification
+- ✅ Status badge generation
+- ✅ Security score output (0-100)
+
+See individual package READMEs for complete documentation.
 
 ## Roadmap
 
@@ -177,13 +187,13 @@ See [packages/validator/README.md](packages/validator/README.md) and [packages/s
    - PEM and base64 key formats
    - CI/CD-friendly CLI interface
 
-### 📋 Planned
-
-3. **GitHub Action for Feed Validation**
-   - Pre-built action: `webmcp/validate-feed@v1`
+3. **GitHub Action** — `@webmcp/github-action`
    - Automatic PR checks for feed changes
-   - Signature verification in CI pipelines
-   - Badge generation for feed trust status
+   - Ed25519 signature verification in CI
+   - Dynamic SVG badge generation
+   - Outputs for downstream workflow steps
+
+### 📋 Planned
 
 4. **Feed Schema Generator**
    - Generate LLMFeed from OpenAPI/Swagger specs

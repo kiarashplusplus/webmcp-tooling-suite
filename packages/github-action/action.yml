@@ -1,0 +1,63 @@
+name: 'Validate LLMFeed'
+description: 'Validate LLMFeed JSON files with Ed25519 signature verification'
+author: 'WebMCP Tooling Suite'
+
+branding:
+  icon: 'shield'
+  color: 'green'
+
+inputs:
+  feed:
+    description: 'Path to LLMFeed JSON file or URL to validate'
+    required: true
+  
+  fail-on-warning:
+    description: 'Fail the action if warnings are found'
+    required: false
+    default: 'false'
+  
+  skip-signature:
+    description: 'Skip Ed25519 signature verification'
+    required: false
+    default: 'false'
+  
+  timeout:
+    description: 'Timeout in milliseconds for network requests'
+    required: false
+    default: '10000'
+  
+  create-badge:
+    description: 'Generate a validation status badge'
+    required: false
+    default: 'false'
+  
+  badge-path:
+    description: 'Path to save the generated badge SVG'
+    required: false
+    default: '.github/badges/llmfeed-status.svg'
+
+outputs:
+  valid:
+    description: 'Whether the feed is valid (true/false)'
+  
+  security-score:
+    description: 'Security score from 0-100'
+  
+  signature-status:
+    description: 'Signature verification status (verified/failed/skipped/unsigned)'
+  
+  errors:
+    description: 'JSON array of validation errors'
+  
+  warnings:
+    description: 'JSON array of validation warnings'
+  
+  feed-title:
+    description: 'Title from the feed metadata'
+  
+  capabilities-count:
+    description: 'Number of capabilities in the feed'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
