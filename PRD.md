@@ -79,7 +79,7 @@ Drawing from security/terminal aesthetics with high-contrast, purpose-driven col
 - **Accent Color**: Electric Lime (`oklch(0.75 0.20 130)`) - High-visibility for successful validations and key CTAs
 - **Foreground/Background Pairings**: 
   - Primary background Dark Slate (`oklch(0.20 0.02 240)`): White text (`oklch(0.98 0 0)`) - Ratio 14.2:1 ✓
-  - Success states Electric Lime (`oklch(0.75 0.20 130)`): Dark text (`oklch(0.15 0 0)`) - Ratio 11.8:1 ✓
+  - Success states Electric Lime (`oklch(0.75 0.20 130)`): Dark text (`oklch(0.15 0 0)`) - Ratio 11.8:1 ���
   - Warning states Amber (`oklch(0.70 0.18 75)`): Dark text (`oklch(0.15 0 0)`) - Ratio 9.2:1 ✓
   - Error states Crimson (`oklch(0.55 0.22 25)`): White text (`oklch(0.98 0 0)`) - Ratio 6.1:1 ✓
 
