@@ -572,6 +572,10 @@ export async function verifyEd25519Signature(
   })
 
   // Step 6: Build canonical payload
+  // We support multiple canonicalization strategies:
+  // 1. signed_blocks order with original structure (no sorting)
+  // 2. Alphabetically sorted keys (deep sort)
+  
   const payloadParts: Record<string, any> = {}
   for (const block of signedBlocks) {
     if (feed[block] !== undefined) {
@@ -579,8 +583,15 @@ export async function verifyEd25519Signature(
     }
   }
 
+  // Strategy 1: Original order (signed_blocks order, no key sorting)
+  const originalOrderPayload = JSON.stringify(payloadParts)
+  
+  // Strategy 2: Deep sorted (alphabetical keys at all levels)
   const sortedPayload = deepSortObject(payloadParts)
-  const canonicalPayload = JSON.stringify(sortedPayload)
+  const sortedCanonicalPayload = JSON.stringify(sortedPayload)
+  
+  // Default to sorted for display, but we'll try both during verification
+  const canonicalPayload = sortedCanonicalPayload
   const payloadHash = await sha256(canonicalPayload)
   
   result.canonicalPayload = {
@@ -712,21 +723,52 @@ export async function verifyEd25519Signature(
     return result
   }
 
-  // Step 10: Verify signature
+  // Step 10: Verify signature (try multiple canonicalization strategies)
   const encoder = new TextEncoder()
-  const messageBytes = encoder.encode(canonicalPayload)
+  
+  // Strategies to try in order of preference
+  const strategies = [
+    { name: 'sorted', payload: sortedCanonicalPayload },
+    { name: 'original_order', payload: originalOrderPayload },
+  ]
+  
+  let verified = false
+  let usedStrategy = ''
   
   try {
-    const isValid = await verifyEd25519Native(messageBytes, signatureBytes, publicKeyBytes)
+    for (const strategy of strategies) {
+      const messageBytes = encoder.encode(strategy.payload)
+      const isValid = await verifyEd25519Native(messageBytes, signatureBytes, publicKeyBytes)
+      
+      if (isValid) {
+        verified = true
+        usedStrategy = strategy.name
+        
+        // Update canonical payload to show the one that worked
+        if (strategy.name === 'original_order') {
+          result.canonicalPayload = {
+            json: strategy.payload,
+            bytes: messageBytes.length,
+            hash: await sha256(strategy.payload)
+          }
+        }
+        break
+      }
+    }
     
-    if (isValid) {
+    if (verified) {
       result.valid = true
+      const strategyNote = usedStrategy === 'original_order' 
+        ? ' (using signed_blocks order)' 
+        : ' (using sorted canonical JSON)'
       result.steps.push({
         step: 'Verify signature',
         status: 'success',
-        message: 'Signature verification PASSED ✓'
+        message: `Signature verification PASSED ✓${strategyNote}`,
+        details: { canonicalizationStrategy: usedStrategy }
       })
     } else {
+      const messageBytes = encoder.encode(canonicalPayload)
       result.steps.push({
         step: 'Verify signature',
         status: 'failed',
@@ -734,7 +776,8 @@ export async function verifyEd25519Signature(
         details: {
           payloadHash,
           payloadBytes: messageBytes.length,
-          signatureBytes: 64
+          signatureBytes: 64,
+          triedStrategies: strategies.map(s => s.name)
         }
       })
       result.error = 'Signature verification failed - signature does not match'
