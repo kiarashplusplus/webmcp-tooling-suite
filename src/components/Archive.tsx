@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { fetchLLMFeed, validateLLMFeed, type LLMFeed } from '@/lib/llmfeed'
-import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple } from '@phosphor-icons/react'
+import { Archive as ArchiveIcon, CloudArrowDown, Clock, Trash, Download, Copy, FolderOpen, UploadSimple, CheckCircle } from '@phosphor-icons/react'
 import { JsonViewer } from './JsonViewer'
 import { toast } from 'sonner'
 
@@ -189,12 +189,20 @@ export function Archive() {
       const feeds = currentFeeds || []
       const exists = feeds.some(f => f.id === feedMetadata.id)
       if (exists) {
-        toast.info('Feed already published to directory')
+        toast.info('This snapshot is already published to the directory', {
+          description: 'Navigate to the Directory tab to view it'
+        })
         return feeds
       }
-      toast.success(`Published "${feedMetadata.title}" to directory`)
+      toast.success(`Published "${feedMetadata.title}" to directory`, {
+        description: 'View it in the Directory tab alongside other feeds'
+      })
       return [...feeds, feedMetadata]
     })
+  }
+
+  const isPublishedToDirectory = (snapshotId: string) => {
+    return (archivedFeeds || []).some(f => f.id === snapshotId)
   }
 
   const formatTimestamp = (timestamp: number) => {
@@ -220,10 +228,10 @@ export function Archive() {
 
       <Alert className="glass-card border-primary/20">
         <ArchiveIcon size={18} className="text-primary" />
-        <AlertTitle className="text-sm font-semibold">Persistent Feed Storage</AlertTitle>
+        <AlertTitle className="text-sm font-semibold">Persistent Feed Storage & Publishing</AlertTitle>
         <AlertDescription className="text-xs text-muted-foreground">
-          Archive any LLMFeed from any URL to ensure availability even if the original site goes offline. Each snapshot is timestamped and versioned, 
-          providing reproducibility for AI agents and research applications.
+          Archive any LLMFeed from any URL to ensure availability even if the original site goes offline. Each snapshot is timestamped and versioned. 
+          Published snapshots appear in the <span className="font-semibold text-accent">Directory tab</span> for public discovery.
         </AlertDescription>
       </Alert>
 
@@ -346,18 +354,29 @@ export function Archive() {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <Button
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        publishToDirectory(snapshot)
-                                      }}
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0 text-accent hover:text-accent hover:bg-accent/10"
-                                      title="Publish to Directory"
-                                    >
-                                      <UploadSimple size={12} />
-                                    </Button>
+                                    {isPublishedToDirectory(snapshot.id) ? (
+                                      <Badge 
+                                        variant="default" 
+                                        className="h-6 px-2 text-xs bg-accent/20 text-accent border-accent/30"
+                                      >
+                                        <CheckCircle size={12} className="mr-1" />
+                                        Published
+                                      </Badge>
+                                    ) : (
+                                      <Button
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          publishToDirectory(snapshot)
+                                        }}
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 px-2 text-xs text-accent hover:text-accent hover:bg-accent/10"
+                                        title="Publish to Directory"
+                                      >
+                                        <UploadSimple size={12} className="mr-1" />
+                                        Publish
+                                      </Button>
+                                    )}
                                     <Button
                                       onClick={(e) => {
                                         e.stopPropagation()
@@ -406,15 +425,22 @@ export function Archive() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-foreground">Snapshot Details</h3>
                   <div className="flex gap-2">
-                    <Button
-                      onClick={() => publishToDirectory(selectedSnapshot)}
-                      variant="default"
-                      size="sm"
-                      className="bg-accent hover:bg-accent/90 text-accent-foreground"
-                    >
-                      <UploadSimple size={16} className="mr-2" />
-                      Publish to Directory
-                    </Button>
+                    {isPublishedToDirectory(selectedSnapshot.id) ? (
+                      <Badge variant="default" className="bg-accent/20 text-accent border-accent/30 px-3 py-1">
+                        <CheckCircle size={16} className="mr-2" />
+                        Published to Directory
+                      </Badge>
+                    ) : (
+                      <Button
+                        onClick={() => publishToDirectory(selectedSnapshot)}
+                        variant="default"
+                        size="sm"
+                        className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                      >
+                        <UploadSimple size={16} className="mr-2" />
+                        Publish to Directory
+                      </Button>
+                    )}
                     <Button
                       onClick={() => copySnapshotUrl(selectedSnapshot)}
                       variant="outline"

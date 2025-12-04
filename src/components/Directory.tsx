@@ -12,7 +12,8 @@ import {
   Globe,
   Tag,
   Calendar,
-  ArrowUpRight
+  ArrowUpRight,
+  Archive
 } from '@phosphor-icons/react'
 
 interface FeedMetadata {
@@ -135,14 +136,25 @@ export function Directory() {
     return `${days}d ago`
   }
 
-  const FeedCard = ({ feed }: { feed: FeedMetadata }) => (
+  const FeedCard = ({ feed, isFromArchive }: { feed: FeedMetadata; isFromArchive?: boolean }) => (
     <Card className="glass-card p-6 hover:glass-strong transition-all duration-300 group">
       <div className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-foreground mb-2 font-mono truncate">
-              {feed.title}
-            </h3>
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-lg font-bold text-foreground font-mono truncate">
+                {feed.title}
+              </h3>
+              {isFromArchive && (
+                <Badge 
+                  variant="outline" 
+                  className="shrink-0 glass-strong text-primary border-primary/30 text-xs"
+                >
+                  <Archive size={12} className="mr-1" />
+                  Archived
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
               {feed.description}
             </p>
@@ -225,7 +237,11 @@ export function Directory() {
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-4">
             {topFeeds.map((feed) => (
-              <FeedCard key={`top-${feed.id}`} feed={feed} />
+              <FeedCard 
+                key={`top-${feed.id}`} 
+                feed={feed}
+                isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
+              />
             ))}
           </div>
         </ScrollArea>
@@ -245,7 +261,11 @@ export function Directory() {
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-4">
             {latestFeeds.map((feed) => (
-              <FeedCard key={`latest-${feed.id}`} feed={feed} />
+              <FeedCard 
+                key={`latest-${feed.id}`} 
+                feed={feed}
+                isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
+              />
             ))}
           </div>
         </ScrollArea>
