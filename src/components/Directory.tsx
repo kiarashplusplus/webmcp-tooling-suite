@@ -191,12 +191,19 @@ export function Directory() {
   }
 
   const FeedCard = ({ feed, isFromArchive }: { feed: FeedMetadata; isFromArchive?: boolean }) => (
-    <Card className="glass-card p-6 hover:glass-strong transition-all duration-300 group">
+    <Card 
+      className="glass-card p-6 hover:glass-strong transition-all duration-300 group"
+      itemScope
+      itemType="https://schema.org/DataFeed"
+    >
       <div className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-lg font-bold text-foreground font-mono truncate">
+              <h3 
+                className="text-lg font-bold text-foreground font-mono truncate"
+                itemProp="name"
+              >
                 {feed.title}
               </h3>
               {isFromArchive && (
@@ -209,23 +216,29 @@ export function Directory() {
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+            <p 
+              className="text-sm text-muted-foreground line-clamp-2 mb-3"
+              itemProp="description"
+            >
               {feed.description}
             </p>
+            <meta itemProp="url" content={feed.url} />
+            <meta itemProp="encodingFormat" content="application/json" />
+            <meta itemProp="datePublished" content={new Date(feed.timestamp).toISOString()} />
           </div>
           <Badge 
             variant="outline" 
             className="shrink-0 glass text-primary border-primary/30"
           >
             <Tag size={14} className="mr-1" />
-            {feed.feed_type}
+            <span itemProp="genre">{feed.feed_type}</span>
           </Badge>
         </div>
 
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <Globe size={14} />
-            <span className="font-mono">{feed.domain}</span>
+            <span className="font-mono" itemProp="provider">{feed.domain}</span>
           </div>
           {feed.capabilities_count !== undefined && (
             <>
@@ -236,13 +249,13 @@ export function Directory() {
           {feed.version && (
             <>
               <Separator orientation="vertical" className="h-4" />
-              <span>v{feed.version}</span>
+              <span itemProp="version">v{feed.version}</span>
             </>
           )}
           {feed.author && (
             <>
               <Separator orientation="vertical" className="h-4" />
-              <span>{feed.author}</span>
+              <span itemProp="creator">{feed.author}</span>
             </>
           )}
         </div>
@@ -253,7 +266,10 @@ export function Directory() {
             target="_blank"
             rel="noopener noreferrer nofollow"
             data-feed-json-url={feed.url}
+            data-feed-type={feed.feed_type}
+            data-feed-domain={feed.domain}
             className="flex-1"
+            itemProp="url"
           >
             <Button 
               variant="outline" 
@@ -273,7 +289,10 @@ export function Directory() {
                 target="_blank"
                 rel="noopener noreferrer"
                 data-archived-feed-json-url={getArchivedSnapshotUrl(feed.id)}
+                data-snapshot-id={feed.id}
+                data-feed-type={feed.feed_type}
                 className="flex-1"
+                itemProp="distribution"
               >
                 <Button 
                   variant="outline" 
@@ -300,7 +319,9 @@ export function Directory() {
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar size={14} />
-          <span>{formatTimestamp(feed.timestamp)}</span>
+          <time dateTime={new Date(feed.timestamp).toISOString()}>
+            {formatTimestamp(feed.timestamp)}
+          </time>
         </div>
       </div>
     </Card>
@@ -308,55 +329,85 @@ export function Directory() {
 
   return (
     <div className="space-y-8">
-      <div className="glass-strong rounded-2xl p-8">
+      <section 
+        className="glass-strong rounded-2xl p-8"
+        aria-labelledby="top-feeds-heading"
+        itemScope
+        itemType="https://schema.org/ItemList"
+      >
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 rounded-xl bg-primary/10">
             <TrendUp size={24} className="text-primary" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-foreground font-mono">Top Published Feeds</h2>
-            <p className="text-sm text-muted-foreground">Most capable feeds by number of available capabilities</p>
+            <h2 
+              id="top-feeds-heading" 
+              className="text-2xl font-bold text-foreground font-mono"
+              itemProp="name"
+            >
+              Top Published Feeds
+            </h2>
+            <p className="text-sm text-muted-foreground" itemProp="description">
+              Most capable feeds by number of available capabilities
+            </p>
           </div>
         </div>
 
         <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-4">
-            {topFeeds.map((feed) => (
-              <FeedCard 
-                key={`top-${feed.id}`} 
-                feed={feed}
-                isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
-              />
+          <div className="space-y-4" role="list" aria-label="Top published LLM feeds">
+            {topFeeds.map((feed, index) => (
+              <div key={`top-${feed.id}`} itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem" role="listitem">
+                <meta itemProp="position" content={String(index + 1)} />
+                <FeedCard 
+                  feed={feed}
+                  isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
+                />
+              </div>
             ))}
           </div>
         </ScrollArea>
-      </div>
+      </section>
 
-      <div className="glass-strong rounded-2xl p-8">
+      <section 
+        className="glass-strong rounded-2xl p-8"
+        aria-labelledby="latest-feeds-heading"
+        itemScope
+        itemType="https://schema.org/ItemList"
+      >
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 rounded-xl bg-accent/10">
             <Clock size={24} className="text-accent" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-foreground font-mono">Latest Published Feeds</h2>
-            <p className="text-sm text-muted-foreground">Recently published or updated LLM feeds</p>
+            <h2 
+              id="latest-feeds-heading" 
+              className="text-2xl font-bold text-foreground font-mono"
+              itemProp="name"
+            >
+              Latest Published Feeds
+            </h2>
+            <p className="text-sm text-muted-foreground" itemProp="description">
+              Recently published or updated LLM feeds
+            </p>
           </div>
         </div>
 
         <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-4">
-            {latestFeeds.map((feed) => (
-              <FeedCard 
-                key={`latest-${feed.id}`} 
-                feed={feed}
-                isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
-              />
+          <div className="space-y-4" role="list" aria-label="Latest published LLM feeds">
+            {latestFeeds.map((feed, index) => (
+              <div key={`latest-${feed.id}`} itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem" role="listitem">
+                <meta itemProp="position" content={String(index + 1)} />
+                <FeedCard 
+                  feed={feed}
+                  isFromArchive={archivedFeeds?.some(f => f.id === feed.id)}
+                />
+              </div>
             ))}
           </div>
         </ScrollArea>
-      </div>
+      </section>
 
-      <div className="glass-card rounded-2xl p-6">
+      <aside className="glass-card rounded-2xl p-6" aria-label="Developer and bot information">
         <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
           For Developers, Scrapers & AI Bots
         </h3>
@@ -370,7 +421,7 @@ export function Directory() {
           These URLs are marked with <code className="font-mono text-xs glass px-2 py-1 rounded">data-archived-feed-json-url</code> attributes for crawler discovery. 
           Click "View Mirror" to open the served JSON in a new tab, or use the download button to save locally.
         </p>
-      </div>
+      </aside>
     </div>
   )
 }

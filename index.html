@@ -4,7 +4,141 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Universal LLMFeed Analyzer</title>
+    
+    <title>Universal LLMFeed Analyzer - MCP Feed Validator & Archive</title>
+    <meta name="description" content="Comprehensive validation, discovery, and archival tools for LLMFeed and WebMCP feeds. Verify Ed25519 signatures, analyze capabilities, and prepare feeds for RAG indexing. Universal support for any .llmfeed.json file." />
+    <meta name="keywords" content="LLMFeed, WebMCP, MCP, Model Context Protocol, AI agents, feed validation, Ed25519 signature, RAG indexing, AI tools, machine learning, agent discovery, cryptographic verification" />
+    <meta name="author" content="LLMFeed Analyzer" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    
+    <link rel="canonical" href="https://llmfeed-analyzer.app/" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Universal LLMFeed Analyzer - MCP Feed Validator & Archive" />
+    <meta property="og:description" content="Validate, discover, and archive LLMFeed and WebMCP feeds. Ed25519 signature verification, schema analysis, and RAG preparation for AI agents." />
+    <meta property="og:url" content="https://llmfeed-analyzer.app/" />
+    <meta property="og:site_name" content="LLMFeed Analyzer" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="https://llmfeed-analyzer.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Universal LLMFeed Analyzer - Validate and archive MCP feeds" />
+    
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Universal LLMFeed Analyzer - MCP Feed Validator & Archive" />
+    <meta name="twitter:description" content="Comprehensive validation and archival tools for LLMFeed and WebMCP feeds with Ed25519 signature verification." />
+    <meta name="twitter:image" content="https://llmfeed-analyzer.app/twitter-card.png" />
+    <meta name="twitter:image:alt" content="Universal LLMFeed Analyzer interface showing feed validation and archive features" />
+    
+    <link rel="alternate" type="application/rss+xml" title="Latest LLM Feeds" href="/feeds/latest.xml" />
+    <link rel="alternate" type="application/atom+xml" title="Archived Feeds" href="/feeds/archived.atom" />
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Universal LLMFeed Analyzer",
+      "url": "https://llmfeed-analyzer.app/",
+      "description": "Comprehensive validation, discovery, and archival tools for any LLMFeed-enabled website or custom feed URL. Provides cryptographic signature verification, schema analysis, and RAG indexing preparation.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Universal LLMFeed Validation",
+        "Ed25519 Signature Verification",
+        "WebMCP Feed Discovery",
+        "RAG Indexing Preparation",
+        "Feed Archival & Versioning",
+        "Schema Analysis",
+        "JSON-RPC Tool Inspection"
+      ],
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Developers, AI Engineers, Machine Learning Practitioners"
+      }
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareTool",
+      "name": "LLMFeed Validator",
+      "description": "Validates LLMFeed JSON structure, verifies Ed25519 cryptographic signatures, and ensures schema conformance for AI agent security",
+      "url": "https://llmfeed-analyzer.app/",
+      "applicationCategory": "SecurityApplication"
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is LLMFeed?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "LLMFeed is a file-based specification that provides structured JSON feeds for AI agents, targeting websites unable to operate a full JSON-RPC server. Feeds are discovered via .well-known URIs and include metadata, capabilities, and cryptographic signatures for security."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does Ed25519 signature verification work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The LLMFeed Analyzer verifies Ed25519 cryptographic signatures included in the trust block of feeds. This ensures the feed has not been tampered with and originates from the claimed source, preventing tool poisoning and supply chain attacks."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is WebMCP?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "WebMCP (Web Model Context Protocol) is a W3C initiative that enables websites to expose tools as client-side JavaScript functions via the navigator.modelContext API. It allows AI agents to interact with web pages through well-defined tools instead of brittle UI automation."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I prepare LLM feeds for RAG indexing?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Use the RAG Prep tab to transform validated LLMFeed data into structured format suitable for vector embeddings. The tool extracts capability descriptions, generates embedding previews, and exports JSON optimized for vector stores and semantic search."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I archive feeds from any URL?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, the Universal Feed Analyzer supports archival of any .llmfeed.json file from any URL, whether hosted at standard .well-known paths or custom locations. Archived snapshots are served with JSON headers at dedicated /archive/ URLs."
+          }
+        }
+      ]
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Understanding LLMFeed and WebMCP for AI Agent Integration",
+      "description": "Comprehensive guide to LLMFeed validation, WebMCP discovery, and secure AI agent integration with cryptographic verification",
+      "keywords": "LLMFeed, WebMCP, Model Context Protocol, AI agents, Ed25519, cryptographic signatures, feed validation, RAG indexing",
+      "datePublished": "2024-01-01",
+      "author": {
+        "@type": "Organization",
+        "name": "LLMFeed Analyzer"
+      }
+    }
+    </script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
