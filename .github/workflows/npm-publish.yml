@@ -189,6 +189,11 @@ jobs:
         if: contains(steps.packages.outputs.npm_packages, 'signer') && steps.version-check.outputs.signer_exists == 'true'
         run: echo "⏭️ Skipping @25xcodes/llmfeed-signer - version already exists on npm"
 
+      - name: Build validator for health-monitor types
+        if: contains(steps.packages.outputs.npm_packages, 'health-monitor')
+        working-directory: packages/validator
+        run: npm run build
+
       - name: Build and publish @25xcodes/llmfeed-health-monitor
         if: contains(steps.packages.outputs.npm_packages, 'health-monitor') && steps.version-check.outputs.health_exists != 'true'
         working-directory: packages/health-monitor
