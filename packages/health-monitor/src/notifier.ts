@@ -78,7 +78,7 @@ LLMFeed files help AI assistants discover and understand what your project can d
 
 ${health.validation?.issues?.some(i => i.suggestion) 
   ? `Here are some suggestions:\n${health.validation.issues.filter(i => i.suggestion).map(i => `- ${i.suggestion}`).join('\n')}`
-  : 'Check out the [LLMFeed spec](https://llm-feed.org) for the full schema.'}
+  : `Add our [GitHub Action](https://github.com/kiarashplusplus/webmcp-tooling-suite/tree/main/packages/github-action) to validate your feed on every push:\n\n\`\`\`yaml\n- uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1\n  with:\n    feed: '.well-known/mcp.llmfeed.json'\n\`\`\``}
 
 ${reportUrl ? `📊 [View Full Health Report](${reportUrl})` : ''}
 
@@ -111,7 +111,7 @@ ${formatIssuesForEmail(health.validation)}
 QUICK FIXES:
 ${health.validation?.issues?.some(i => i.suggestion)
   ? health.validation.issues.filter(i => i.suggestion).map(i => `• ${i.suggestion}`).join('\n')
-  : '• Check out https://llm-feed.org for the full spec'}
+  : '• Add the GitHub Action to validate on every push: https://github.com/kiarashplusplus/webmcp-tooling-suite/tree/main/packages/github-action'}
 
 ${reportUrl ? `View full report: ${reportUrl}` : ''}
 
