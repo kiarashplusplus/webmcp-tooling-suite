@@ -545,20 +545,35 @@ export function FeedDirectory() {
         )}
       </section>
 
-      <aside className="glass-card rounded-2xl p-6" aria-label="Developer and bot information">
-        <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
+      <aside className="glass-card rounded-2xl p-6 border border-border/50" aria-label="Developer and bot information">
+        <h3 className="text-sm font-semibold text-primary mb-3 uppercase tracking-wider flex items-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
           For Developers, Scrapers & AI Bots
         </h3>
-        <p className="text-sm text-foreground/80 leading-relaxed mb-3">
-          All feed JSON URLs are marked with <code className="font-mono text-xs glass px-2 py-1 rounded">data-feed-json-url</code> attributes 
-          for easy programmatic discovery. Click any feed URL to view the raw JSON schema directly.
-        </p>
-        <p className="text-sm text-foreground/80 leading-relaxed">
-          Archived feeds are served at dedicated URLs with <code className="font-mono text-xs glass px-2 py-1 rounded">application/json</code> headers at 
-          <code className="font-mono text-xs glass px-2 py-1 rounded">/archive/&#123;snapshot-id&#125;.json</code>. 
-          These URLs are marked with <code className="font-mono text-xs glass px-2 py-1 rounded">data-archived-feed-json-url</code> attributes for crawler discovery. 
-          Click "View Mirror" to open the served JSON in a new tab, or use the download button to save locally.
-        </p>
+        <div className="space-y-4">
+          <p className="text-sm text-foreground leading-relaxed">
+            <strong className="text-foreground">Feed Discovery:</strong> All feed URLs include{' '}
+            <code className="font-mono text-xs bg-muted text-foreground px-1.5 py-0.5 rounded border border-border">data-feed-json-url</code>{' '}
+            attributes for programmatic access. Click any URL to view raw JSON.
+          </p>
+          <p className="text-sm text-foreground leading-relaxed">
+            <strong className="text-foreground">GitHub Gist Archives:</strong> Submitted feeds are permanently archived as public GitHub Gists 
+            with versioned history. Each archive includes the full feed JSON, validation score, and cryptographic signature status. 
+            "View Mirror" opens the raw Gist JSON URL (served with proper <code className="font-mono text-xs bg-muted text-foreground px-1.5 py-0.5 rounded border border-border">application/json</code> headers).
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            <strong className="text-foreground">Full Directory API:</strong>{' '}
+            <a 
+              href="https://webmcp-directory.the-safe.workers.dev/api/feeds" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline font-mono text-xs"
+            >
+              /api/feeds
+            </a>{' '}
+            — Returns all feeds as JSON array with gist URLs, scores, and metadata.
+          </p>
+        </div>
       </aside>
     </div>
   )
