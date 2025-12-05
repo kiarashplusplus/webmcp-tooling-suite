@@ -21,7 +21,10 @@ export function SitemapGenerator() {
 
   useEffect(() => {
     const generateSitemap = () => {
-      const baseUrl = window.location.origin
+      // Get the base path from the current pathname (e.g., /webmcp-tooling-suite/)
+      const pathname = window.location.pathname
+      const basePath = pathname.replace(/\/index\.html$/, '').replace(/\/$/, '')
+      const baseUrl = `${window.location.origin}${basePath}`
       const now = new Date().toISOString()
 
       const urls = [

@@ -91,22 +91,27 @@ export function FeedStructuredData() {
       }))
     )
 
+    // Get the base path from the current pathname (e.g., /webmcp-tooling-suite/)
+    const pathname = window.location.pathname
+    const basePath = pathname.replace(/\/index\.html$/, '').replace(/\/$/, '')
+    const siteBaseUrl = `${window.location.origin}${basePath}`
+
     const structuredData = {
       '@context': 'https://schema.org',
       '@type': 'DataCatalog',
       name: 'WebMCP Feed Archive',
       description: 'Timestamped snapshots of LLM feeds with cryptographic verification',
-      url: `${window.location.origin}/archive/`,
+      url: `${siteBaseUrl}/archive/`,
       dataset: allSnapshots.map(({ snapshot, domain }) => ({
         '@type': 'Dataset',
-        '@id': `${window.location.origin}/archive/${snapshot.id}.json`,
+        '@id': `${siteBaseUrl}/archive/${snapshot.id}.json`,
         name: `${snapshot.feed.metadata?.title || domain} (Archived)`,
         description: snapshot.feed.metadata?.description || `Archived LLM feed from ${domain}`,
-        url: `${window.location.origin}/archive/${snapshot.id}.json`,
+        url: `${siteBaseUrl}/archive/${snapshot.id}.json`,
         distribution: {
           '@type': 'DataDownload',
           encodingFormat: 'application/json',
-          contentUrl: `${window.location.origin}/archive/${snapshot.id}.json`
+          contentUrl: `${siteBaseUrl}/archive/${snapshot.id}.json`
         },
         datePublished: new Date(snapshot.timestamp).toISOString(),
         creator: {

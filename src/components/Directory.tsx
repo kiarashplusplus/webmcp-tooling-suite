@@ -151,7 +151,10 @@ export function FeedDirectory() {
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, 10)
 
-  const formatTimestamp = (timestamp: number) => {
+  const formatTimestamp = (timestamp: number, isCurated?: boolean) => {
+    // For curated feeds, just show "Curated" since they were seeded, not submitted
+    if (isCurated) return 'Curated'
+    
     const now = Date.now()
     const diff = now - timestamp
     const minutes = Math.floor(diff / 60000)
@@ -160,12 +163,15 @@ export function FeedDirectory() {
 
     if (minutes < 60) return `${minutes}m ago`
     if (hours < 24) return `${hours}h ago`
-    return `${days}d ago`
+    if (days < 30) return `${days}d ago`
+    return new Date(timestamp).toLocaleDateString()
   }
 
   const getArchivedSnapshotUrl = (feedId: string) => {
-    const baseUrl = window.location.origin
-    return `${baseUrl}/archive/${feedId}.json`
+    // Get the base path from the current pathname (e.g., /webmcp-tooling-suite/)
+    const pathname = window.location.pathname
+    const basePath = pathname.replace(/\/index\.html$/, '').replace(/\/$/, '')
+    return `${window.location.origin}${basePath}/archive/${feedId}.json`
   }
 
   const findArchivedSnapshot = (feedId: string) => {
@@ -427,7 +433,7 @@ export function FeedDirectory() {
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar size={14} />
           <time dateTime={new Date(feed.timestamp).toISOString()}>
-            {formatTimestamp(feed.timestamp)}
+            {formatTimestamp(feed.timestamp, feed.is_curated)}
           </time>
         </div>
       </div>

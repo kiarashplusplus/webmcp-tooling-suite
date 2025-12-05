@@ -12,8 +12,12 @@ export interface ServedArchive {
 }
 
 export function getArchiveUrl(snapshotId: string): string {
-  const baseUrl = window.location.origin
-  return `${baseUrl}/archive/${snapshotId}.json`
+  // Get the base path from the current pathname (e.g., /webmcp-tooling-suite/)
+  // Remove trailing hash/query and get the directory part
+  const pathname = window.location.pathname
+  // For SPA, pathname might be /webmcp-tooling-suite/ or /webmcp-tooling-suite/index.html
+  const basePath = pathname.replace(/\/index\.html$/, '').replace(/\/$/, '')
+  return `${window.location.origin}${basePath}/archive/${snapshotId}.json`
 }
 
 export function serializeSnapshot(snapshot: ArchivedSnapshot): ServedArchive {
