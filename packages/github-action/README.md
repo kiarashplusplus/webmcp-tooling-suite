@@ -2,46 +2,23 @@
 
 GitHub Action for validating LLMFeed JSON files with Ed25519 signature verification.
 
-## Usage
+[![Used by FIML](https://img.shields.io/badge/used%20by-FIML-blue)](https://github.com/kiarashplusplus/FIML)
+[![npm](https://img.shields.io/npm/v/@25xcodes/llmfeed-validator)](https://www.npmjs.com/package/@25xcodes/llmfeed-validator)
 
-### Basic Validation
+## Quick Start
+
+Add LLMFeed validation to your repository in 2 minutes:
 
 ```yaml
+# .github/workflows/validate-llmfeed.yml
 name: Validate LLMFeed
 
 on:
   push:
-    paths:
-      - '**/*.llmfeed.json'
-      - '**/mcp.llmfeed.json'
-  pull_request:
-    paths:
-      - '**/*.llmfeed.json'
-      - '**/mcp.llmfeed.json'
-
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Validate LLMFeed
-        uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
-        with:
-          feed: '.well-known/mcp.llmfeed.json'
-```
-
-### With Dynamic Badge (Recommended)
-
-Generate a dynamic shields.io badge that shows your security score:
-
-```yaml
-name: Validate and Badge
-
-on:
-  push:
     branches: [main]
-    paths: ['**/*.llmfeed.json']
+    paths: ['**/*.llmfeed.json', '**/llms.txt']
+  pull_request:
+    paths: ['**/*.llmfeed.json', '**/llms.txt']
 
 jobs:
   validate:
@@ -53,14 +30,12 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Validate LLMFeed
-        id: validate
         uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
         with:
           feed: '.well-known/mcp.llmfeed.json'
-          skip-signature: 'true'
           create-badge: 'true'
       
-      - name: Commit badge files
+      - name: Commit badge
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -69,48 +44,68 @@ jobs:
           git push
 ```
 
-The action generates both `.svg` and `.json` badge files. Add to your README:
+Then add the badge to your README:
 
 ```markdown
-<!-- Dynamic badge via shields.io (shows score like "85/100") -->
-[![LLMFeed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/OWNER/REPO/main/.github/badges/llmfeed-status.json)](https://your-site/.well-known/mcp.llmfeed.json)
-
-<!-- Or use the static SVG directly -->
-![LLMFeed](/.github/badges/llmfeed-status.svg)
+[![LLMFeed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/.github/badges/llmfeed-status.json)](https://your-site/.well-known/mcp.llmfeed.json)
 ```
 
-**Badge colors by score:**
-- 🟢 **brightgreen**: Score ≥ 80
-- 🟢 **green**: Score ≥ 60
-- 🟡 **yellow**: Score ≥ 40
-- 🟠 **orange**: Score < 40
-- 🔴 **red**: Invalid feed
+## Live Example
 
-### Advanced: Dynamic Badge via Gist (No Commits)
+See this action in production on [**FIML**](https://github.com/kiarashplusplus/FIML) - a Financial Intelligence MCP Server:
 
-If you prefer not to commit badge files, use a GitHub Gist as the endpoint:
+- 📋 [Workflow file](https://github.com/kiarashplusplus/FIML/blob/main/.github/workflows/validate-llmfeed.yml)
+- ✅ [Workflow runs](https://github.com/kiarashplusplus/FIML/actions/workflows/validate-llmfeed.yml)
+- 🏷️ [Badge in README](https://github.com/kiarashplusplus/FIML#readme)
 
-1. Create a GitHub Gist with `llmfeed-badge.json`
-2. Create a PAT with `gist` scope → add as `GIST_TOKEN` secret
-3. Add to workflow:
+## Features
+
+- ✅ **Structural Validation** — Checks `feed_type`, `metadata`, `capabilities`
+- 🔐 **Signature Verification** — Ed25519 signature verification via `public_key_hint`
+- 🎯 **Security Scoring** — 0-100 score with color-coded badges
+- 🏷️ **Dynamic Badges** — shields.io compatible JSON badges
+- 💬 **PR Comments** — Post validation results on pull requests
+- 🔗 **Remote Feeds** — Validate feeds from URLs
+
+## Usage Examples
+
+### Basic Validation
 
 ```yaml
 - name: Validate LLMFeed
   uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
   with:
     feed: '.well-known/mcp.llmfeed.json'
-    badge-gist-id: 'YOUR_GIST_ID'
-  env:
-    GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
 ```
 
-### Validate Remote Feed
+### Multiple Feeds
 
 ```yaml
-- name: Validate Remote Feed
+- name: Validate MCP Feed
   uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
   with:
-    feed: 'https://example.com/.well-known/mcp.llmfeed.json'
+    feed: '.well-known/mcp.llmfeed.json'
+    create-badge: 'true'
+    badge-path: '.github/badges/llmfeed-mcp.json'
+
+- name: Validate LLM Index
+  uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
+  with:
+    feed: '.well-known/llm-index.llmfeed.json'
+    create-badge: 'true'
+    badge-path: '.github/badges/llmfeed-index.json'
+```
+
+### Skip Signature Verification
+
+For feeds without signatures (development or simple use cases):
+
+```yaml
+- name: Validate LLMFeed
+  uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
+  with:
+    feed: 'mcp.llmfeed.json'
+    skip-signature: 'true'
 ```
 
 ### Strict Mode (Fail on Warnings)
@@ -123,33 +118,13 @@ If you prefer not to commit badge files, use a GitHub Gist as the endpoint:
     fail-on-warning: 'true'
 ```
 
-### Skip Signature Verification
+### Validate Remote Feed
 
 ```yaml
-- name: Structure-Only Validation
+- name: Validate Production Feed
   uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
   with:
-    feed: 'mcp.llmfeed.json'
-    skip-signature: 'true'
-```
-
-### Using Outputs
-
-```yaml
-- name: Validate
-  id: validate
-  uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
-  with:
-    feed: 'mcp.llmfeed.json'
-
-- name: Check Results
-  run: |
-    echo "Valid: ${{ steps.validate.outputs.valid }}"
-    echo "Score: ${{ steps.validate.outputs.security-score }}"
-    echo "Signature: ${{ steps.validate.outputs.signature-status }}"
-    echo "Title: ${{ steps.validate.outputs.feed-title }}"
-    echo "Capabilities: ${{ steps.validate.outputs.capabilities-count }}"
-    echo "Badge URL: ${{ steps.validate.outputs.badge-url }}"
+    feed: 'https://example.com/.well-known/mcp.llmfeed.json'
 ```
 
 ### PR Comment with Results
@@ -166,19 +141,19 @@ If you prefer not to commit badge files, use a GitHub Gist as the endpoint:
   uses: actions/github-script@v7
   with:
     script: |
-      const valid = '${{ steps.validate.outputs.valid }}' === 'true';
-      const score = '${{ steps.validate.outputs.security-score }}';
-      const sig = '${{ steps.validate.outputs.signature-status }}';
+      const valid = '\${{ steps.validate.outputs.valid }}' === 'true';
+      const score = '\${{ steps.validate.outputs.security-score }}';
+      const sig = '\${{ steps.validate.outputs.signature-status }}';
       
       const emoji = valid ? '✅' : '❌';
-      const body = `## ${emoji} LLMFeed Validation
+      const body = \`## \${emoji} LLMFeed Validation
       
       | Metric | Value |
       |--------|-------|
-      | Status | ${valid ? 'Valid' : 'Invalid'} |
-      | Security Score | ${score}/100 |
-      | Signature | ${sig} |
-      `;
+      | Status | \${valid ? 'Valid' : 'Invalid'} |
+      | Security Score | \${score}/100 |
+      | Signature | \${sig} |
+      \`;
       
       github.rest.issues.createComment({
         issue_number: context.issue.number,
@@ -186,6 +161,62 @@ If you prefer not to commit badge files, use a GitHub Gist as the endpoint:
         repo: context.repo.repo,
         body
       });
+```
+
+### Using Outputs
+
+```yaml
+- name: Validate
+  id: validate
+  uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
+  with:
+    feed: 'mcp.llmfeed.json'
+
+- name: Check Results
+  run: |
+    echo "Valid: \${{ steps.validate.outputs.valid }}"
+    echo "Score: \${{ steps.validate.outputs.security-score }}"
+    echo "Signature: \${{ steps.validate.outputs.signature-status }}"
+    echo "Title: \${{ steps.validate.outputs.feed-title }}"
+    echo "Capabilities: \${{ steps.validate.outputs.capabilities-count }}"
+```
+
+## Dynamic Badges
+
+The action generates shields.io-compatible JSON badges. Badge colors are based on security score:
+
+| Score | Color | Example |
+|-------|-------|---------|
+| ≥ 80 | 🟢 brightgreen | ![80+](https://img.shields.io/badge/LLMFeed-85%2F100-brightgreen) |
+| ≥ 60 | 🟢 green | ![60+](https://img.shields.io/badge/LLMFeed-65%2F100-green) |
+| ≥ 40 | 🟡 yellow | ![40+](https://img.shields.io/badge/LLMFeed-45%2F100-yellow) |
+| < 40 | 🟠 orange | ![<40](https://img.shields.io/badge/LLMFeed-30%2F100-orange) |
+| Invalid | �� red | ![invalid](https://img.shields.io/badge/LLMFeed-invalid-red) |
+
+### Badge via Repository (Recommended)
+
+The badge JSON is committed to your repo and served via `raw.githubusercontent.com`:
+
+```markdown
+[![LLMFeed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/OWNER/REPO/main/.github/badges/llmfeed-status.json)](LINK_TO_FEED)
+```
+
+### Badge via Gist (No Commits)
+
+If you prefer not to commit badge files:
+
+1. Create a public Gist with `llmfeed-badge.json`
+2. Create a PAT with `gist` scope → add as `GIST_TOKEN` secret
+3. Configure the action:
+
+```yaml
+- name: Validate LLMFeed
+  uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
+  with:
+    feed: '.well-known/mcp.llmfeed.json'
+    badge-gist-id: 'YOUR_GIST_ID'
+  env:
+    GIST_TOKEN: \${{ secrets.GIST_TOKEN }}
 ```
 
 ## Inputs
@@ -196,8 +227,8 @@ If you prefer not to commit badge files, use a GitHub Gist as the endpoint:
 | `fail-on-warning` | Fail if warnings are found | No | `false` |
 | `skip-signature` | Skip Ed25519 signature verification | No | `false` |
 | `timeout` | Network request timeout (ms) | No | `10000` |
-| `create-badge` | Generate SVG validation badge | No | `false` |
-| `badge-path` | Path for generated SVG badge | No | `.github/badges/llmfeed-status.svg` |
+| `create-badge` | Generate badge files (`.svg` and `.json`) | No | `false` |
+| `badge-path` | Path for generated badge files | No | `.github/badges/llmfeed-status` |
 | `badge-gist-id` | Gist ID for dynamic shields.io badge | No | - |
 | `badge-filename` | Filename in gist for badge JSON | No | `llmfeed-badge.json` |
 
@@ -212,34 +243,40 @@ If you prefer not to commit badge files, use a GitHub Gist as the endpoint:
 | `warnings` | JSON array of validation warnings |
 | `feed-title` | Title from feed metadata |
 | `capabilities-count` | Number of capabilities in the feed |
-| `badge-url` | Dynamic shields.io badge URL (if `badge-gist-id` is set) |
+| `badge-url` | Dynamic shields.io badge URL |
 
 ## Validation Checks
 
-The action performs:
+### Structure Validation
+- ✅ Required `feed_type` field (`mcp`, `export`, `llm-index`)
+- ✅ Required `metadata` fields: `title`, `origin`, `description`
+- ✅ Valid URL formats
+- ✅ Capability schema correctness
 
-1. **Structure Validation**
-   - Required fields: `feed_type`, `metadata.title`, `metadata.origin`, `metadata.description`
-   
-2. **Schema Validation**
-   - Capability schema correctness
-   - JSON Schema syntax validation
-
-3. **Signature Verification** (unless skipped)
-   - Fetches public key from `trust.public_key_hint`
-   - Verifies Ed25519 signature against canonical payload
-   - Checks signed_blocks coverage
+### Signature Verification
+- 🔐 Fetches public key from `trust.public_key_hint` URL
+- 🔐 Supports PEM and SPKI key formats
+- 🔐 Verifies Ed25519 signature against canonical JSON payload
+- 🔐 Validates `signed_blocks` coverage
 
 ## Security Score
 
 The security score (0-100) is calculated based on:
 
-- **-20 points** per validation error
-- **-5 points** per warning
-- **-30 points** if feed is unsigned
-- **-50 points** if signature verification fails
+| Issue | Points |
+|-------|--------|
+| Validation error | -20 |
+| Validation warning | -5 |
+| Unsigned feed | -30 |
+| Signature verification failed | -50 |
+
+## Related Tools
+
+- 📦 [@25xcodes/llmfeed-validator](https://www.npmjs.com/package/@25xcodes/llmfeed-validator) — CLI & library for validation
+- 🔏 [@25xcodes/llmfeed-signer](https://www.npmjs.com/package/@25xcodes/llmfeed-signer) — Sign feeds with Ed25519
+- 🔍 [@25xcodes/llmfeed-health-monitor](https://www.npmjs.com/package/@25xcodes/llmfeed-health-monitor) — Feed monitoring & health checks
+- 🌐 [LLMFeed Validator Web App](https://kiarashplusplus.github.io/webmcp-tooling-suite/) — Online validation tool
 
 ## License
 
 MIT
-
