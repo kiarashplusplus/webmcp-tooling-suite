@@ -51,7 +51,7 @@ npx @25xcodes/llmfeed-validator example.com --verbose
 ## Programmatic Usage
 
 ```typescript
-import { validateLLMFeed, fetchLLMFeed } from '@webmcp/validator'
+import { validateLLMFeed, fetchLLMFeed } from '@25xcodes/llmfeed-validator'
 
 // Validate from URL
 const feed = await fetchLLMFeed('https://example.com')
@@ -102,7 +102,7 @@ if (!result.signatureValid && result.signatureDiagnostics) {
 For environments without global `fetch` or for testing:
 
 ```typescript
-import { validateLLMFeed } from '@webmcp/validator'
+import { validateLLMFeed } from '@25xcodes/llmfeed-validator'
 
 const result = await validateLLMFeed(feed, {
   fetch: customFetchFunction,
@@ -129,7 +129,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npx @webmcp/validator ./mcp.llmfeed.json --json > validation.json
+      - run: npx @25xcodes/llmfeed-validator ./mcp.llmfeed.json --json > validation.json
       - run: |
           if [ $(jq '.valid' validation.json) != "true" ]; then
             echo "Feed validation failed!"

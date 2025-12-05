@@ -114,8 +114,9 @@ import type {
 
 import type { 
   CrawlResult, 
-  HealthReport,
-  FeedStorage 
+  HealthCheck,
+  StorageAdapter,
+  CrawlerConfig
 } from '@25xcodes/llmfeed-health-monitor'
 ```
 
@@ -140,15 +141,15 @@ Each package includes a CLI:
 
 ```bash
 # Validate feeds
-npx llmfeed-validate ./feed.json
+npx @25xcodes/llmfeed-validator ./feed.json
 
 # Generate keys and sign feeds
-npx llmfeed-sign keygen --output ./keys
-npx llmfeed-sign sign ./feed.json --key ./keys/private.pem
+npx @25xcodes/llmfeed-signer keygen --output ./keys
+npx @25xcodes/llmfeed-signer sign ./feed.json --key ./keys/private.pem
 
 # Monitor feed health
-npx llmfeed-health crawl https://example.com/.well-known/llm.txt
-npx llmfeed-health report --format html --output report.html
+npx @25xcodes/llmfeed-health-monitor crawl https://example.com/.well-known/mcp.llmfeed.json
+npx @25xcodes/llmfeed-health-monitor report --format html --output report.html
 ```
 
 ## Versioning

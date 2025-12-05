@@ -79,7 +79,7 @@ Create a file called `llmfeed.json` or `feed.json`:
 Use the CLI to validate your LLMFeed JSON:
 
 ```bash
-npx llmfeed-validate llmfeed.json
+npx @25xcodes/llmfeed-validator mcp.llmfeed.json
 ```
 
 Or use the API:
@@ -88,13 +88,14 @@ Or use the API:
 import { validateFeedStructure } from '@25xcodes/llmfeed-validator'
 import fs from 'fs'
 
-const feed = JSON.parse(fs.readFileSync('llmfeed.json', 'utf-8'))
-const result = validateFeedStructure(feed)
+const feed = JSON.parse(fs.readFileSync('mcp.llmfeed.json', 'utf-8'))
+const errors = validateFeedStructure(feed)
 
-if (result.valid) {
+if (errors.length === 0) {
   console.log('✅ LLMFeed JSON is valid!')
 } else {
-  console.error('❌ Validation errors:', result.errors)
+  console.error('❌ Validation errors:')
+  errors.forEach(err => console.log(`  ${err.field}: ${err.message}`))
 }
 ```
 
@@ -153,12 +154,13 @@ Verify that the signature is valid:
 
 ```typescript
 import { validateLLMFeed } from '@25xcodes/llmfeed-validator'
+import fs from 'fs'
 
 const signedFeed = JSON.parse(fs.readFileSync('signed-feed.json', 'utf-8'))
 const result = await validateLLMFeed(signedFeed)
 
-console.log('Structure valid:', result.structureValid)
 console.log('Signature valid:', result.signatureValid)
+console.log('Security score:', result.score)
 console.log('Overall valid:', result.valid)
 ```
 
@@ -168,10 +170,10 @@ Once your feed is validated and signed, publish it to your website:
 
 ### Option 1: Well-Known Location
 
-Place your feed at `/.well-known/llm.txt`:
+Place your feed at `/.well-known/mcp.llmfeed.json`:
 
 ```
-https://example.com/.well-known/llm.txt
+https://example.com/.well-known/mcp.llmfeed.json
 ```
 
 ### Option 2: Root Location
@@ -179,7 +181,7 @@ https://example.com/.well-known/llm.txt
 Place at the root of your domain:
 
 ```
-https://example.com/llm.txt
+https://example.com/mcp.llmfeed.json
 ```
 
 ### Option 3: Custom Path
@@ -212,10 +214,10 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Validate Feed
-        uses: 25xcodes/llmfeed-action@v1
+        uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
         with:
-          feed-path: './feed.json'
-          fail-on-error: true
+          feed: './.well-known/mcp.llmfeed.json'
+          fail-on-error: 'true'
 ```
 
 ## Monitor Feed Health
@@ -223,19 +225,21 @@ jobs:
 Set up monitoring for your feeds:
 
 ```typescript
-import { crawlFeed, generateReport, MemoryStorage } from '@25xcodes/llmfeed-health-monitor'
-
-const storage = new MemoryStorage()
+import { crawlFeed, generateReport } from '@25xcodes/llmfeed-health-monitor'
 
 // Crawl a feed
-const result = await crawlFeed('https://example.com/llm.txt', storage)
+const result = await crawlFeed('https://example.com/.well-known/mcp.llmfeed.json')
+
+// Check health status
+console.log('Reachable:', result.healthCheck.reachable)
+console.log('Valid:', result.healthCheck.validation?.valid)
+console.log('Score:', result.healthCheck.validation?.score)
 
 // Generate a health report
-const report = await generateReport({
-  storage,
-  format: 'html',
-  outputPath: './health-report.html'
-})
+if (!result.optedOut) {
+  const report = generateReport(result.feed, result.healthCheck)
+  console.log(report.html)
+}
 ```
 
 ## Next Steps

@@ -40,75 +40,82 @@ npm install @25xcodes/llmfeed-health-monitor
 ```typescript
 import { 
   crawlFeed, 
-  generateReport, 
-  MemoryStorage 
+  generateReport 
 } from '@25xcodes/llmfeed-health-monitor'
 
-const storage = new MemoryStorage()
-
 // Crawl a LLMFeed JSON (full validation support)
-const result = await crawlFeed('https://example.com/.well-known/llmfeed.json', storage)
+const result = await crawlFeed('https://example.com/.well-known/mcp.llmfeed.json')
 
-console.log(result.status)           // 'healthy' | 'degraded' | 'unhealthy'
-console.log(result.structureValid)   // Schema validity
-console.log(result.signatureValid)   // Signature validity
-console.log(result.responseTime)     // ms
+// Access the result
+console.log(result.feed.url)                    // Feed URL
+console.log(result.healthCheck.reachable)       // Was feed accessible?
+console.log(result.healthCheck.validation?.score)  // Security score (0-100)
+console.log(result.healthCheck.responseTimeMs)  // Response time in ms
+console.log(result.optedOut)                    // Whether feed opted out
 
 // Generate a report
-const report = await generateReport({
-  storage,
-  format: 'html',
-  outputPath: './health-report.html'
-})
+if (!result.optedOut) {
+  const report = generateReport(result.feed, result.healthCheck)
+  console.log(report.html)
+}
 ```
 
 ## Core Functions
 
-### `crawlFeed(url, storage?, options?)`
+### `crawlFeed(url, config?)`
 
 Crawl a single feed:
 
 ```typescript
-import { crawlFeed, MemoryStorage } from '@25xcodes/llmfeed-health-monitor'
+import { crawlFeed, type CrawlResult } from '@25xcodes/llmfeed-health-monitor'
 
-const storage = new MemoryStorage()
-
-const result = await crawlFeed('https://example.com/llm.txt', storage, {
-  timeout: 10000,        // Request timeout
-  validateSignature: true,  // Verify signatures
-  followRedirects: true  // Follow HTTP redirects
+const result = await crawlFeed('https://example.com/.well-known/mcp.llmfeed.json', {
+  timeoutMs: 10000,          // Request timeout
+  respectRobotsTxt: true,    // Check robots.txt opt-out
+  userAgent: 'My-Bot/1.0'    // Custom user agent
 })
 
-// Result structure
-{
-  url: 'https://example.com/llm.txt',
-  status: 'healthy',
-  crawledAt: '2025-12-01T14:30:00Z',
-  responseTime: 245,
-  httpStatus: 200,
-  structureValid: true,
-  signatureValid: true,
-  feed: { ... },         // The parsed feed
-  errors: [],            // Any errors encountered
-  contentHash: 'sha256:...'
+// CrawlResult structure
+interface CrawlResult {
+  feed: {
+    id: string               // Unique feed identifier
+    url: string              // Feed URL
+    domain: string           // Domain extracted from URL
+    discoveredAt: number     // Timestamp
+    optedOut: boolean        // Whether feed has opted out
+  }
+  healthCheck: {
+    timestamp: number        // Check timestamp
+    reachable: boolean       // Was feed accessible?
+    httpStatus?: number      // HTTP status code
+    responseTimeMs?: number  // Response time in ms
+    validation?: {           // Validation result (if reachable)
+      valid: boolean
+      score: number          // 0-100
+      errorCount: number
+      warningCount: number
+      signatureValid?: boolean
+    }
+    errors: string[]         // Any errors encountered
+  }
+  optedOut: boolean          // Whether feed opted out
+  optOutReason?: string      // Reason for opting out
 }
 ```
 
-### `crawlFeeds(urls, storage?, options?)`
+### `crawlFeeds(urls, config?)`
 
 Crawl multiple feeds concurrently:
 
 ```typescript
-import { crawlFeeds, MemoryStorage } from '@25xcodes/llmfeed-health-monitor'
-
-const storage = new MemoryStorage()
+import { crawlFeeds } from '@25xcodes/llmfeed-health-monitor'
 
 const results = await crawlFeeds([
-  'https://example.com/llm.txt',
-  'https://another.com/.well-known/llm.txt'
-], storage, {
-  concurrency: 5,  // Max concurrent requests
-  timeout: 10000
+  'https://example.com/.well-known/mcp.llmfeed.json',
+  'https://another.com/.well-known/mcp.llmfeed.json'
+], {
+  maxConcurrency: 5,  // Max concurrent requests
+  timeoutMs: 10000
 })
 ```
 

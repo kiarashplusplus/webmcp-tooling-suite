@@ -133,4 +133,4 @@ export async function validateFeed(feed: unknown, options?: { url?: string }) {
 }
 
 // Version
-export const VERSION = '1.0.0'
+export const VERSION = '1.1.6'

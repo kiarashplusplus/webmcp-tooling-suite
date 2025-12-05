@@ -94,14 +94,26 @@ The private key can be in multiple formats:
 - Base64-encoded PKCS#8 (48 bytes decoded)
 - Base64-encoded raw seed (32 bytes decoded)
 
-### `verifyFeed(feed)`
+### `verifyFeed(feed, publicKeyBase64)`
 
-Verify a signed feed:
+Verify a signed feed's signature:
 
 ```typescript
-import { verifyFeed } from '@25xcodes/llmfeed-signer'
+import { verifyFeed, pemToPublicKey, uint8ArrayToBase64 } from '@25xcodes/llmfeed-signer'
+import fs from 'fs'
 
-const isValid = await verifyFeed(signedFeed)
+// Load public key
+const publicKeyPem = fs.readFileSync('./keys/public.pem', 'utf-8')
+const publicKeyRaw = pemToPublicKey(publicKeyPem)
+const publicKeyBase64 = uint8ArrayToBase64(publicKeyRaw)
+
+// Verify the feed
+const result = await verifyFeed(signedFeed, publicKeyBase64)
+
+console.log(result.valid)        // boolean
+console.log(result.signedBlocks) // string[]
+console.log(result.payloadHash)  // SHA-256 hash
+console.log(result.error)        // Error message if invalid
 ```
 
 ### `loadKeyPair(privateKey)`
@@ -190,20 +202,26 @@ const bytes = base64ToUint8Array(base64)
 
 ## Trust Block Output
 
-The signed feed includes a `trust` block:
+The signed feed includes separate `trust` and `signature` blocks:
 
 ```json
 {
-  "title": "My Service",
-  "items": [...],
+  "feed_type": "mcp",
+  "metadata": {
+    "title": "My Service",
+    "origin": "https://example.com",
+    "description": "A helpful service"
+  },
+  "capabilities": [...],
   "trust": {
-    "type": "signed",
-    "algorithm": "ed25519",
-    "publicKey": "MCowBQYDK2VwAyEA...",
-    "signature": "base64-signature...",
-    "signedBlocks": ["title", "items"],
-    "timestamp": "2025-12-01T14:30:00Z",
-    "contentHash": "sha256:a7b3c4d5..."
+    "signed_blocks": ["feed_type", "metadata", "capabilities"],
+    "algorithm": "Ed25519",
+    "public_key_hint": "https://example.com/.well-known/public.pem",
+    "trust_level": "self-signed"
+  },
+  "signature": {
+    "value": "base64-encoded-signature...",
+    "created_at": "2025-12-01T14:30:00.000Z"
   }
 }
 ```

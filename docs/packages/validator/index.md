@@ -62,18 +62,21 @@ Parsing and validation for llm.txt (markdown format) is planned for future relea
 
 ### `validateFeedStructure(feed)`
 
-Validate the structure of a feed without checking signatures:
+Validate the structure of a feed without checking signatures. Returns an array of validation errors:
 
 ```typescript
 import { validateFeedStructure } from '@25xcodes/llmfeed-validator'
 
-const result = validateFeedStructure(feed)
+const errors = validateFeedStructure(feed)
 
-console.log(result.valid)   // boolean
-console.log(result.errors)  // string[]
+if (errors.length === 0) {
+  console.log('Feed structure is valid!')
+} else {
+  errors.forEach(err => console.log(`${err.field}: ${err.message}`))
+}
 ```
 
-### `validateLLMFeed(feed)`
+### `validateLLMFeed(feed, options?)`
 
 Full validation including signature verification:
 
@@ -82,46 +85,53 @@ import { validateLLMFeed } from '@25xcodes/llmfeed-validator'
 
 const result = await validateLLMFeed(signedFeed)
 
-console.log(result.valid)           // Overall validity
-console.log(result.structureValid)  // Schema validity
-console.log(result.signatureValid)  // Signature validity
-console.log(result.signatureError)  // Signature error message
+console.log(result.valid)           // Overall validity (boolean)
+console.log(result.score)           // Security score (0-100)
+console.log(result.signatureValid)  // Signature validity (boolean | undefined)
+console.log(result.errors)          // ValidationError[]
+console.log(result.warnings)        // ValidationWarning[]
 ```
 
-### `fetchLLMFeed(url)`
+### `fetchLLMFeed(url, options?)`
 
-Fetch and validate a feed from a URL:
+Fetch a feed from a URL. Returns the parsed feed object:
 
 ```typescript
-import { fetchLLMFeed } from '@25xcodes/llmfeed-validator'
+import { fetchLLMFeed, validateLLMFeed } from '@25xcodes/llmfeed-validator'
 
-const result = await fetchLLMFeed('https://example.com/.well-known/llm.txt')
+// Fetch the feed
+const feed = await fetchLLMFeed('https://example.com/.well-known/mcp.llmfeed.json')
 
-console.log(result.feed)    // The parsed feed object
-console.log(result.valid)   // Validation result
+// Then validate it
+const result = await validateLLMFeed(feed)
+console.log(result.valid)
 ```
 
-### `verifyEd25519Signature(feed)`
+### `verifyEd25519Signature(feed, options?)`
 
-Verify just the cryptographic signature:
+Verify the cryptographic signature with detailed diagnostics:
 
 ```typescript
 import { verifyEd25519Signature } from '@25xcodes/llmfeed-validator'
 
-const isValid = await verifyEd25519Signature(signedFeed)
+const result = await verifyEd25519Signature(signedFeed)
+
+console.log(result.valid)           // boolean
+console.log(result.steps)           // Verification steps with status
+console.log(result.detectedIssues)  // Any detected signing issues
 ```
 
-### `validateCapabilitySchemas(capabilities)`
+### `validateCapabilitySchemas(feed)`
 
 Validate JSON Schema definitions in capabilities:
 
 ```typescript
 import { validateCapabilitySchemas } from '@25xcodes/llmfeed-validator'
 
-const result = validateCapabilitySchemas(feed.capabilities)
+const errors = validateCapabilitySchemas(feed)
 
-if (!result.valid) {
-  console.log('Schema errors:', result.errors)
+if (errors.length > 0) {
+  errors.forEach(err => console.log(`${err.field}: ${err.message}`))
 }
 ```
 
@@ -129,16 +139,22 @@ if (!result.valid) {
 
 ```bash
 # Validate a local LLMFeed JSON file
-npx llmfeed-validate ./llmfeed.json
+npx @25xcodes/llmfeed-validator ./mcp.llmfeed.json
 
-# Validate a remote feed
-npx llmfeed-validate https://example.com/.well-known/llmfeed.json
+# Validate a remote feed (auto-discovers .well-known path)
+npx @25xcodes/llmfeed-validator example.com
 
-# Verify signatures
-npx llmfeed-validate ./signed-feed.json --verify-signature
+# Validate with full URL
+npx @25xcodes/llmfeed-validator https://example.com/.well-known/mcp.llmfeed.json
 
-# Output JSON results
-npx llmfeed-validate ./llmfeed.json --json
+# Skip signature verification
+npx @25xcodes/llmfeed-validator ./feed.json --skip-signature
+
+# Output JSON results (for CI/CD)
+npx @25xcodes/llmfeed-validator ./feed.json --json
+
+# Verbose output
+npx @25xcodes/llmfeed-validator example.com --verbose
 ```
 
 ::: warning llm.txt
