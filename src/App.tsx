@@ -25,6 +25,7 @@ const LLMSTxtDiscovery = lazy(() => import('@/components/llmstxt/LLMSTxtDiscover
 const LLMSTxtValidator = lazy(() => import('@/components/llmstxt/LLMSTxtValidator').then(m => ({ default: m.LLMSTxtValidator })))
 const LLMSTxtArchive = lazy(() => import('@/components/llmstxt/LLMSTxtArchive').then(m => ({ default: m.LLMSTxtArchive })))
 const LLMSTxtRAGPrep = lazy(() => import('@/components/llmstxt/LLMSTxtRAGPrep').then(m => ({ default: m.LLMSTxtRAGPrep })))
+const LLMSTxtDirectory = lazy(() => import('@/components/llmstxt/LLMSTxtDirectory').then(m => ({ default: m.LLMSTxtDirectory })))
 
 // Loading skeleton for tab content
 function TabLoadingSkeleton() {
@@ -289,23 +290,21 @@ function AppContent() {
               </div>
             )}
 
-            {/* LLMS.txt external link CTA */}
+            {/* Submit Your Site CTA - LLMS.txt mode */}
             {mode === 'llmstxt' && (
               <div className="mt-12 mb-8">
                 <div className="glass-card rounded-2xl p-6 border border-primary/20 bg-primary/5">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-bold text-foreground font-mono">Learn more about llms.txt</h3>
-                      <p className="text-sm text-muted-foreground">Visit the official specification and see examples from other projects</p>
+                      <h3 className="text-lg font-bold text-foreground font-mono">Own a site with llms.txt?</h3>
+                      <p className="text-sm text-muted-foreground">Archive your llms.txt file and get listed in our directory</p>
                     </div>
-                    <a
-                      href="https://llmstxt.org"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => handleTabChange('archive')}
                       className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap"
                     >
-                      Visit llmstxt.org →
-                    </a>
+                      Archive Your llms.txt →
+                    </button>
                   </div>
                 </div>
               </div>
@@ -315,6 +314,15 @@ function AppContent() {
             {mode === 'llmfeed' && (
               <div className="mt-12">
                 <FeedDirectory />
+              </div>
+            )}
+
+            {/* LLMS.txt Directory - LLMS.txt mode only */}
+            {mode === 'llmstxt' && (
+              <div className="mt-12">
+                <Suspense fallback={<TabLoadingSkeleton />}>
+                  <LLMSTxtDirectory />
+                </Suspense>
               </div>
             )}
           </main>
