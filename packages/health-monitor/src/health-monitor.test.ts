@@ -6,13 +6,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { MemoryStorage } from './storage.js'
 import { 
   crawlFeed, 
+  crawlFeeds,
   discoverFeeds, 
   normalizeUrl, 
   generateFeedId,
-  checkMetaOptOut 
+  checkMetaOptOut,
+  checkFeedOptOut
 } from './crawler.js'
-import { generateReport } from './report.js'
-import type { FeedSource, HealthCheck, ValidationResult, OutreachHistory } from './types.js'
+import { generateReport, generateStatsReport } from './report.js'
+import type { FeedSource, HealthCheck, ValidationResult, OutreachHistory, MonitorStats } from './types.js'
 
 // Mock fetch globally
 const mockFetch = vi.fn()
@@ -292,6 +294,68 @@ describe('Crawler utilities', () => {
       expect(result).toBeNull()
     })
   })
+
+  describe('checkFeedOptOut', () => {
+    it('should return null for null feed', () => {
+      expect(checkFeedOptOut(null)).toBeNull()
+    })
+
+    it('should return null for non-object feed', () => {
+      expect(checkFeedOptOut('string')).toBeNull()
+      expect(checkFeedOptOut(123)).toBeNull()
+    })
+
+    it('should return null for feed without opt-out', () => {
+      const feed = { feed_type: 'mcp', metadata: { title: 'Test' } }
+      expect(checkFeedOptOut(feed)).toBeNull()
+    })
+
+    it('should detect llm-feed-bot noindex in metadata', () => {
+      const feed = { 
+        feed_type: 'mcp', 
+        metadata: { 
+          title: 'Test',
+          'llm-feed-bot': 'noindex'
+        } 
+      }
+      const result = checkFeedOptOut(feed)
+      expect(result).toBe('Feed metadata: health-monitor=noindex')
+    })
+
+    it('should detect health-monitor noindex in metadata', () => {
+      const feed = { 
+        feed_type: 'mcp', 
+        metadata: { 
+          title: 'Test',
+          'health-monitor': 'noindex'
+        } 
+      }
+      const result = checkFeedOptOut(feed)
+      expect(result).toBe('Feed metadata: health-monitor=noindex')
+    })
+
+    it('should detect llm-feed-bot noindex in _meta', () => {
+      const feed = { 
+        feed_type: 'mcp', 
+        _meta: { 
+          'llm-feed-bot': 'noindex'
+        } 
+      }
+      const result = checkFeedOptOut(feed)
+      expect(result).toBe('Feed _meta: health-monitor=noindex')
+    })
+
+    it('should detect health-monitor noindex in _meta', () => {
+      const feed = { 
+        feed_type: 'mcp', 
+        _meta: { 
+          'health-monitor': 'noindex'
+        } 
+      }
+      const result = checkFeedOptOut(feed)
+      expect(result).toBe('Feed _meta: health-monitor=noindex')
+    })
+  })
 })
 
 describe('crawlFeed', () => {
@@ -451,6 +515,151 @@ describe('discoverFeeds', () => {
     // Should find the feed URL from sitemap
     expect(feeds.some(f => f.includes('llmfeed'))).toBe(true)
   })
+
+  it('should handle domain without protocol', async () => {
+    const validFeed = {
+      feed_type: 'mcp',
+      metadata: { title: 'Test', origin: 'https://example.com', description: 'Test' },
+    }
+
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes('mcp.llmfeed.json')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: () => Promise.resolve(JSON.stringify(validFeed)),
+        })
+      }
+      return Promise.resolve({ ok: false, status: 404 })
+    })
+
+    const feeds = await discoverFeeds('example.com')
+    expect(feeds.some(f => f.includes('mcp.llmfeed.json'))).toBe(true)
+  })
+
+  it('should return empty array when no feeds found', async () => {
+    mockFetch.mockImplementation(() => {
+      return Promise.resolve({ ok: false, status: 404 })
+    })
+
+    const feeds = await discoverFeeds('nofeed.example.com')
+    expect(feeds).toEqual([])
+  })
+
+  it('should skip invalid JSON responses', async () => {
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes('mcp.llmfeed.json')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: () => Promise.resolve('not valid json'),
+        })
+      }
+      return Promise.resolve({ ok: false, status: 404 })
+    })
+
+    const feeds = await discoverFeeds('example.com')
+    expect(feeds).toEqual([])
+  })
+
+  it('should handle fetch errors gracefully', async () => {
+    mockFetch.mockImplementation(() => {
+      return Promise.reject(new Error('Network error'))
+    })
+
+    const feeds = await discoverFeeds('example.com')
+    expect(feeds).toEqual([])
+  })
+})
+
+
+describe('crawlFeeds (batch)', () => {
+  beforeEach(() => {
+    mockFetch.mockReset()
+  })
+
+  it('should crawl multiple feeds concurrently', async () => {
+    const validFeed = {
+      feed_type: 'mcp',
+      metadata: { title: 'Test', origin: 'https://example.com', description: 'Test' },
+      capabilities: [{ name: 'test', type: 'tool', description: 'Test tool' }],
+    }
+
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes('robots.txt')) {
+        return Promise.resolve({ ok: false, status: 404 })
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(validFeed),
+        text: () => Promise.resolve(JSON.stringify(validFeed)),
+      })
+    })
+
+    const urls = [
+      'https://example1.com/.well-known/mcp.llmfeed.json',
+      'https://example2.com/.well-known/mcp.llmfeed.json',
+      'https://example3.com/.well-known/mcp.llmfeed.json',
+    ]
+
+    const results = await crawlFeeds(urls)
+
+    expect(results).toHaveLength(3)
+    expect(results.every(r => r.healthCheck.reachable)).toBe(true)
+  })
+
+  it('should handle mixed success and failure', async () => {
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes('robots.txt')) {
+        return Promise.resolve({ ok: false, status: 404 })
+      }
+      if (url.includes('example1.com')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ feed_type: 'mcp', metadata: { title: 'Test', origin: 'https://example1.com', description: 'Test' } }),
+          text: () => Promise.resolve('{}'),
+        })
+      }
+      return Promise.reject(new Error('Network error'))
+    })
+
+    const urls = [
+      'https://example1.com/.well-known/mcp.llmfeed.json',
+      'https://example2.com/.well-known/mcp.llmfeed.json',
+    ]
+
+    const results = await crawlFeeds(urls)
+
+    expect(results).toHaveLength(2)
+    expect(results[0].healthCheck.reachable).toBe(true)
+    expect(results[1].healthCheck.reachable).toBe(false)
+  })
+
+  it('should respect maxConcurrency option', async () => {
+    const fetchCalls: string[] = []
+    mockFetch.mockImplementation((url: string) => {
+      fetchCalls.push(url)
+      if (url.includes('robots.txt')) {
+        return Promise.resolve({ ok: false, status: 404 })
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ feed_type: 'mcp', metadata: { title: 'Test', origin: 'https://example.com', description: 'Test' } }),
+        text: () => Promise.resolve('{}'),
+      })
+    })
+
+    const urls = Array.from({ length: 10 }, (_, i) => `https://example${i}.com/.well-known/mcp.llmfeed.json`)
+
+    const results = await crawlFeeds(urls, { maxConcurrency: 2 })
+
+    expect(results).toHaveLength(10)
+    // All should be processed
+    expect(results.every(r => r.feed.url)).toBe(true)
+  })
 })
 
 
@@ -517,5 +726,168 @@ describe('Report Generator', () => {
     expect(report.json).toBeDefined()
     expect(report.feed.domain).toBe('example.com')
     expect(report.healthCheck.validation?.score).toBe(90)
+  })
+
+  it('should include issues in HTML report', () => {
+    const feed: FeedSource = {
+      id: 'test-feed',
+      url: 'https://example.com/.well-known/mcp.llmfeed.json',
+      domain: 'example.com',
+      discoveredAt: Date.now(),
+      optedOut: false,
+    }
+    
+    const healthCheck: HealthCheck = {
+      timestamp: Date.now(),
+      reachable: true,
+      httpStatus: 200,
+      responseTimeMs: 100,
+      validation: {
+        valid: false,
+        score: 60,
+        errorCount: 1,
+        warningCount: 2,
+        issues: [
+          { type: 'error', code: 'MISSING_FIELD', message: 'Missing required field' },
+          { type: 'warning', code: 'DEPRECATED', message: 'Deprecated field used', suggestion: 'Use the new field' },
+        ],
+        capabilitiesCount: 2,
+      },
+      errors: [],
+    }
+    
+    const report = generateReport(feed, healthCheck)
+    
+    expect(report.html).toContain('MISSING_FIELD')
+    expect(report.html).toContain('Missing required field')
+    expect(report.html).toContain('Use the new field')
+  })
+
+  it('should generate report for unreachable feed', () => {
+    const feed: FeedSource = {
+      id: 'test-feed',
+      url: 'https://example.com/.well-known/mcp.llmfeed.json',
+      domain: 'example.com',
+      discoveredAt: Date.now(),
+      optedOut: false,
+    }
+    
+    const healthCheck: HealthCheck = {
+      timestamp: Date.now(),
+      reachable: false,
+      httpStatus: undefined,
+      responseTimeMs: undefined,
+      errors: ['Network timeout'],
+    }
+    
+    const report = generateReport(feed, healthCheck)
+    
+    expect(report.html).toContain('Network timeout')
+    expect(report.json).toBeDefined()
+  })
+
+  it('should include GitHub repo info when available', () => {
+    const feed: FeedSource = {
+      id: 'test-feed',
+      url: 'https://example.github.io/.well-known/mcp.llmfeed.json',
+      domain: 'example.github.io',
+      discoveredAt: Date.now(),
+      optedOut: false,
+      githubRepo: {
+        owner: 'example',
+        repo: 'example.github.io',
+        feedPath: '/.well-known/mcp.llmfeed.json',
+      },
+    }
+    
+    const healthCheck: HealthCheck = {
+      timestamp: Date.now(),
+      reachable: true,
+      httpStatus: 200,
+      responseTimeMs: 100,
+      validation: {
+        valid: true,
+        score: 90,
+        errorCount: 0,
+        warningCount: 0,
+        issues: [],
+        capabilitiesCount: 3,
+      },
+      errors: [],
+    }
+    
+    const report = generateReport(feed, healthCheck)
+    
+    const json = report.json as Record<string, any>
+    expect(json.feed.github_repo).toBeDefined()
+    expect(json.feed.github_repo.owner).toBe('example')
+  })
+})
+
+describe('generateStatsReport', () => {
+  it('should generate stats report from monitor stats', () => {
+    const stats: MonitorStats = {
+      totalFeeds: 100,
+      healthyFeeds: 70,
+      degradedFeeds: 20,
+      unhealthyFeeds: 5,
+      optedOutFeeds: 5,
+      averageScore: 78,
+      commonIssues: {
+        'MISSING_FIELD': 15,
+        'UNSIGNED_FEED': 30,
+        'DEPRECATED': 5,
+      },
+      lastCrawl: Date.now(),
+    }
+
+    const report = generateStatsReport(stats) as Record<string, any>
+
+    expect(report.report_version).toBe('1.0')
+    expect(report.overview.total_feeds).toBe(100)
+    expect(report.overview.healthy_feeds).toBe(70)
+    expect(report.overview.average_score).toBe(78)
+    expect(report.issues_summary.common_errors).toHaveLength(3)
+    // Should be sorted by count (UNSIGNED_FEED first with 30)
+    expect(report.issues_summary.common_errors[0][0]).toBe('UNSIGNED_FEED')
+  })
+
+  it('should handle empty stats', () => {
+    const stats: MonitorStats = {
+      totalFeeds: 0,
+      healthyFeeds: 0,
+      degradedFeeds: 0,
+      unhealthyFeeds: 0,
+      optedOutFeeds: 0,
+      averageScore: 0,
+      commonIssues: {},
+    }
+
+    const report = generateStatsReport(stats) as Record<string, any>
+
+    expect(report.overview.total_feeds).toBe(0)
+    expect(report.issues_summary.common_errors).toHaveLength(0)
+  })
+
+  it('should limit common errors to top 10', () => {
+    const commonIssues: Record<string, number> = {}
+    for (let i = 0; i < 20; i++) {
+      commonIssues[`ERROR_${i}`] = i
+    }
+
+    const stats: MonitorStats = {
+      totalFeeds: 100,
+      healthyFeeds: 50,
+      degradedFeeds: 25,
+      unhealthyFeeds: 20,
+      optedOutFeeds: 5,
+      averageScore: 65,
+      commonIssues,
+      lastCrawl: Date.now(),
+    }
+
+    const report = generateStatsReport(stats) as Record<string, any>
+
+    expect(report.issues_summary.common_errors).toHaveLength(10)
   })
 })

@@ -16,7 +16,7 @@ export interface Env {
   // Optional: Add rate limiting KV or D1 binding
 }
 
-const ALLOWED_ORIGINS = [
+export const ALLOWED_ORIGINS = [
   'https://kiarashplusplus.github.io',
   'http://localhost:5000',
   'http://localhost:5173',
@@ -25,7 +25,7 @@ const ALLOWED_ORIGINS = [
 ]
 
 // CORS headers helper
-function corsHeaders(origin: string): HeadersInit {
+export function corsHeaders(origin: string): HeadersInit {
   const allowOrigin = ALLOWED_ORIGINS.some(o => origin.startsWith(o)) ? origin : ALLOWED_ORIGINS[0]
   
   return {
@@ -34,6 +34,65 @@ function corsHeaders(origin: string): HeadersInit {
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
   }
+}
+
+/**
+ * Validate a target URL for proxying
+ */
+export interface UrlValidationResult {
+  valid: boolean
+  error?: string
+  parsedUrl?: URL
+  isPemRequest?: boolean
+}
+
+export function validateTargetUrl(targetUrl: string): UrlValidationResult {
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(targetUrl)
+  } catch {
+    return { valid: false, error: 'Invalid URL format' }
+  }
+
+  // Security: Only allow HTTPS (except for localhost)
+  if (parsedUrl.protocol !== 'https:' && !parsedUrl.hostname.includes('localhost')) {
+    return { valid: false, error: 'Only HTTPS URLs are allowed' }
+  }
+
+  // Security: Only allow specific file types
+  const isJsonFile = parsedUrl.pathname.endsWith('.json')
+  const isPemFile = parsedUrl.pathname.endsWith('.pem')
+  const isWellKnown = parsedUrl.pathname.includes('.well-known')
+  const isLLMFeed = parsedUrl.pathname.includes('llmfeed')
+  const isPublicKey = parsedUrl.pathname.includes('public') || parsedUrl.pathname.includes('key')
+  
+  if (!isJsonFile && !isPemFile && !isWellKnown && !isLLMFeed && !isPublicKey) {
+    return { valid: false, error: 'Only .json, .pem files or .well-known paths are allowed' }
+  }
+
+  // Security: Block private IP ranges
+  const hostname = parsedUrl.hostname
+  if (isPrivateIp(hostname)) {
+    return { valid: false, error: 'Private IP addresses are not allowed' }
+  }
+
+  const isPemRequest = isPemFile || isPublicKey
+
+  return { valid: true, parsedUrl, isPemRequest }
+}
+
+/**
+ * Check if a hostname is a private IP address
+ */
+export function isPrivateIp(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname.startsWith('127.') ||
+    hostname.startsWith('10.') ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('172.16.') ||
+    hostname === '0.0.0.0'
+  )
 }
 
 export default {
@@ -78,56 +137,16 @@ export default {
       })
     }
 
-    // Validate URL format
-    let parsedUrl: URL
-    try {
-      parsedUrl = new URL(targetUrl)
-    } catch {
-      return new Response(JSON.stringify({ error: 'Invalid URL format' }), {
+    // Validate the target URL
+    const validation = validateTargetUrl(targetUrl)
+    if (!validation.valid) {
+      return new Response(JSON.stringify({ error: validation.error }), {
         status: 400,
         headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
       })
     }
 
-    // Security: Only allow HTTPS (except for localhost)
-    if (parsedUrl.protocol !== 'https:' && !parsedUrl.hostname.includes('localhost')) {
-      return new Response(JSON.stringify({ error: 'Only HTTPS URLs are allowed' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
-      })
-    }
-
-    // Security: Only allow specific file types
-    const isJsonFile = parsedUrl.pathname.endsWith('.json')
-    const isPemFile = parsedUrl.pathname.endsWith('.pem')
-    const isWellKnown = parsedUrl.pathname.includes('.well-known')
-    const isLLMFeed = parsedUrl.pathname.includes('llmfeed')
-    const isPublicKey = parsedUrl.pathname.includes('public') || parsedUrl.pathname.includes('key')
-    
-    if (!isJsonFile && !isPemFile && !isWellKnown && !isLLMFeed && !isPublicKey) {
-      return new Response(JSON.stringify({ 
-        error: 'Only .json, .pem files or .well-known paths are allowed' 
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
-      })
-    }
-
-    // Security: Block private IP ranges
-    const hostname = parsedUrl.hostname
-    if (
-      hostname === 'localhost' ||
-      hostname.startsWith('127.') ||
-      hostname.startsWith('10.') ||
-      hostname.startsWith('192.168.') ||
-      hostname.startsWith('172.16.') ||
-      hostname === '0.0.0.0'
-    ) {
-      return new Response(JSON.stringify({ error: 'Private IP addresses are not allowed' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
-      })
-    }
+    const { parsedUrl, isPemRequest } = validation
 
     try {
       // Fetch the target URL
@@ -153,11 +172,6 @@ export default {
 
       // Get the response body
       const body = await response.text()
-
-      // Determine content type based on request
-      const isPemRequest = parsedUrl.pathname.endsWith('.pem') || 
-                          parsedUrl.pathname.includes('public') || 
-                          parsedUrl.pathname.includes('key')
       
       // Only validate JSON for JSON requests
       if (!isPemRequest) {
@@ -180,7 +194,7 @@ export default {
         headers: {
           'Content-Type': contentType,
           'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
-          'X-Proxied-From': parsedUrl.origin,
+          'X-Proxied-From': parsedUrl!.origin,
           ...corsHeaders(origin),
         },
       })

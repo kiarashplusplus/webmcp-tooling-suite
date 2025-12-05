@@ -566,3 +566,264 @@ describe('Signature verification edge cases', () => {
     expect(result.errors.some(e => e.type === 'signature')).toBe(true)
   })
 })
+
+describe('Signature verification with mocked fetch', () => {
+  // Valid Ed25519 test data (pre-generated)
+  const validPublicKeyPem = `-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAGb9bTmLHPWy3bNGP/2Z+aqHnCWB7ey5kWUBhZHnqDPU=
+-----END PUBLIC KEY-----`
+
+  // 64-byte signature (base64 encoded)
+  const valid64ByteSignature = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=='
+
+  it('should fail when public key fetch fails', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network error'))
+    
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      },
+      trust: {
+        algorithm: 'Ed25519',
+        signed_blocks: ['metadata'],
+        public_key_hint: 'https://example.com/key.pem'
+      },
+      signature: {
+        value: valid64ByteSignature,
+        created_at: '2024-01-01T00:00:00Z'
+      }
+    }
+    
+    const result = await validateLLMFeed(feed)
+    expect(result.signatureValid).toBe(false)
+    expect(result.signatureDiagnostics?.error).toContain('fetch')
+  })
+
+  it('should fail when public key returns non-200', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      statusText: 'Not Found'
+    })
+    
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      },
+      trust: {
+        algorithm: 'Ed25519',
+        signed_blocks: ['metadata'],
+        public_key_hint: 'https://example.com/key.pem'
+      },
+      signature: {
+        value: valid64ByteSignature,
+        created_at: '2024-01-01T00:00:00Z'
+      }
+    }
+    
+    const result = await validateLLMFeed(feed)
+    expect(result.signatureValid).toBe(false)
+    expect(result.signatureDiagnostics?.error).toContain('404')
+  })
+
+  it('should fail when public key is not PEM format', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      text: async () => 'not a valid pem key'
+    })
+    
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      },
+      trust: {
+        algorithm: 'Ed25519',
+        signed_blocks: ['metadata'],
+        public_key_hint: 'https://example.com/key.pem'
+      },
+      signature: {
+        value: valid64ByteSignature,
+        created_at: '2024-01-01T00:00:00Z'
+      }
+    }
+    
+    const result = await validateLLMFeed(feed)
+    expect(result.signatureValid).toBe(false)
+    expect(result.signatureDiagnostics?.error).toContain('Invalid public key')
+  })
+
+  it('should fail verification with mismatched signature', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      text: async () => validPublicKeyPem
+    })
+    
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      },
+      trust: {
+        algorithm: 'Ed25519',
+        signed_blocks: ['metadata'],
+        public_key_hint: 'https://example.com/key.pem'
+      },
+      signature: {
+        // 64 bytes of zeros - won't match any real signature
+        value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
+        created_at: '2024-01-01T00:00:00Z'
+      }
+    }
+    
+    const result = await validateLLMFeed(feed)
+    expect(result.signatureValid).toBe(false)
+    expect(result.signatureDiagnostics?.steps.some(s => 
+      s.step === 'Verify signature' && s.status === 'failed'
+    )).toBe(true)
+  })
+
+  it('should use custom publicKeyResolver when provided', async () => {
+    const customResolver = vi.fn().mockResolvedValue(validPublicKeyPem)
+    
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      },
+      trust: {
+        algorithm: 'Ed25519',
+        signed_blocks: ['metadata'],
+        public_key_hint: 'https://example.com/key.pem'
+      },
+      signature: {
+        value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
+        created_at: '2024-01-01T00:00:00Z'
+      }
+    }
+    
+    await validateLLMFeed(feed, { publicKeyResolver: customResolver })
+    
+    expect(customResolver).toHaveBeenCalledWith('https://example.com/key.pem')
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('should handle invalid signature length', async () => {
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      },
+      trust: {
+        algorithm: 'Ed25519',
+        signed_blocks: ['metadata'],
+        public_key_hint: 'https://example.com/key.pem'
+      },
+      signature: {
+        value: 'c2hvcnQ=', // Only 5 bytes, not 64
+        created_at: '2024-01-01T00:00:00Z'
+      }
+    }
+    
+    const result = await validateLLMFeed(feed)
+    expect(result.signatureValid).toBe(false)
+    expect(result.signatureDiagnostics?.error).toContain('Invalid signature length')
+    expect(result.signatureDiagnostics?.detectedIssues.some(i => 
+      i.code === 'INVALID_SIGNATURE_LENGTH'
+    )).toBe(true)
+  })
+
+  it('should handle missing signature.value', async () => {
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      },
+      trust: {
+        algorithm: 'Ed25519',
+        signed_blocks: ['metadata'],
+        public_key_hint: 'https://example.com/key.pem'
+      },
+      signature: {
+        // value is missing
+        created_at: '2024-01-01T00:00:00Z'
+      }
+    }
+    
+    const result = await validateLLMFeed(feed)
+    expect(result.signatureValid).toBe(false)
+    expect(result.signatureDiagnostics?.error).toContain('Missing signature value')
+  })
+
+  it('should handle empty signed_blocks', async () => {
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      },
+      trust: {
+        algorithm: 'Ed25519',
+        signed_blocks: [], // Empty!
+        public_key_hint: 'https://example.com/key.pem'
+      },
+      signature: {
+        value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
+        created_at: '2024-01-01T00:00:00Z'
+      }
+    }
+    
+    const result = await validateLLMFeed(feed)
+    expect(result.signatureValid).toBe(false)
+    expect(result.signatureDiagnostics?.error).toContain('No signed_blocks')
+  })
+
+  it('should report canonical payload details', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      text: async () => validPublicKeyPem
+    })
+    
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      },
+      trust: {
+        algorithm: 'Ed25519',
+        signed_blocks: ['metadata', 'feed_type'],
+        public_key_hint: 'https://example.com/key.pem'
+      },
+      signature: {
+        value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
+        created_at: '2024-01-01T00:00:00Z'
+      }
+    }
+    
+    const result = await validateLLMFeed(feed)
+    expect(result.signatureDiagnostics?.canonicalPayload).toBeDefined()
+    expect(result.signatureDiagnostics?.canonicalPayload?.bytes).toBeGreaterThan(0)
+    expect(result.signatureDiagnostics?.canonicalPayload?.hash).toBeDefined()
+    expect(result.signatureDiagnostics?.canonicalPayload?.hash?.length).toBe(64) // SHA-256 hex
+  })
+})
+

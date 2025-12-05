@@ -23,7 +23,7 @@ export interface Env {
   FRONTEND_URL: string
 }
 
-interface Feed {
+export interface Feed {
   id: string
   url: string
   domain: string
@@ -43,22 +43,25 @@ interface Feed {
   is_active: boolean
 }
 
-interface GitHubUser {
+export interface GitHubUser {
   login: string
   id: number
   avatar_url: string
   email?: string
 }
 
+export const ALLOWED_ORIGINS = [
+  'https://kiarashplusplus.github.io',
+  'http://localhost:5000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+]
+
 // CORS headers
-function corsHeaders(origin: string | null, env: Env): HeadersInit {
-  const allowedOrigins = [
-    'https://kiarashplusplus.github.io',
-    env.FRONTEND_URL,
-    'http://localhost:5000',
-    'http://localhost:5173',
-    'http://localhost:5174',
-  ]
+export function corsHeaders(origin: string | null, frontendUrl?: string): HeadersInit {
+  const allowedOrigins = frontendUrl 
+    ? [...ALLOWED_ORIGINS, frontendUrl]
+    : ALLOWED_ORIGINS
   
   // Check if origin matches any allowed origin (including subpaths)
   const isAllowed = origin && allowedOrigins.some(allowed => 
@@ -76,7 +79,7 @@ function corsHeaders(origin: string | null, env: Env): HeadersInit {
   }
 }
 
-function jsonResponse(data: unknown, status = 200, headers: HeadersInit = {}): Response {
+export function jsonResponse(data: unknown, status = 200, headers: HeadersInit = {}): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
@@ -86,8 +89,17 @@ function jsonResponse(data: unknown, status = 200, headers: HeadersInit = {}): R
   })
 }
 
+/**
+ * Extract Bearer token from Authorization header
+ */
+export function extractBearerToken(authHeader: string | null): string | null {
+  if (!authHeader) return null
+  if (!authHeader.startsWith('Bearer ')) return null
+  return authHeader.slice(7)
+}
+
 // Verify GitHub token and get user info
-async function verifyGitHubToken(token: string): Promise<GitHubUser | null> {
+export async function verifyGitHubToken(token: string): Promise<GitHubUser | null> {
   try {
     const response = await fetch('https://api.github.com/user', {
       headers: {
@@ -105,7 +117,7 @@ async function verifyGitHubToken(token: string): Promise<GitHubUser | null> {
 }
 
 // Convert D1 row to Feed object
-function rowToFeed(row: Record<string, unknown>): Feed {
+export function rowToFeed(row: Record<string, unknown>): Feed {
   return {
     id: row.id as string,
     url: row.url as string,
@@ -127,11 +139,81 @@ function rowToFeed(row: Record<string, unknown>): Feed {
   }
 }
 
+/**
+ * Validate a feed URL and extract domain
+ */
+export function validateFeedUrl(url: string): { valid: boolean; error?: string; domain?: string } {
+  let feedUrl: URL
+  try {
+    feedUrl = new URL(url)
+  } catch {
+    return { valid: false, error: 'Invalid URL' }
+  }
+  
+  return { valid: true, domain: feedUrl.hostname }
+}
+
+/**
+ * Generate a feed ID from domain and timestamp
+ */
+export function generateFeedId(domain: string, timestamp?: number): string {
+  const ts = timestamp ?? Date.now()
+  return `${domain.replace(/\./g, '-')}-${ts}`
+}
+
+/**
+ * Calculate pagination info
+ */
+export function calculatePagination(
+  totalResults: number, 
+  limit: number, 
+  offset: number
+): { hasMore: boolean; nextOffset: number | null } {
+  const hasMore = offset + limit < totalResults
+  return {
+    hasMore,
+    nextOffset: hasMore ? offset + limit : null,
+  }
+}
+
+/**
+ * Normalize pagination parameters
+ */
+export function normalizePaginationParams(
+  limitParam: string | null, 
+  offsetParam: string | null
+): { limit: number; offset: number } {
+  const limit = Math.min(parseInt(limitParam || '50', 10), 100)
+  const offset = parseInt(offsetParam || '0', 10)
+  return { limit: Math.max(1, limit), offset: Math.max(0, offset) }
+}
+
+/**
+ * Build SQL LIKE pattern for search
+ */
+export function buildSearchPattern(search: string): string {
+  // Escape SQL special characters
+  const escaped = search.replace(/[%_]/g, '\\$&')
+  return `%${escaped}%`
+}
+
+/**
+ * Valid feed types
+ */
+export const VALID_FEED_TYPES = ['mcp', 'export', 'llm-index']
+
+/**
+ * Check if feed type is valid
+ */
+export function isValidFeedType(feedType: string): boolean {
+  return VALID_FEED_TYPES.includes(feedType)
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
     const origin = request.headers.get('Origin') || env.FRONTEND_URL
-    const cors = corsHeaders(origin, env)
+    const cors = corsHeaders(origin, env.FRONTEND_URL)
 
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {

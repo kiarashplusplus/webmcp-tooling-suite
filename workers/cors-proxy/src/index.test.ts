@@ -1,70 +1,16 @@
 /**
  * CORS Proxy Worker Test Suite
+ * 
+ * Tests the exported helper functions from index.ts
  */
 
 import { describe, it, expect } from 'vitest'
-
-// Constants matching those in index.ts
-const ALLOWED_ORIGINS = [
-  'https://kiarashplusplus.github.io',
-  'http://localhost:5000',
-  'http://localhost:5173',
-  'http://127.0.0.1:5000',
-  'http://127.0.0.1:5173',
-]
-
-// Helper function to generate CORS headers (mirrors implementation)
-function corsHeaders(origin: string): Record<string, string> {
-  const allowOrigin = ALLOWED_ORIGINS.some(o => origin.startsWith(o)) ? origin : ALLOWED_ORIGINS[0]
-  
-  return {
-    'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-  }
-}
-
-// URL validation logic
-function validateTargetUrl(targetUrl: string): { valid: boolean; error?: string; parsedUrl?: URL } {
-  let parsedUrl: URL
-  try {
-    parsedUrl = new URL(targetUrl)
-  } catch {
-    return { valid: false, error: 'Invalid URL format' }
-  }
-
-  // Security: Only allow HTTPS (except for localhost)
-  if (parsedUrl.protocol !== 'https:' && !parsedUrl.hostname.includes('localhost')) {
-    return { valid: false, error: 'Only HTTPS URLs are allowed' }
-  }
-
-  // Security: Only allow specific file types
-  const isJsonFile = parsedUrl.pathname.endsWith('.json')
-  const isPemFile = parsedUrl.pathname.endsWith('.pem')
-  const isWellKnown = parsedUrl.pathname.includes('.well-known')
-  const isLLMFeed = parsedUrl.pathname.includes('llmfeed')
-  const isPublicKey = parsedUrl.pathname.includes('public') || parsedUrl.pathname.includes('key')
-  
-  if (!isJsonFile && !isPemFile && !isWellKnown && !isLLMFeed && !isPublicKey) {
-    return { valid: false, error: 'Only .json, .pem files or .well-known paths are allowed' }
-  }
-
-  // Security: Block private IP ranges
-  const hostname = parsedUrl.hostname
-  if (
-    hostname === 'localhost' ||
-    hostname.startsWith('127.') ||
-    hostname.startsWith('10.') ||
-    hostname.startsWith('192.168.') ||
-    hostname.startsWith('172.16.') ||
-    hostname === '0.0.0.0'
-  ) {
-    return { valid: false, error: 'Private IP addresses are not allowed' }
-  }
-
-  return { valid: true, parsedUrl }
-}
+import { 
+  corsHeaders, 
+  validateTargetUrl, 
+  isPrivateIp, 
+  ALLOWED_ORIGINS 
+} from './index'
 
 describe('CORS Headers', () => {
   it('should return allowed origin for main domain', () => {
@@ -101,9 +47,57 @@ describe('CORS Headers', () => {
     const headers = corsHeaders('https://kiarashplusplus.github.io')
     expect(headers['Access-Control-Max-Age']).toBe('86400')
   })
+
+  it('should handle origin with subpath', () => {
+    const headers = corsHeaders('https://kiarashplusplus.github.io/webmcp-tooling-suite')
+    expect(headers['Access-Control-Allow-Origin']).toBe('https://kiarashplusplus.github.io/webmcp-tooling-suite')
+  })
 })
 
-describe('URL Validation', () => {
+describe('isPrivateIp', () => {
+  it('should identify localhost as private', () => {
+    expect(isPrivateIp('localhost')).toBe(true)
+  })
+
+  it('should identify 127.0.0.1 as private', () => {
+    expect(isPrivateIp('127.0.0.1')).toBe(true)
+  })
+
+  it('should identify 127.x.x.x range as private', () => {
+    expect(isPrivateIp('127.1.2.3')).toBe(true)
+  })
+
+  it('should identify 10.x.x.x range as private', () => {
+    expect(isPrivateIp('10.0.0.1')).toBe(true)
+    expect(isPrivateIp('10.255.255.255')).toBe(true)
+  })
+
+  it('should identify 192.168.x.x range as private', () => {
+    expect(isPrivateIp('192.168.1.1')).toBe(true)
+    expect(isPrivateIp('192.168.0.254')).toBe(true)
+  })
+
+  it('should identify 172.16.x.x range as private', () => {
+    expect(isPrivateIp('172.16.0.1')).toBe(true)
+  })
+
+  it('should identify 0.0.0.0 as private', () => {
+    expect(isPrivateIp('0.0.0.0')).toBe(true)
+  })
+
+  it('should allow public IPs', () => {
+    expect(isPrivateIp('8.8.8.8')).toBe(false)
+    expect(isPrivateIp('1.1.1.1')).toBe(false)
+    expect(isPrivateIp('93.184.216.34')).toBe(false)
+  })
+
+  it('should allow public domains', () => {
+    expect(isPrivateIp('example.com')).toBe(false)
+    expect(isPrivateIp('api.github.com')).toBe(false)
+  })
+})
+
+describe('validateTargetUrl', () => {
   describe('URL Format Validation', () => {
     it('should reject invalid URL format', () => {
       const result = validateTargetUrl('not-a-valid-url')
@@ -114,6 +108,13 @@ describe('URL Validation', () => {
     it('should accept valid HTTPS URL', () => {
       const result = validateTargetUrl('https://example.com/.well-known/mcp.llmfeed.json')
       expect(result.valid).toBe(true)
+      expect(result.parsedUrl).toBeDefined()
+    })
+
+    it('should parse URL correctly', () => {
+      const result = validateTargetUrl('https://example.com/feed.json')
+      expect(result.parsedUrl?.hostname).toBe('example.com')
+      expect(result.parsedUrl?.pathname).toBe('/feed.json')
     })
   })
 
@@ -128,6 +129,12 @@ describe('URL Validation', () => {
       const result = validateTargetUrl('https://example.com/feed.json')
       expect(result.valid).toBe(true)
     })
+
+    it('should allow HTTP for localhost (but blocked by private IP)', () => {
+      // Note: This tests the protocol check, but will fail private IP check
+      const result = validateTargetUrl('http://localhost/feed.json')
+      expect(result.error).toBe('Private IP addresses are not allowed')
+    })
   })
 
   describe('File Type Restrictions', () => {
@@ -139,6 +146,7 @@ describe('URL Validation', () => {
     it('should allow .pem files', () => {
       const result = validateTargetUrl('https://example.com/public.pem')
       expect(result.valid).toBe(true)
+      expect(result.isPemRequest).toBe(true)
     })
 
     it('should allow .well-known paths', () => {
@@ -154,11 +162,13 @@ describe('URL Validation', () => {
     it('should allow paths containing public', () => {
       const result = validateTargetUrl('https://example.com/public/key')
       expect(result.valid).toBe(true)
+      expect(result.isPemRequest).toBe(true)
     })
 
     it('should allow paths containing key', () => {
       const result = validateTargetUrl('https://example.com/crypto/key')
       expect(result.valid).toBe(true)
+      expect(result.isPemRequest).toBe(true)
     })
 
     it('should reject HTML files', () => {
@@ -270,22 +280,29 @@ describe('Request Validation Edge Cases', () => {
   })
 })
 
-describe('Content Type Detection', () => {
-  it('should identify PEM file requests', () => {
-    const url = new URL('https://example.com/public.pem')
-    const isPemFile = url.pathname.endsWith('.pem')
-    expect(isPemFile).toBe(true)
+describe('isPemRequest detection', () => {
+  it('should mark .pem files as pem requests', () => {
+    const result = validateTargetUrl('https://example.com/public.pem')
+    expect(result.isPemRequest).toBe(true)
   })
 
-  it('should identify JSON file requests', () => {
-    const url = new URL('https://example.com/feed.json')
-    const isJsonFile = url.pathname.endsWith('.json')
-    expect(isJsonFile).toBe(true)
+  it('should mark public paths as pem requests', () => {
+    const result = validateTargetUrl('https://example.com/public/ed25519')
+    expect(result.isPemRequest).toBe(true)
   })
 
-  it('should identify public key requests', () => {
-    const url = new URL('https://example.com/public/key')
-    const isPublicKey = url.pathname.includes('public') || url.pathname.includes('key')
-    expect(isPublicKey).toBe(true)
+  it('should mark key paths as pem requests', () => {
+    const result = validateTargetUrl('https://example.com/ed25519-key')
+    expect(result.isPemRequest).toBe(true)
+  })
+
+  it('should not mark .json files as pem requests', () => {
+    const result = validateTargetUrl('https://example.com/feed.json')
+    expect(result.isPemRequest).toBe(false)
+  })
+
+  it('should not mark .well-known json as pem request', () => {
+    const result = validateTargetUrl('https://example.com/.well-known/mcp.llmfeed.json')
+    expect(result.isPemRequest).toBe(false)
   })
 })

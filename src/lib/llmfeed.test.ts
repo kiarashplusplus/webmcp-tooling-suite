@@ -5,6 +5,8 @@ import {
   validateLLMFeed,
   calculateTokenEstimate,
   prepareForRAG,
+  normalizeFeed,
+  fetchWithCorsProxy,
   type LLMFeed,
   type ValidationResult
 } from './llmfeed'
@@ -345,5 +347,249 @@ describe('Feed with signature', () => {
     const result = await validateLLMFeed(feed)
     // Should still validate successfully structurally
     expect(result.errors.filter(e => e.severity === 'error').length).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('normalizeFeed', () => {
+  it('should return feed as-is if already in standard format', () => {
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test Feed',
+        origin: 'https://example.com',
+        description: 'A test feed'
+      },
+      capabilities: [{ name: 'test', type: 'tool', description: 'Test' }]
+    }
+    const result = normalizeFeed(feed, 'https://example.com/feed.json')
+    expect(result.feed_type).toBe('mcp')
+    expect(result.metadata.title).toBe('Test Feed')
+  })
+
+  it('should normalize simple MCP format (Notion style)', () => {
+    const rawFeed = {
+      name: 'My Service',
+      description: 'A service description',
+      endpoint: 'https://api.example.com/mcp',
+      icon: 'https://example.com/icon.png'
+    }
+    const result = normalizeFeed(rawFeed, 'https://example.com/.well-known/mcp.json')
+    
+    expect(result.feed_type).toBe('mcp')
+    expect(result.metadata.title).toBe('My Service')
+    expect(result.metadata.description).toBe('A service description')
+    expect(result.capabilities).toHaveLength(1)
+    expect(result.capabilities![0].url).toBe('https://api.example.com/mcp')
+    expect(result._originalFormat).toBe('simple-mcp')
+  })
+
+  it('should normalize Sentry-style format with servers', () => {
+    const rawFeed = {
+      name: 'Multi-server MCP',
+      description: 'An MCP with multiple servers',
+      servers: [
+        { name: 'server1', url: 'https://api1.example.com', description: 'Server 1' },
+        { name: 'server2', url: 'https://api2.example.com', description: 'Server 2' }
+      ]
+    }
+    const result = normalizeFeed(rawFeed, 'https://example.com/.well-known/mcp.json')
+    
+    expect(result.feed_type).toBe('mcp')
+    expect(result.metadata.title).toBe('Multi-server MCP')
+    expect(result.capabilities).toHaveLength(2)
+    expect(result.capabilities![0].name).toBe('server1')
+    expect(result.capabilities![1].name).toBe('server2')
+  })
+
+  it('should normalize format with tools array', () => {
+    const rawFeed = {
+      name: 'Tool Provider',
+      tools: [
+        { name: 'tool1', description: 'First tool' },
+        { name: 'tool2', description: 'Second tool' }
+      ]
+    }
+    const result = normalizeFeed(rawFeed, 'https://example.com/mcp.json')
+    
+    expect(result.capabilities).toHaveLength(2)
+    expect(result.capabilities![0].name).toBe('tool1')
+  })
+
+  it('should extract origin from URL', () => {
+    const rawFeed = {
+      name: 'Simple Service',
+      endpoint: 'https://api.example.com/mcp'
+    }
+    const result = normalizeFeed(rawFeed, 'https://example.com/.well-known/mcp.json')
+    
+    expect(result.metadata.origin).toBe('https://example.com')
+  })
+
+  it('should use fallback origin on invalid URL', () => {
+    const rawFeed = {
+      name: 'Simple Service',
+      endpoint: 'https://api.example.com/mcp'
+    }
+    const result = normalizeFeed(rawFeed, 'invalid-url')
+    
+    expect(result.metadata.origin).toBe('invalid-url')
+  })
+})
+
+describe('fetchWithCorsProxy', () => {
+  beforeEach(() => {
+    mockFetch.mockReset()
+  })
+
+  it('should fetch through CORS proxy', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ feed_type: 'mcp' })
+    })
+
+    const response = await fetchWithCorsProxy('https://example.com/.well-known/mcp.llmfeed.json')
+    
+    expect(mockFetch).toHaveBeenCalled()
+    expect(response.ok).toBe(true)
+  })
+
+  it('should include target URL in proxy request', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200
+    })
+
+    await fetchWithCorsProxy('https://example.com/feed.json')
+    
+    const callUrl = mockFetch.mock.calls[0][0]
+    expect(callUrl).toContain('example.com')
+  })
+})
+
+describe('prepareForRAG - edge cases', () => {
+  it('should handle feed with agent_guidance', () => {
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test Feed',
+        origin: 'https://example.com',
+        description: 'A test feed'
+      },
+      agent_guidance: {
+        on_load: 'Welcome! I can help you with...',
+        interaction_tone: 'friendly',
+        preferred_entrypoints: ['help', 'start']
+      },
+      capabilities: [
+        { name: 'help', type: 'tool', description: 'Get help' }
+      ]
+    }
+    const entries = prepareForRAG(feed)
+    
+    expect(entries.some(e => e.type === 'guidance')).toBe(true)
+  })
+
+  it('should handle feed with empty capabilities', () => {
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test Feed',
+        origin: 'https://example.com',
+        description: 'A test feed'
+      },
+      capabilities: []
+    }
+    const entries = prepareForRAG(feed)
+    
+    // Should still have metadata entry
+    expect(entries.some(e => e.type === 'metadata')).toBe(true)
+    expect(entries.filter(e => e.type === 'capability')).toHaveLength(0)
+  })
+
+  it('should include inputSchema in capability entries', () => {
+    const feed: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      },
+      capabilities: [
+        {
+          name: 'search',
+          type: 'tool',
+          description: 'Search for items',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: { type: 'string' }
+            },
+            required: ['query']
+          }
+        }
+      ]
+    }
+    const entries = prepareForRAG(feed)
+    const capEntry = entries.find(e => e.type === 'capability')
+    
+    expect(capEntry?.schema).toBeDefined()
+    expect(capEntry?.schema.properties.query).toBeDefined()
+  })
+})
+
+describe('validateLLMFeed - additional cases', () => {
+  beforeEach(() => {
+    mockFetch.mockReset()
+  })
+
+  it('should calculate higher score for feeds with capabilities', async () => {
+    const feedWithCaps: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      },
+      capabilities: [
+        { name: 'tool1', type: 'tool', description: 'Tool 1' },
+        { name: 'tool2', type: 'tool', description: 'Tool 2' }
+      ]
+    }
+    
+    const feedNoCaps: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      }
+    }
+    
+    const resultWithCaps = await validateLLMFeed(feedWithCaps)
+    const resultNoCaps = await validateLLMFeed(feedNoCaps)
+    
+    expect(resultWithCaps.score).toBeGreaterThanOrEqual(resultNoCaps.score)
+  })
+
+  it('should decrease score for structure errors', async () => {
+    const invalidFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        // Missing title and origin
+        description: 'Test'
+      }
+    }
+    
+    const result = await validateLLMFeed(invalidFeed)
+    
+    expect(result.valid).toBe(false)
+    expect(result.score).toBeLessThan(100)
+  })
+
+  it('should handle null input', async () => {
+    // The function expects at least an object, so null causes an error
+    // This test verifies the behavior
+    await expect(validateLLMFeed(null)).rejects.toThrow()
   })
 })
