@@ -117,7 +117,7 @@
           "name": "Can I archive feeds from any URL?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes, the Universal Feed Analyzer supports archival of any .llmfeed.json file from any URL, whether hosted at standard .well-known paths or custom locations. Archived snapshots are served with JSON headers at dedicated /archive/ URLs."
+            "text": "Yes! When you submit a feed to our directory, it automatically creates a versioned GitHub Gist archive with a permanent URL. Each archive includes the full feed JSON, validation score, and signature status. Gists provide revision history, public accessibility, and are owned by your GitHub account."
           }
         }
       ]
@@ -141,12 +141,14 @@
     </script>
     
     <!-- LLMFeed Directory - Machine-readable feed URLs for AI agents and scrapers -->
+    <!-- Full directory available at: https://webmcp-directory.the-safe.workers.dev/api/feeds -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "ItemList",
       "name": "LLMFeed Directory",
-      "description": "Curated directory of LLMFeed-enabled websites with machine-readable JSON feeds",
+      "description": "Curated directory of LLMFeed-enabled websites. Full feed list available at API endpoint.",
+      "mainEntityOfPage": "https://webmcp-directory.the-safe.workers.dev/api/feeds",
       "itemListElement": [
         {
           "@type": "ListItem",
@@ -209,7 +211,14 @@
     <noscript>
       <div id="llmfeed-directory" data-description="LLMFeed Directory - Machine-readable feed URLs">
         <h1>LLMFeed Directory</h1>
-        <p>Curated directory of LLMFeed-enabled websites:</p>
+        <p>Directory of LLMFeed-enabled websites. <strong>For the complete list of all feeds, fetch the API:</strong></p>
+        <p><a href="https://webmcp-directory.the-safe.workers.dev/api/feeds" 
+              data-api-endpoint="true"
+              data-description="JSON API returning all registered LLMFeed URLs">
+          https://webmcp-directory.the-safe.workers.dev/api/feeds
+        </a></p>
+        
+        <h2>Curated Feeds (Sample)</h2>
         <ul>
           <li>
             <a href="https://25x.codes/.well-known/mcp.llmfeed.json" 
