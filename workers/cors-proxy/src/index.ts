@@ -27,7 +27,7 @@ export const ALLOWED_ORIGINS = [
 // CORS headers helper
 export function corsHeaders(origin: string): HeadersInit {
   const allowOrigin = ALLOWED_ORIGINS.some(o => origin.startsWith(o)) ? origin : ALLOWED_ORIGINS[0]
-  
+
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -44,7 +44,9 @@ export interface UrlValidationResult {
   error?: string
   parsedUrl?: URL
   isPemRequest?: boolean
+  isTxtRequest?: boolean
 }
+
 
 export function validateTargetUrl(targetUrl: string): UrlValidationResult {
   let parsedUrl: URL
@@ -62,12 +64,14 @@ export function validateTargetUrl(targetUrl: string): UrlValidationResult {
   // Security: Only allow specific file types
   const isJsonFile = parsedUrl.pathname.endsWith('.json')
   const isPemFile = parsedUrl.pathname.endsWith('.pem')
+  const isTxtFile = parsedUrl.pathname.endsWith('.txt') // Support llms.txt
   const isWellKnown = parsedUrl.pathname.includes('.well-known')
   const isLLMFeed = parsedUrl.pathname.includes('llmfeed')
+  const isLLMSTxt = parsedUrl.pathname.includes('llms') // Support llms.txt and llms-full.txt
   const isPublicKey = parsedUrl.pathname.includes('public') || parsedUrl.pathname.includes('key')
-  
-  if (!isJsonFile && !isPemFile && !isWellKnown && !isLLMFeed && !isPublicKey) {
-    return { valid: false, error: 'Only .json, .pem files or .well-known paths are allowed' }
+
+  if (!isJsonFile && !isPemFile && !isTxtFile && !isWellKnown && !isLLMFeed && !isLLMSTxt && !isPublicKey) {
+    return { valid: false, error: 'Only .json, .pem, .txt files or .well-known paths are allowed' }
   }
 
   // Security: Block private IP ranges
@@ -77,9 +81,11 @@ export function validateTargetUrl(targetUrl: string): UrlValidationResult {
   }
 
   const isPemRequest = isPemFile || isPublicKey
+  const isTxtRequest = isTxtFile || isLLMSTxt
 
-  return { valid: true, parsedUrl, isPemRequest }
+  return { valid: true, parsedUrl, isPemRequest, isTxtRequest }
 }
+
 
 /**
  * Check if a hostname is a private IP address
@@ -116,7 +122,7 @@ export default {
     }
 
     const url = new URL(request.url)
-    
+
     // Health check endpoint
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({ status: 'ok', service: 'llmfeed-cors-proxy' }), {
@@ -128,7 +134,7 @@ export default {
     const targetUrl = url.searchParams.get('url')
 
     if (!targetUrl) {
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: 'Missing url parameter',
         usage: 'GET /?url=https://example.com/.well-known/mcp.llmfeed.json'
       }), {
@@ -146,13 +152,13 @@ export default {
       })
     }
 
-    const { parsedUrl, isPemRequest } = validation
+    const { parsedUrl, isPemRequest, isTxtRequest } = validation
 
     try {
       // Fetch the target URL
       const response = await fetch(targetUrl, {
         headers: {
-          'Accept': 'application/json, text/plain, */*',
+          'Accept': 'application/json, text/plain, text/markdown, */*',
           'User-Agent': 'LLMFeed-Analyzer-Proxy/1.0 (+https://github.com/kiarashplusplus/webmcp-tooling-suite)',
         },
         // Follow redirects
@@ -160,7 +166,7 @@ export default {
       })
 
       if (!response.ok) {
-        return new Response(JSON.stringify({ 
+        return new Response(JSON.stringify({
           error: `Upstream server returned ${response.status}`,
           status: response.status,
           statusText: response.statusText
@@ -172,14 +178,14 @@ export default {
 
       // Get the response body
       const body = await response.text()
-      
-      // Only validate JSON for JSON requests
-      if (!isPemRequest) {
+
+      // Only validate JSON for JSON requests (not txt or pem)
+      if (!isPemRequest && !isTxtRequest) {
         try {
           JSON.parse(body)
         } catch {
-          return new Response(JSON.stringify({ 
-            error: 'Response is not valid JSON' 
+          return new Response(JSON.stringify({
+            error: 'Response is not valid JSON'
           }), {
             status: 400,
             headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -188,7 +194,13 @@ export default {
       }
 
       // Return the proxied response with CORS headers
-      const contentType = isPemRequest ? 'text/plain' : 'application/json'
+      let contentType = 'application/json'
+      if (isPemRequest) {
+        contentType = 'text/plain'
+      } else if (isTxtRequest) {
+        contentType = 'text/plain; charset=utf-8'
+      }
+
       return new Response(body, {
         status: 200,
         headers: {
@@ -199,9 +211,10 @@ export default {
         },
       })
 
+
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: 'Failed to fetch from upstream',
         details: message
       }), {

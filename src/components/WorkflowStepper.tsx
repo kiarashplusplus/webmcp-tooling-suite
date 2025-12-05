@@ -1,41 +1,49 @@
 import { ArrowRight, Check, Circle } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import type { FeedMode } from '@/context/FeedModeContext'
 
 export interface WorkflowStep {
   id: string
   label: string
   description: string
+  llmstxtDescription?: string // Optional override for llms.txt mode
 }
 
 const WORKFLOW_STEPS: WorkflowStep[] = [
-  { id: 'discovery', label: 'Discovery', description: 'Find & explore feeds' },
-  { id: 'validator', label: 'Validate', description: 'Check feed integrity' },
-  { id: 'archive', label: 'Archive', description: 'Save feed snapshot' },
-  { id: 'rag', label: 'RAG Prep', description: 'Prepare for AI' },
+  { id: 'discovery', label: 'Discovery', description: 'Find & explore feeds', llmstxtDescription: 'Find & parse llms.txt' },
+  { id: 'validator', label: 'Validate', description: 'Check feed integrity', llmstxtDescription: 'Validate structure' },
+  { id: 'archive', label: 'Archive', description: 'Save feed snapshot', llmstxtDescription: 'Save as snapshot' },
+  { id: 'rag', label: 'RAG Prep', description: 'Prepare for AI', llmstxtDescription: 'Optimize for AI' },
 ]
 
 interface WorkflowStepperProps {
   currentStep: string
   onStepClick: (stepId: string) => void
   completedSteps?: string[]
+  mode?: FeedMode
 }
 
-export function WorkflowStepper({ currentStep, onStepClick, completedSteps = [] }: WorkflowStepperProps) {
+export function WorkflowStepper({ currentStep, onStepClick, completedSteps = [], mode = 'llmfeed' }: WorkflowStepperProps) {
   const currentIndex = WORKFLOW_STEPS.findIndex(s => s.id === currentStep)
 
   return (
     <div className="glass-card rounded-2xl p-4 mb-8">
       <div className="flex items-center justify-between text-xs text-muted-foreground mb-3 px-2">
-        <span className="font-semibold uppercase tracking-wider">Recommended Workflow</span>
+        <span className="font-semibold uppercase tracking-wider">
+          {mode === 'llmfeed' ? 'LLMFeed Workflow' : 'LLMS.txt Workflow'}
+        </span>
         <span className="text-primary/80">Step {currentIndex + 1} of {WORKFLOW_STEPS.length}</span>
       </div>
-      
+
       <div className="flex items-center justify-between">
         {WORKFLOW_STEPS.map((step, index) => {
           const isActive = step.id === currentStep
           const isCompleted = completedSteps.includes(step.id)
           const isPast = index < currentIndex
-          
+          const description = mode === 'llmstxt' && step.llmstxtDescription
+            ? step.llmstxtDescription
+            : step.description
+
           return (
             <div key={step.id} className="flex items-center flex-1">
               <button
@@ -45,6 +53,7 @@ export function WorkflowStepper({ currentStep, onStepClick, completedSteps = [] 
                   "hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50",
                   isActive && "bg-primary/15"
                 )}
+                title={description}
               >
                 <div
                   className={cn(
@@ -72,7 +81,7 @@ export function WorkflowStepper({ currentStep, onStepClick, completedSteps = [] 
                   {step.label}
                 </span>
               </button>
-              
+
               {index < WORKFLOW_STEPS.length - 1 && (
                 <div
                   className={cn(
