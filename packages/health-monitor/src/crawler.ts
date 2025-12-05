@@ -189,14 +189,29 @@ export async function discoverFeeds(
   for (const path of wellKnownPaths) {
     const url = new URL(path, baseUrl).toString()
     try {
+      // Use GET with small timeout - some servers don't handle HEAD properly
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 5000)
+      
       const response = await fetch(url, {
-        method: 'HEAD',
+        method: 'GET',
+        signal: controller.signal,
         headers: {
           'User-Agent': config.userAgent || DEFAULT_USER_AGENT,
         },
       })
+      
+      clearTimeout(timeout)
+      
       if (response.ok) {
-        discovered.push(url)
+        // Always verify it's valid JSON by attempting to parse
+        try {
+          const text = await response.text()
+          JSON.parse(text) // Throws if not valid JSON
+          discovered.push(url)
+        } catch {
+          // Not valid JSON, skip silently
+        }
       }
     } catch {
       // Ignore fetch errors for discovery
