@@ -1,11 +1,86 @@
 # WebMCP Tooling Suite
 
-A comprehensive toolkit for the **Web Model Context Protocol (WebMCP)** and **LLMFeed** ecosystem—providing validation, discovery, archival, and RAG indexing tools for AI agent-ready websites.
+<div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<img src="public/og-image.svg" alt="WebMCP Tooling Suite" width="600" />
 
-[![npm](https://img.shields.io/npm/v/@25xcodes/llmfeed-validator)](https://npmjs.com/package/@25xcodes/llmfeed-validator)
+### 🔐 The Complete Toolkit for Secure AI Agent Integration
 
+**Validate • Sign • Discover • Archive**
+
+[![Live Suite](https://img.shields.io/badge/🌐_Live_Suite-kiarashplusplus.github.io-6366f1?style=for-the-badge)](https://kiarashplusplus.github.io/webmcp-tooling-suite/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg?style=for-the-badge)](LICENSE)
+
+---
+
+</div>
+
+## 📦 Packages
+
+<table>
+<tr>
+<td width="50%">
+
+### 🔍 Validator
+**[@25xcodes/llmfeed-validator](https://npmjs.com/package/@25xcodes/llmfeed-validator)**
+
+[![npm](https://img.shields.io/npm/v/@25xcodes/llmfeed-validator?style=flat-square&color=6366f1)](https://npmjs.com/package/@25xcodes/llmfeed-validator)
+[![npm downloads](https://img.shields.io/npm/dm/@25xcodes/llmfeed-validator?style=flat-square&color=22c55e)](https://npmjs.com/package/@25xcodes/llmfeed-validator)
+
+Validate LLMFeed structure + **Ed25519 signature verification**
+
+```bash
+npx @25xcodes/llmfeed-validator example.com
+```
+
+</td>
+<td width="50%">
+
+### ✍️ Signer
+**[@25xcodes/llmfeed-signer](https://npmjs.com/package/@25xcodes/llmfeed-signer)**
+
+[![npm](https://img.shields.io/npm/v/@25xcodes/llmfeed-signer?style=flat-square&color=6366f1)](https://npmjs.com/package/@25xcodes/llmfeed-signer)
+[![npm downloads](https://img.shields.io/npm/dm/@25xcodes/llmfeed-signer?style=flat-square&color=22c55e)](https://npmjs.com/package/@25xcodes/llmfeed-signer)
+
+Generate Ed25519 keys + sign LLMFeed JSON files
+
+```bash
+npx @25xcodes/llmfeed-signer keygen
+npx @25xcodes/llmfeed-signer sign feed.json
+```
+
+</td>
+</tr>
+<tr>
+<td colspan="2">
+
+### 🤖 GitHub Action
+**[kiarashplusplus/webmcp-tooling-suite/packages/github-action](packages/github-action)**
+
+[![Used by FIML](https://img.shields.io/badge/used%20by-FIML-blue?style=flat-square)](https://github.com/kiarashplusplus/FIML)
+
+Automated CI/CD validation with badge generation
+
+```yaml
+- uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
+  with:
+    feed: '.well-known/mcp.llmfeed.json'
+    create-badge: 'true'
+```
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🌐 The Suite
+
+A comprehensive web application for the **Web Model Context Protocol (WebMCP)** and **LLMFeed** ecosystem.
+
+**[→ Launch the Suite](https://kiarashplusplus.github.io/webmcp-tooling-suite/)**
+
+---
 
 ## Project Summary
 
