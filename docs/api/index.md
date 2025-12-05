@@ -1,11 +1,11 @@
 # API Reference
 
-Complete API documentation for all LLMFeed packages.
+Complete API documentation for all WebMCP Tooling Suite packages.
 
 ## Format Support
 
-::: info
-All APIs are designed for **LLMFeed JSON** format. Support for **llm.txt** parsing is planned for future releases.
+::: tip Full Support for Both Formats
+All APIs fully support both **LLMFeed JSON** (`.llmfeed.json`) and **llms.txt** formats. Use the appropriate package for each format.
 :::
 
 ## Overview
@@ -26,6 +26,11 @@ Each package exports a set of functions, classes, and types. This reference cove
   <a href="/api/health-monitor" class="package-card">
     <h3>Health Monitor API</h3>
     <p>crawlFeed, generateReport, MemoryStorage, and more</p>
+  </a>
+  
+  <a href="/api/llmstxt-parser" class="package-card">
+    <h3>LLMS.txt Parser API</h3>
+    <p>parseLLMSTxt, validateLLMSTxt, fetchLLMSTxt, toRAGFormat, and more</p>
   </a>
 </div>
 

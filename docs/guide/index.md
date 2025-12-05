@@ -1,10 +1,10 @@
-# What is LLMFeed?
+# What is WebMCP Tooling Suite?
 
-LLMFeed is a comprehensive toolkit for the **Model Context Protocol (MCP)** feed ecosystem. It provides everything you need to create, validate, sign, publish, and monitor feeds that enable AI agents to discover and interact with your services.
+WebMCP Tooling Suite is a comprehensive toolkit for the **Model Context Protocol (MCP)** feed ecosystem. It provides everything you need to create, validate, sign, publish, and monitor feeds that enable AI agents to discover and interact with your services.
 
 ## Supported Feed Formats
 
-LLMFeed tools support two complementary feed formats:
+WebMCP tools support two complementary feed formats:
 
 | Format | Status | Best For |
 |--------|--------|----------|
@@ -75,7 +75,7 @@ A markdown-based format for human-readable documentation:
 While you can create and serve llm.txt files, our tooling (validator, signer, health-monitor) does not yet parse or validate this format. JSON feeds are recommended for full tooling support.
 :::
 
-## LLMFeed Toolkit
+## WebMCP Toolkit
 
 This project provides the core tooling to work with MCP feeds:
 

@@ -2,12 +2,12 @@
 layout: home
 
 hero:
-  name: LLMFeed
+  name: WebMCP Tooling Suite
   text: MCP Feed Ecosystem Tools
   tagline: The complete toolkit for discovering, validating, signing, and monitoring feeds that power AI agent integrations
   image:
     src: /logo.svg
-    alt: LLMFeed
+    alt: WebMCP Tooling Suite
   actions:
     - theme: brand
       text: Get Started
@@ -67,7 +67,7 @@ features:
 
 ## Supported Feed Formats
 
-LLMFeed tools support two feed formats for the **Model Context Protocol (MCP)** ecosystem:
+WebMCP Tooling Suite supports two feed formats for the **Model Context Protocol (MCP)** ecosystem:
 
 <div class="format-comparison">
 
@@ -84,7 +84,7 @@ LLMFeed tools support two feed formats for the **Model Context Protocol (MCP)** 
 
 ## The MCP Feed Ecosystem
 
-LLMFeed provides the foundational tooling for the **Model Context Protocol (MCP)** feed ecosystem. Whether you're a service provider exposing capabilities to AI agents, or a platform consuming feeds, these tools ensure interoperability, trust, and reliability.
+WebMCP Tooling Suite provides the foundational tooling for the **Model Context Protocol (MCP)** feed ecosystem. Whether you're a service provider exposing capabilities to AI agents, or a platform consuming feeds, these tools ensure interoperability, trust, and reliability.
 
 <div class="ecosystem-diagram">
   <div class="ecosystem-flow">
@@ -131,7 +131,7 @@ npm install @25xcodes/llmfeed-health-monitor
 npm install @25xcodes/llmstxt-parser
 ```
 
-## Why LLMFeed?
+## Why WebMCP?
 
 <div class="stats-grid">
   <div class="stat-item">
@@ -154,7 +154,7 @@ npm install @25xcodes/llmstxt-parser
 
 ### For Service Providers
 
-Expose your APIs and services to AI agents with a standardized feed format. LLMFeed tools help you:
+Expose your APIs and services to AI agents with a standardized feed format. WebMCP tools help you:
 
 - **Validate** your feed structure before publishing
 - **Sign** feeds cryptographically for authenticity

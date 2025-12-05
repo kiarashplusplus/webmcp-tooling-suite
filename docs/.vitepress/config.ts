@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'LLMFeed',
+  title: 'WebMCP Tooling Suite',
   description: 'The Complete Toolkit for MCP-Ready Feed Discovery, Validation & Trust',
 
   base: '/webmcp-tooling-suite/docs/',
@@ -18,12 +18,12 @@ export default defineConfig({
     ['link', { rel: 'canonical', href: 'https://kiarashplusplus.github.io/webmcp-tooling-suite/docs/' }],
     ['meta', { name: 'theme-color', content: '#7c3aed' }],
     ['meta', { name: 'og:type', content: 'website' }],
-    ['meta', { name: 'og:site_name', content: 'LLMFeed Documentation' }],
-    ['meta', { name: 'og:title', content: 'LLMFeed - MCP Feed Ecosystem Tools for AI Agents' }],
+    ['meta', { name: 'og:site_name', content: 'WebMCP Tooling Suite Documentation' }],
+    ['meta', { name: 'og:title', content: 'WebMCP Tooling Suite - MCP Feed Ecosystem Tools for AI Agents' }],
     ['meta', { name: 'og:description', content: 'Complete toolkit for LLMFeed JSON and llms.txt: validator, signer, health monitor, and parser. Ed25519 signatures, RAG utilities, and GitHub Actions for AI agent integrations.' }],
     ['meta', { name: 'og:image', content: 'https://kiarashplusplus.github.io/webmcp-tooling-suite/og-image.png' }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['meta', { name: 'twitter:title', content: 'LLMFeed - MCP Feed Ecosystem Tools' }],
+    ['meta', { name: 'twitter:title', content: 'WebMCP Tooling Suite - MCP Feed Ecosystem Tools' }],
     ['meta', { name: 'twitter:description', content: 'Validate, sign, and monitor LLMFeed JSON & llms.txt feeds for AI agent integrations.' }],
     ['meta', { name: 'keywords', content: 'MCP, Model Context Protocol, LLMFeed, llms.txt, llmstxt, AI agents, feed validation, Ed25519 signing, llmfeed.json, WebMCP, RAG, vector database' }],
     ['meta', { name: 'author', content: 'Kiarash Adl' }],
@@ -45,7 +45,7 @@ export default defineConfig({
         {
           text: 'Introduction',
           items: [
-            { text: 'What is LLMFeed?', link: '/guide/' },
+            { text: 'What is WebMCP?', link: '/guide/' },
             { text: 'Why MCP Matters', link: '/guide/why-mcp' },
             { text: 'Getting Started', link: '/guide/getting-started' },
           ]
@@ -124,6 +124,7 @@ export default defineConfig({
             { text: 'Validator API', link: '/api/validator' },
             { text: 'Signer API', link: '/api/signer' },
             { text: 'Health Monitor API', link: '/api/health-monitor' },
+            { text: 'LLMS.txt Parser API', link: '/api/llmstxt-parser' },
           ]
         }
       ]
