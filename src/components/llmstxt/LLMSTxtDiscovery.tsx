@@ -20,7 +20,7 @@ interface LLMSTxtDiscoveryProps {
 }
 
 const EXAMPLE_DOMAINS = [
-    { domain: 'anthropic.com', description: 'Anthropic AI' },
+    { domain: 'ai-sdk.dev', description: 'Vercel AI SDK' },
     { domain: 'cursor.com', description: 'Cursor Editor' },
     { domain: 'supabase.com', description: 'Supabase' },
 ]
