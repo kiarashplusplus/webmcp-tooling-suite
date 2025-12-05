@@ -59,17 +59,19 @@ jobs:
           # Test validator
           node -e "const v = require('./packages/validator/dist/index.js'); console.log('Validator exports:', Object.keys(v))"
           
-          # Test signer with PEM key
+          # Test signer with async functions
           node -e "
-            const s = require('./packages/signer/dist/index.js');
-            const { privateKey } = s.generateKeyPair();
-            console.log('Signer exports:', Object.keys(s));
-            console.log('Key generated successfully');
-            
-            // Test PEM parsing
-            const feed = { title: 'Test', items: [] };
-            const result = s.signFeed(feed, privateKey);
-            console.log('Sign with base64 key: SUCCESS');
+            (async () => {
+              const s = require('./packages/signer/dist/index.js');
+              console.log('Signer exports:', Object.keys(s));
+              
+              const { privateKey } = await s.generateKeyPair();
+              console.log('Key generated successfully');
+              
+              const feed = { title: 'Test', items: [] };
+              const result = await s.signFeed(feed, privateKey);
+              console.log('Sign with base64 key: SUCCESS');
+            })();
           "
           
           # Test health-monitor exports
