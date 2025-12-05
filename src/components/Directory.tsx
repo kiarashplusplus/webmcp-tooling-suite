@@ -5,10 +5,8 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useKV } from '@/hooks/use-kv'
 import { useAuth } from '@/hooks/use-auth'
 import { useDirectory, type DirectoryFeed } from '@/hooks/use-directory'
-import type { ArchivedFeed } from './Archive'
 import { toast } from 'sonner'
 import { 
   TrendUp, 
@@ -134,9 +132,6 @@ export function FeedDirectory() {
     refresh
   } = useDirectory()
   
-  // Local archives for viewing archived snapshots
-  const [archives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
-  
   // Convert API feeds to FeedMetadata format
   const allFeeds: FeedMetadata[] = apiError 
     ? FALLBACK_CURATED_FEEDS 
@@ -171,83 +166,19 @@ export function FeedDirectory() {
     return new Date(timestamp).toLocaleDateString()
   }
 
-  const getArchivedSnapshotUrl = (feedId: string) => {
-    // Get the base path from the current pathname (e.g., /webmcp-tooling-suite/)
-    const pathname = window.location.pathname
-    const basePath = pathname.replace(/\/index\.html$/, '').replace(/\/$/, '')
-    return `${window.location.origin}${basePath}/archive/${feedId}.json`
-  }
-
-  const findArchivedSnapshot = (feedId: string) => {
-    if (!archives) return null
-    
-    for (const archiveDomain of Object.values(archives)) {
-      const snapshot = archiveDomain.snapshots.find(s => s.id === feedId)
-      if (snapshot) return snapshot
-    }
-    return null
-  }
-
-  const handleViewArchivedMirror = (feed: FeedMetadata) => {
-    // If feed has a Gist URL, use that (preferred - permanent URL)
+  const handleViewMirror = (feed: FeedMetadata) => {
     if (feed.gist_raw_url) {
       window.open(feed.gist_raw_url, '_blank')
-      return
-    }
-    
-    // Fallback to localStorage snapshot
-    const snapshot = findArchivedSnapshot(feed.id)
-    if (snapshot) {
-      const servedData = {
-        snapshot_id: snapshot.id,
-        domain: snapshot.domain,
-        archived_at: new Date(snapshot.timestamp).toISOString(),
-        feed_url: snapshot.feed.metadata?.origin || `https://${snapshot.domain}/.well-known/mcp.llmfeed.json`,
-        validation_score: snapshot.validationScore,
-        signature_valid: snapshot.signatureValid,
-        feed: snapshot.feed
-      }
-      
-      const blob = new Blob([JSON.stringify(servedData, null, 2)], { 
-        type: 'application/json' 
-      })
-      const url = URL.createObjectURL(blob)
-      window.open(url, '_blank')
     } else {
       toast.error('No mirror available', {
-        description: 'This feed has not been archived yet'
+        description: 'This feed does not have a Gist mirror'
       })
     }
   }
 
-  const handleDownloadArchivedMirror = (feed: FeedMetadata) => {
-    const snapshot = findArchivedSnapshot(feed.id)
-    if (snapshot) {
-      const servedData = {
-        snapshot_id: snapshot.id,
-        domain: snapshot.domain,
-        archived_at: new Date(snapshot.timestamp).toISOString(),
-        archive_url: getArchivedSnapshotUrl(snapshot.id),
-        feed_url: snapshot.feed.metadata.origin || `https://${snapshot.domain}/.well-known/mcp.llmfeed.json`,
-        validation_score: snapshot.validationScore,
-        signature_valid: snapshot.signatureValid,
-        feed: snapshot.feed
-      }
-      
-      const blob = new Blob([JSON.stringify(servedData, null, 2)], { 
-        type: 'application/json' 
-      })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${feed.domain}-archived-${feed.id}.json`
-      a.click()
-      URL.revokeObjectURL(url)
-      toast.success('Archived feed downloaded', {
-        description: `${feed.title} mirror saved as JSON`
-      })
-    } else {
-      toast.error('Archived snapshot not found')
+  const handleViewGist = (feed: FeedMetadata) => {
+    if (feed.gist_html_url) {
+      window.open(feed.gist_html_url, '_blank')
     }
   }
 
@@ -292,7 +223,7 @@ export function FeedDirectory() {
     return feed?.is_curated ?? false
   }
 
-  const FeedCard = ({ feed, isFromArchive }: { feed: FeedMetadata; isFromArchive?: boolean }) => {
+  const FeedCard = ({ feed, isUserSubmitted }: { feed: FeedMetadata; isUserSubmitted?: boolean }) => {
     const isCurated = isCuratedFeed(feed.id)
     
     return (
@@ -319,7 +250,7 @@ export function FeedDirectory() {
                   ✨ Curated
                 </Badge>
               )}
-              {isFromArchive && !isCurated && (
+              {isUserSubmitted && !isCurated && (
                 <Badge 
                   variant="outline" 
                   className="shrink-0 glass-strong text-primary border-primary/30 text-xs"
@@ -347,7 +278,7 @@ export function FeedDirectory() {
               <Tag size={14} className="mr-1" />
               <span itemProp="genre">{feed.feed_type}</span>
             </Badge>
-            {isFromArchive && canUnpublish(feed.id) && (
+            {isUserSubmitted && canUnpublish(feed.id) && (
               <Button
                 onClick={() => handleUnpublish(feed)}
                 variant="ghost"
@@ -426,33 +357,18 @@ export function FeedDirectory() {
             </Button>
           </a>
           
-          {(feed.gist_raw_url || isFromArchive) && (
-            <>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleViewArchivedMirror(feed)}
-                className="flex-1 glass-strong hover:border-accent/50 text-accent hover:text-accent transition-all"
-                data-snapshot-id={feed.id}
-                data-feed-type={feed.feed_type}
-                data-gist-url={feed.gist_raw_url || undefined}
-              >
-                <Archive size={16} className="mr-2" />
-                <span className="font-mono text-xs">{feed.gist_raw_url ? 'View Mirror' : 'View Local'}</span>
-                <ArrowUpRight size={14} className="ml-2 shrink-0" />
-              </Button>
-              {!feed.gist_raw_url && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleDownloadArchivedMirror(feed)}
-                  className="flex-1 sm:flex-initial glass hover:border-accent/50 text-accent hover:text-accent transition-all"
-                  title="Download archived JSON"
-                >
-                  <FileJs size={16} />
-                </Button>
-              )}
-            </>
+          {feed.gist_raw_url && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleViewMirror(feed)}
+              className="flex-1 glass-strong hover:border-accent/50 text-accent hover:text-accent transition-all"
+              data-gist-url={feed.gist_raw_url}
+            >
+              <Archive size={16} className="mr-2" />
+              <span className="font-mono text-xs">View Mirror</span>
+              <ArrowUpRight size={14} className="ml-2 shrink-0" />
+            </Button>
           )}
         </div>
 
@@ -555,7 +471,7 @@ export function FeedDirectory() {
                   <meta itemProp="position" content={String(index + 1)} />
                   <FeedCard 
                     feed={feed}
-                    isFromArchive={!feed.is_curated}
+                    isUserSubmitted={!feed.is_curated}
                   />
                 </div>
               ))}
@@ -620,7 +536,7 @@ export function FeedDirectory() {
                   <meta itemProp="position" content={String(index + 1)} />
                   <FeedCard 
                     feed={feed}
-                    isFromArchive={!feed.is_curated}
+                    isUserSubmitted={!feed.is_curated}
                   />
                 </div>
               ))}

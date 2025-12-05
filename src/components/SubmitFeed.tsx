@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/hooks/use-auth'
 import { useDirectory } from '@/hooks/use-directory'
+import { useGistArchive } from '@/hooks/use-gist-archive'
 import { validateLLMFeed, fetchWithCorsProxy, type ValidationResult, type LLMFeed } from '@/lib/llmfeed'
 import { generateAllBadges } from '@/lib/badge-generator'
 import { toast } from 'sonner'
@@ -28,6 +29,7 @@ import {
 export function SubmitFeed() {
   const { user, isAuthenticated, signIn, signOut, loading: authLoading } = useAuth()
   const { submitFeed, submitting: apiSubmitting, error: apiError } = useDirectory()
+  const { archiveToGist } = useGistArchive()
   
   const [feedUrl, setFeedUrl] = useState('')
   const [isValidating, setIsValidating] = useState(false)
@@ -144,7 +146,23 @@ export function SubmitFeed() {
     setIsSubmitting(true)
 
     try {
-      // Submit to API
+      // First, create a Gist archive for the feed
+      const domain = new URL(feedUrl).hostname
+      const gistResult = await archiveToGist(
+        domain,
+        parsedFeed,
+        {
+          validationScore: validationResult.score,
+          signatureValid: validationResult.signatureValid,
+          feedUrl: feedUrl
+        }
+      )
+
+      if (!gistResult) {
+        throw new Error('Failed to create Gist archive')
+      }
+
+      // Submit to directory API with Gist URLs
       const result = await submitFeed({
         url: feedUrl,
         title: parsedFeed.metadata?.title || undefined,
@@ -154,12 +172,18 @@ export function SubmitFeed() {
         version: parsedFeed.metadata?.version || undefined,
         score: validationResult.score,
         signature_valid: validationResult.signatureValid,
+        gist_raw_url: gistResult.rawUrl,
+        gist_html_url: gistResult.htmlUrl,
       })
 
       if (result) {
         setSubmitted(true)
         toast.success('Feed submitted successfully!', {
-          description: 'Your feed is now visible in the public directory'
+          description: 'Your feed is now in the directory with a permanent Gist mirror',
+          action: {
+            label: 'View Gist',
+            onClick: () => window.open(gistResult.htmlUrl, '_blank')
+          }
         })
       }
     } catch (error) {
