@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="50%" style="stop-color:#1e1b4b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Subtle grid pattern -->
+  <g opacity="0.1">
+    <defs>
+      <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+        <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#6366f1" stroke-width="0.5"/>
+      </pattern>
+    </defs>
+    <rect width="1200" height="630" fill="url(#grid)"/>
+  </g>
+  
+  <!-- Decorative glow circles -->
+  <circle cx="200" cy="315" r="300" fill="url(#glow)"/>
+  <circle cx="1000" cy="315" r="250" fill="url(#glow)"/>
+  
+  <!-- Main content container -->
+  <g transform="translate(100, 80)">
+    <!-- Icon -->
+    <g transform="translate(0, 50)">
+      <rect width="120" height="120" rx="24" fill="url(#accent)"/>
+      <g fill="white" transform="translate(20, 15)">
+        <path d="M15 10h45l20 20v55a6 6 0 0 1-6 6H15a6 6 0 0 1-6-6V16a6 6 0 0 1 6-6z" opacity="0.9"/>
+        <path d="M60 10v20h20" fill="none" stroke="#1e1b4b" stroke-width="3"/>
+        <path d="M25 55l12 12 24-24" fill="none" stroke="#22c55e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="25" y="75" width="35" height="5" rx="2.5" fill="#6366f1" opacity="0.6"/>
+      </g>
+    </g>
+    
+    <!-- Title -->
+    <text x="150" y="100" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="white">
+      LLMFeed Analyzer
+    </text>
+    
+    <!-- Subtitle -->
+    <text x="150" y="160" font-family="system-ui, -apple-system, sans-serif" font-size="32" fill="#a5b4fc">
+      MCP Feed Validator &amp; Archive
+    </text>
+    
+    <!-- Feature pills -->
+    <g transform="translate(150, 200)">
+      <g transform="translate(0, 0)">
+        <rect width="220" height="50" rx="25" fill="#22c55e" opacity="0.2"/>
+        <rect width="220" height="50" rx="25" fill="none" stroke="#22c55e" stroke-width="2"/>
+        <text x="110" y="33" font-family="system-ui, sans-serif" font-size="20" fill="#22c55e" text-anchor="middle">✓ Ed25519 Signatures</text>
+      </g>
+      <g transform="translate(240, 0)">
+        <rect width="200" height="50" rx="25" fill="#6366f1" opacity="0.2"/>
+        <rect width="200" height="50" rx="25" fill="none" stroke="#6366f1" stroke-width="2"/>
+        <text x="100" y="33" font-family="system-ui, sans-serif" font-size="20" fill="#a5b4fc" text-anchor="middle">Schema Validation</text>
+      </g>
+      <g transform="translate(460, 0)">
+        <rect width="180" height="50" rx="25" fill="#8b5cf6" opacity="0.2"/>
+        <rect width="180" height="50" rx="25" fill="none" stroke="#8b5cf6" stroke-width="2"/>
+        <text x="90" y="33" font-family="system-ui, sans-serif" font-size="20" fill="#c4b5fd" text-anchor="middle">RAG Indexing</text>
+      </g>
+      <g transform="translate(660, 0)">
+        <rect width="200" height="50" rx="25" fill="#f59e0b" opacity="0.2"/>
+        <rect width="200" height="50" rx="25" fill="none" stroke="#f59e0b" stroke-width="2"/>
+        <text x="100" y="33" font-family="system-ui, sans-serif" font-size="20" fill="#fcd34d" text-anchor="middle">Feed Discovery</text>
+      </g>
+    </g>
+    
+    <!-- Description -->
+    <text x="0" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="26" fill="#94a3b8">
+      Comprehensive validation, discovery, and archival tools for
+    </text>
+    <text x="0" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="26" fill="#94a3b8">
+      LLMFeed and WebMCP feeds with cryptographic verification
+    </text>
+  </g>
+  
+  <!-- URL at bottom -->
+  <text x="600" y="570" font-family="monospace" font-size="24" fill="#6366f1" text-anchor="middle">
+    kiarashplusplus.github.io/webmcp-tooling-suite
+  </text>
+  
+  <!-- Accent line at bottom -->
+  <rect x="0" y="615" width="1200" height="15" fill="url(#accent)"/>
+</svg>
