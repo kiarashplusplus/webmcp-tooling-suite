@@ -180,7 +180,37 @@ async function handleFeedsAPI(
     ).all()
     
     const feeds = (result.results || []).map(rowToFeed)
-    return jsonResponse({ feeds, total: feeds.length }, 200, cors)
+    
+    // Add caching
+    const cacheHeaders = {
+      ...cors,
+      'Cache-Control': 'public, max-age=3600, s-maxage=7200, stale-while-revalidate=86400',
+    }
+    
+    return jsonResponse({ feeds, total: feeds.length }, 200, cacheHeaders)
+  }
+
+  // GET /api/feeds/index-html - Optimized for static HTML generation
+  if (path === '/api/feeds/index-html' && method === 'GET') {
+    const result = await env.DB.prepare(
+      'SELECT url, domain, title, description, feed_type FROM feeds WHERE is_active = 1 ORDER BY is_curated DESC, submitted_at DESC'
+    ).all()
+    
+    const feeds = (result.results || []).map(row => ({
+      url: row.url as string,
+      domain: row.domain as string,
+      title: row.title as string | null,
+      description: row.description as string | null,
+      feed_type: row.feed_type as string,
+    }))
+    
+    // Heavy caching - 2hr browser, 6hr CDN, 24hr stale-while-revalidate
+    const cacheHeaders = {
+      ...cors,
+      'Cache-Control': 'public, max-age=7200, s-maxage=21600, stale-while-revalidate=86400',
+    }
+    
+    return jsonResponse({ feeds, total: feeds.length }, 200, cacheHeaders)
   }
 
   // GET /api/feeds/:id
