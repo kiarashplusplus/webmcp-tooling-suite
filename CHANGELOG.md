@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2025-12-05
+
+### Changed
+
+#### @25xcodes/llmfeed-validator (`1.1.2`)
+- **Improved Test Coverage** — Test coverage increased from 42.5% to 80.45%
+  - Added comprehensive Ed25519 signature verification tests
+  - Added tests for public key fetch failures, invalid PEM format, mismatched signatures
+  - Added tests for custom `publicKeyResolver` option
+  - Added tests for invalid signature length handling
+
+#### @25xcodes/llmfeed-signer (`1.0.1`)
+- **Added Test Suite** — New comprehensive test coverage (71%)
+  - Added tests for Ed25519 key generation
+  - Added tests for feed signing and signature verification
+  - Added tests for canonical JSON serialization
+  - Added vitest configuration
+
+#### @25xcodes/llmfeed-health-monitor (`1.1.2`)
+- **Improved Test Coverage** — Test coverage increased from 49% to 54%
+  - Added tests for `crawlFeeds` batch crawling
+  - Added tests for `checkFeedOptOut` function
+  - Added tests for `discoverFeeds` edge cases
+  - Added tests for `generateStatsReport`
+
+### Internal
+- **Workers Refactored for Testability**
+  - `cors-proxy`: Exported helper functions (`validateTargetUrl`, `isPrivateIp`, `corsHeaders`)
+  - `directory`: Exported helper functions (`validateFeedUrl`, `generateFeedId`, `calculatePagination`, etc.)
+- **Main App Test Coverage** — `src/lib/llmfeed.ts` coverage increased from 27% to 38%
+  - Added tests for `normalizeFeed` (handles Notion, Sentry-style MCP formats)
+  - Added tests for `fetchWithCorsProxy`
+  - Added tests for `prepareForRAG` edge cases
+
+---
+
 ## [1.1.1] - 2025-12-05
 
 ### Changed

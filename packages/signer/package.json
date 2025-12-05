@@ -1,6 +1,6 @@
 {
   "name": "@25xcodes/llmfeed-signer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ed25519 key generation and LLMFeed signing tool for the WebMCP ecosystem",
   "type": "module",
   "main": "./dist/index.cjs",
