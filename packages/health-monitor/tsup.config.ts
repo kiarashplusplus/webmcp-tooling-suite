@@ -6,7 +6,14 @@ export default defineConfig({
     cli: 'src/cli.ts',
   },
   format: ['cjs', 'esm'],
-  dts: true,
+  dts: {
+    compilerOptions: {
+      moduleResolution: 'bundler',
+      paths: {
+        '@25xcodes/llmfeed-validator': ['../validator/src/index.ts'],
+      },
+    },
+  },
   sourcemap: true,
   clean: true,
   target: 'es2022',
