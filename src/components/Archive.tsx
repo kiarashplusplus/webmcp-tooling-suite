@@ -560,7 +560,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
         </Card>
       )}
 
-      {archiveList.length === 0 ? (
+      {archiveList.length === 0 && gistArchives.length === 0 ? (
         <Card className="p-12 text-center glass-card shadow-xl">
           <FolderOpen size={48} className="mx-auto mb-4 text-primary/50" />
           <h3 className="text-lg font-semibold text-foreground mb-2">No Archives Yet</h3>
@@ -568,7 +568,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
             Start archiving LLM feeds by entering a domain above. Each feed will be timestamped and versioned automatically.
           </p>
         </Card>
-      ) : (
+      ) : archiveList.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-foreground">Archived Feeds</h3>
@@ -901,7 +901,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
             )}
           </div>
         </div>
-      )}
+      ) : null}
 
       <Dialog open={showSignInDialog} onOpenChange={setShowSignInDialog}>
         <DialogContent className="sm:max-w-md bg-background border-primary/30">
@@ -916,7 +916,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
       </Dialog>
 
       {/* Next Step Navigation - Show when archives exist */}
-      {Object.keys(archives).length > 0 && onNavigate && (
+      {(Object.keys(archives).length > 0 || gistArchives.length > 0) && onNavigate && (
         <Card className="p-6 glass-card shadow-xl border-primary/30 bg-primary/5 mt-6">
           <div className="flex items-center justify-between">
             <div>
