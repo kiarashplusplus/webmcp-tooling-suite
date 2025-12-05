@@ -548,10 +548,14 @@ export async function fetchLLMSTxt(
                     doc.sourceUrl = url
                     doc.isFull = path.includes('full')
                     return doc
+                } else {
+                    errors.push(`${url}: Response is not valid llms.txt (no markdown content)`)
                 }
+            } else {
+                errors.push(`${url}: HTTP ${response.status}`)
             }
         } catch (err) {
-            errors.push(`${path}: ${err instanceof Error ? err.message : String(err)}`)
+            errors.push(`${url}: ${err instanceof Error ? err.message : String(err)}`)
         }
     }
 
