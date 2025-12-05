@@ -1080,6 +1080,152 @@ export async function fetchWithCorsProxy(url: string): Promise<Response> {
   }
 }
 
+/**
+ * Normalize different MCP/LLMFeed format variations to the standard LLMFeed structure.
+ * Handles formats like Notion's simple mcp.json, Sentry's format, etc.
+ */
+export function normalizeFeed(rawFeed: any, sourceUrl: string): LLMFeed {
+  // If it already has our expected structure, return as-is
+  if (rawFeed.feed_type && rawFeed.metadata?.title) {
+    return rawFeed as LLMFeed
+  }
+
+  // Extract domain from URL for origin fallback
+  let origin = sourceUrl
+  try {
+    const urlObj = new URL(sourceUrl)
+    origin = `${urlObj.protocol}//${urlObj.host}`
+  } catch {
+    // Keep sourceUrl as fallback
+  }
+
+  // Handle simple MCP format (like Notion's mcp.json)
+  // Format: { name, description, icon, endpoint }
+  if (rawFeed.name && rawFeed.endpoint) {
+    const normalized: LLMFeed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: rawFeed.name,
+        origin: origin,
+        description: rawFeed.description || `MCP endpoint for ${rawFeed.name}`,
+        icon: rawFeed.icon,
+        version: rawFeed.version,
+      },
+      capabilities: [{
+        name: 'mcp_endpoint',
+        type: 'endpoint',
+        method: 'POST',
+        url: rawFeed.endpoint,
+        protocol: 'mcp',
+        description: rawFeed.description || `Connect to ${rawFeed.name} via MCP`,
+      }],
+      _originalFormat: 'simple-mcp',
+      _raw: rawFeed,
+    }
+    return normalized
+  }
+
+  // Handle Sentry-style format or other variations
+  // Format: { name, description, servers: [...] }
+  if (rawFeed.name && (rawFeed.servers || rawFeed.tools)) {
+    const capabilities: Capability[] = []
+    
+    // Convert servers to capabilities
+    if (rawFeed.servers && Array.isArray(rawFeed.servers)) {
+      rawFeed.servers.forEach((server: any, idx: number) => {
+        capabilities.push({
+          name: server.name || `server_${idx}`,
+          type: 'server',
+          url: server.url || server.endpoint,
+          description: server.description || `Server ${idx + 1}`,
+          ...server,
+        })
+      })
+    }
+    
+    // Convert tools to capabilities
+    if (rawFeed.tools && Array.isArray(rawFeed.tools)) {
+      rawFeed.tools.forEach((tool: any) => {
+        capabilities.push({
+          name: tool.name,
+          type: 'tool',
+          description: tool.description || tool.name,
+          inputSchema: tool.inputSchema || tool.parameters,
+          ...tool,
+        })
+      })
+    }
+
+    const normalized: LLMFeed = {
+      feed_type: rawFeed.feed_type || 'mcp',
+      metadata: {
+        title: rawFeed.name,
+        origin: rawFeed.origin || origin,
+        description: rawFeed.description || `MCP feed for ${rawFeed.name}`,
+        version: rawFeed.version,
+        icon: rawFeed.icon,
+      },
+      capabilities: capabilities.length > 0 ? capabilities : undefined,
+      _originalFormat: 'mcp-servers',
+      _raw: rawFeed,
+    }
+    return normalized
+  }
+
+  // Handle format with just 'description' at root (minimal format)
+  if (rawFeed.description && !rawFeed.metadata) {
+    const normalized: LLMFeed = {
+      feed_type: rawFeed.feed_type || 'mcp',
+      metadata: {
+        title: rawFeed.title || rawFeed.name || extractDomainName(origin),
+        origin: rawFeed.origin || origin,
+        description: rawFeed.description,
+        version: rawFeed.version,
+      },
+      capabilities: rawFeed.capabilities,
+      agent_guidance: rawFeed.agent_guidance,
+      _originalFormat: 'minimal',
+      _raw: rawFeed,
+    }
+    return normalized
+  }
+
+  // Last resort: wrap whatever we got
+  const normalized: LLMFeed = {
+    feed_type: rawFeed.feed_type || 'unknown',
+    metadata: {
+      title: rawFeed.metadata?.title || rawFeed.name || rawFeed.title || extractDomainName(origin),
+      origin: rawFeed.metadata?.origin || rawFeed.origin || origin,
+      description: rawFeed.metadata?.description || rawFeed.description || 'No description available',
+      ...rawFeed.metadata,
+    },
+    capabilities: rawFeed.capabilities,
+    agent_guidance: rawFeed.agent_guidance,
+    _originalFormat: 'wrapped',
+    _raw: rawFeed,
+  }
+  return normalized
+}
+
+/**
+ * Extract a human-readable name from a domain
+ */
+function extractDomainName(url: string): string {
+  try {
+    const urlObj = new URL(url)
+    const host = urlObj.host.replace(/^www\./, '')
+    // Capitalize first letter and remove TLD for common cases
+    const parts = host.split('.')
+    if (parts.length >= 2) {
+      const name = parts[0]
+      return name.charAt(0).toUpperCase() + name.slice(1)
+    }
+    return host
+  } catch {
+    return url
+  }
+}
+
 export async function fetchLLMFeed(input: string): Promise<LLMFeed> {
   let url = input.trim()
   
@@ -1096,7 +1242,11 @@ export async function fetchLLMFeed(input: string): Promise<LLMFeed> {
     throw new Error(`Failed to fetch feed: ${response.status} ${response.statusText}`)
   }
 
-  const feed = await response.json()
+  const rawFeed = await response.json()
+  
+  // Normalize the feed to handle different format variations
+  const feed = normalizeFeed(rawFeed, url)
+  
   return feed
 }
 

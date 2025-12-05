@@ -127,27 +127,27 @@ export function Discovery({ onNavigate, onComplete }: DiscoveryProps) {
           <Card className="p-6 gradient-border shadow-2xl">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-2xl font-bold text-foreground mb-1">{feed.metadata.title}</h3>
+                <h3 className="text-2xl font-bold text-foreground mb-1">{feed.metadata?.title || 'Untitled Feed'}</h3>
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <CloudArrowDown size={16} />
-                  {feed.metadata.origin}
+                  {feed.metadata?.origin || 'Unknown origin'}
                 </p>
               </div>
               <Badge className="bg-primary text-primary-foreground">
-                {feed.feed_type}
+                {feed.feed_type || 'unknown'}
               </Badge>
             </div>
 
-            <p className="text-foreground mb-4">{feed.metadata.description}</p>
+            <p className="text-foreground mb-4">{feed.metadata?.description || 'No description available'}</p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-              {feed.metadata.version && (
+              {feed.metadata?.version && (
                 <div>
                   <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Version</div>
                   <div className="text-foreground font-mono">{feed.metadata.version}</div>
                 </div>
               )}
-              {feed.metadata.lang && (
+              {feed.metadata?.lang && (
                 <div>
                   <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Language</div>
                   <div className="text-foreground font-mono">{feed.metadata.lang}</div>
@@ -167,7 +167,7 @@ export function Discovery({ onNavigate, onComplete }: DiscoveryProps) {
               )}
             </div>
 
-            {feed.metadata.topics && feed.metadata.topics.length > 0 && (
+            {feed.metadata?.topics && feed.metadata.topics.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {feed.metadata.topics.map((topic, idx) => (
                   <Badge key={idx} variant="secondary" className="text-xs">
