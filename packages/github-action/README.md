@@ -31,7 +31,9 @@ jobs:
           feed: '.well-known/mcp.llmfeed.json'
 ```
 
-### With Badge Generation
+### With Dynamic Badge (Recommended)
+
+Generate a dynamic shields.io badge that shows your security score:
 
 ```yaml
 name: Validate and Badge
@@ -39,8 +41,7 @@ name: Validate and Badge
 on:
   push:
     branches: [main]
-    paths:
-      - 'mcp.llmfeed.json'
+    paths: ['**/*.llmfeed.json']
 
 jobs:
   validate:
@@ -55,23 +56,52 @@ jobs:
         id: validate
         uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
         with:
-          feed: 'mcp.llmfeed.json'
+          feed: '.well-known/mcp.llmfeed.json'
+          skip-signature: 'true'
           create-badge: 'true'
-          badge-path: '.github/badges/llmfeed-status.svg'
       
-      - name: Commit badge
-        if: always()
+      - name: Commit badge files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .github/badges/
-          git diff --staged --quiet || git commit -m "chore: update LLMFeed validation badge"
+          git diff --staged --quiet || git commit -m "chore: update LLMFeed badge"
           git push
 ```
 
-Then add to your README:
+The action generates both `.svg` and `.json` badge files. Add to your README:
+
 ```markdown
-![LLMFeed Status](/.github/badges/llmfeed-status.svg)
+<!-- Dynamic badge via shields.io (shows score like "85/100") -->
+[![LLMFeed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/OWNER/REPO/main/.github/badges/llmfeed-status.json)](https://your-site/.well-known/mcp.llmfeed.json)
+
+<!-- Or use the static SVG directly -->
+![LLMFeed](/.github/badges/llmfeed-status.svg)
+```
+
+**Badge colors by score:**
+- 🟢 **brightgreen**: Score ≥ 80
+- 🟢 **green**: Score ≥ 60
+- 🟡 **yellow**: Score ≥ 40
+- 🟠 **orange**: Score < 40
+- 🔴 **red**: Invalid feed
+
+### Advanced: Dynamic Badge via Gist (No Commits)
+
+If you prefer not to commit badge files, use a GitHub Gist as the endpoint:
+
+1. Create a GitHub Gist with `llmfeed-badge.json`
+2. Create a PAT with `gist` scope → add as `GIST_TOKEN` secret
+3. Add to workflow:
+
+```yaml
+- name: Validate LLMFeed
+  uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
+  with:
+    feed: '.well-known/mcp.llmfeed.json'
+    badge-gist-id: 'YOUR_GIST_ID'
+  env:
+    GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
 ```
 
 ### Validate Remote Feed
@@ -119,6 +149,7 @@ Then add to your README:
     echo "Signature: ${{ steps.validate.outputs.signature-status }}"
     echo "Title: ${{ steps.validate.outputs.feed-title }}"
     echo "Capabilities: ${{ steps.validate.outputs.capabilities-count }}"
+    echo "Badge URL: ${{ steps.validate.outputs.badge-url }}"
 ```
 
 ### PR Comment with Results
@@ -165,8 +196,10 @@ Then add to your README:
 | `fail-on-warning` | Fail if warnings are found | No | `false` |
 | `skip-signature` | Skip Ed25519 signature verification | No | `false` |
 | `timeout` | Network request timeout (ms) | No | `10000` |
-| `create-badge` | Generate validation status badge | No | `false` |
-| `badge-path` | Path for generated badge SVG | No | `.github/badges/llmfeed-status.svg` |
+| `create-badge` | Generate SVG validation badge | No | `false` |
+| `badge-path` | Path for generated SVG badge | No | `.github/badges/llmfeed-status.svg` |
+| `badge-gist-id` | Gist ID for dynamic shields.io badge | No | - |
+| `badge-filename` | Filename in gist for badge JSON | No | `llmfeed-badge.json` |
 
 ## Outputs
 
@@ -179,6 +212,7 @@ Then add to your README:
 | `warnings` | JSON array of validation warnings |
 | `feed-title` | Title from feed metadata |
 | `capabilities-count` | Number of capabilities in the feed |
+| `badge-url` | Dynamic shields.io badge URL (if `badge-gist-id` is set) |
 
 ## Validation Checks
 
@@ -208,3 +242,4 @@ The security score (0-100) is calculated based on:
 ## License
 
 MIT
+

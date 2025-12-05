@@ -181,7 +181,7 @@ llmfeed-sign sign feed.json --key ./keys/mysite.private.pem \
 
 ### @25xcodes/llmfeed-action (GitHub Action)
 
-GitHub Action for automated feed validation in CI/CD pipelines.
+GitHub Action for automated feed validation in CI/CD pipelines with dynamic badge generation.
 
 ```yaml
 # .github/workflows/validate-feed.yml
@@ -193,21 +193,36 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
         with:
           feed: '.well-known/mcp.llmfeed.json'
+          skip-signature: 'true'
           create-badge: 'true'
+      - name: Commit badge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/badges/
+          git diff --staged --quiet || git commit -m "update badge" && git push
+```
+
+Add the dynamic badge to your README:
+```markdown
+[![LLMFeed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/OWNER/REPO/main/.github/badges/llmfeed-status.json)](https://your-site/.well-known/mcp.llmfeed.json)
 ```
 
 **Features:**
 - ✅ Automatic PR checks for feed changes
 - ✅ Ed25519 signature verification
-- ✅ Status badge generation
+- ✅ Dynamic shields.io badge (SVG + JSON)
 - ✅ Security score output (0-100)
+- ✅ Color-coded badges (green 80+, yellow 40+, red invalid)
 
-See individual package READMEs for complete documentation.
+See [packages/github-action/README.md](packages/github-action/README.md) for complete documentation.
 
 ## Roadmap
 
