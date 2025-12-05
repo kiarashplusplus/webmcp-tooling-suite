@@ -1,0 +1,156 @@
+import { defineConfig } from 'vitepress'
+
+export default defineConfig({
+  title: 'LLMFeed',
+  description: 'The Complete Toolkit for MCP-Ready Feed Discovery, Validation & Trust',
+  
+  base: '/webmcp-tooling-suite/docs/',
+  
+  // Ignore dead links for pages not yet created
+  ignoreDeadLinks: [
+    /\/packages\/validator\/(installation|usage|cli)/,
+    /\/packages\/signer\/(installation|key-management|signing)/,
+    /\/packages\/health-monitor\/(installation|crawling|reports)/,
+  ],
+  
+  head: [
+    ['link', { rel: 'icon', href: '/webmcp-tooling-suite/docs/favicon.svg', type: 'image/svg+xml' }],
+    ['meta', { name: 'theme-color', content: '#7c3aed' }],
+    ['meta', { name: 'og:type', content: 'website' }],
+    ['meta', { name: 'og:title', content: 'LLMFeed Documentation - MCP Feed Ecosystem Tools' }],
+    ['meta', { name: 'og:description', content: 'Comprehensive documentation for LLMFeed validator, signer, and health monitor packages. Build trusted AI agent integrations with LLMFeed JSON (fully supported) and llm.txt (coming soon).' }],
+    ['meta', { name: 'twitter:card', content: 'summary' }],
+    ['meta', { name: 'keywords', content: 'MCP, Model Context Protocol, LLMFeed, AI agents, feed validation, cryptographic signing, llm.txt, llmfeed.json, WebMCP' }],
+  ],
+
+  themeConfig: {
+    logo: '/logo.svg',
+    
+    nav: [
+      { text: 'Guide', link: '/guide/' },
+      { text: 'Packages', link: '/packages/' },
+      { text: 'API Reference', link: '/api/' },
+      { text: 'Playground', link: 'https://kiarashplusplus.github.io/webmcp-tooling-suite/' },
+    ],
+
+    sidebar: {
+      '/guide/': [
+        {
+          text: 'Introduction',
+          items: [
+            { text: 'What is LLMFeed?', link: '/guide/' },
+            { text: 'Why MCP Matters', link: '/guide/why-mcp' },
+            { text: 'Getting Started', link: '/guide/getting-started' },
+          ]
+        },
+        {
+          text: 'Core Concepts',
+          items: [
+            { text: 'Feed Structure', link: '/guide/feed-structure' },
+            { text: 'Trust & Signatures', link: '/guide/trust-signatures' },
+            { text: 'Capabilities', link: '/guide/capabilities' },
+            { text: 'Discovery', link: '/guide/discovery' },
+          ]
+        },
+        {
+          text: 'Workflows',
+          items: [
+            { text: 'Publishing a Feed', link: '/guide/publishing' },
+            { text: 'Validating Feeds', link: '/guide/validating' },
+            { text: 'Monitoring Health', link: '/guide/monitoring' },
+            { text: 'CI/CD Integration', link: '/guide/ci-cd' },
+          ]
+        }
+      ],
+      '/packages/': [
+        {
+          text: 'Packages Overview',
+          items: [
+            { text: 'Introduction', link: '/packages/' },
+          ]
+        },
+        {
+          text: '@25xcodes/llmfeed-validator',
+          items: [
+            { text: 'Overview', link: '/packages/validator/' },
+            { text: 'Installation', link: '/packages/validator/installation' },
+            { text: 'Usage', link: '/packages/validator/usage' },
+            { text: 'CLI Reference', link: '/packages/validator/cli' },
+          ]
+        },
+        {
+          text: '@25xcodes/llmfeed-signer',
+          items: [
+            { text: 'Overview', link: '/packages/signer/' },
+            { text: 'Installation', link: '/packages/signer/installation' },
+            { text: 'Key Management', link: '/packages/signer/key-management' },
+            { text: 'Signing Feeds', link: '/packages/signer/signing' },
+          ]
+        },
+        {
+          text: '@25xcodes/llmfeed-health-monitor',
+          items: [
+            { text: 'Overview', link: '/packages/health-monitor/' },
+            { text: 'Installation', link: '/packages/health-monitor/installation' },
+            { text: 'Crawling', link: '/packages/health-monitor/crawling' },
+            { text: 'Reports', link: '/packages/health-monitor/reports' },
+          ]
+        },
+        {
+          text: '@25xcodes/llmfeed-action',
+          items: [
+            { text: 'GitHub Action', link: '/packages/github-action/' },
+          ]
+        }
+      ],
+      '/api/': [
+        {
+          text: 'API Reference',
+          items: [
+            { text: 'Overview', link: '/api/' },
+            { text: 'Validator API', link: '/api/validator' },
+            { text: 'Signer API', link: '/api/signer' },
+            { text: 'Health Monitor API', link: '/api/health-monitor' },
+          ]
+        }
+      ]
+    },
+
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/kiarashplusplus/webmcp-tooling-suite' },
+      { icon: 'npm', link: 'https://www.npmjs.com/search?q=%4025xcodes%2Fllmfeed' },
+    ],
+
+    footer: {
+      message: 'Community documentation provided as-is. Not official guidance. Verify before production use.',
+      copyright: 'Released under the MIT License. Copyright © 2024-present LLMFeed Contributors'
+    },
+
+    search: {
+      provider: 'local'
+    },
+
+    editLink: {
+      pattern: 'https://github.com/kiarashplusplus/webmcp-tooling-suite/edit/main/docs/:path',
+      text: 'Edit this page on GitHub'
+    },
+
+    lastUpdated: {
+      text: 'Updated at',
+      formatOptions: {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      }
+    }
+  },
+
+  markdown: {
+    theme: {
+      light: 'github-light',
+      dark: 'github-dark'
+    },
+    lineNumbers: true
+  },
+
+  lastUpdated: true,
+})

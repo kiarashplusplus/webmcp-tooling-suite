@@ -1,0 +1,209 @@
+/* Custom VitePress theme overrides */
+
+:root {
+  /* Brand colors */
+  --vp-c-brand-1: #7c3aed;
+  --vp-c-brand-2: #8b5cf6;
+  --vp-c-brand-3: #a78bfa;
+  --vp-c-brand-soft: rgba(124, 58, 237, 0.14);
+
+  /* Hero gradient */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #7c3aed 0%, #ec4899 50%, #f97316 100%);
+
+  --vp-home-hero-image-background-image: linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(236, 72, 153, 0.3) 50%, rgba(249, 115, 22, 0.3) 100%);
+  --vp-home-hero-image-filter: blur(72px);
+}
+
+.dark {
+  --vp-c-brand-1: #a78bfa;
+  --vp-c-brand-2: #8b5cf6;
+  --vp-c-brand-3: #7c3aed;
+  --vp-c-brand-soft: rgba(167, 139, 250, 0.16);
+}
+
+/* Home page customization */
+.VPHero .name {
+  font-size: 3.5rem !important;
+  font-weight: 800 !important;
+}
+
+.VPHero .text {
+  font-size: 1.5rem !important;
+  color: var(--vp-c-text-2);
+}
+
+.VPHero .tagline {
+  font-size: 1.2rem !important;
+  max-width: 600px;
+}
+
+/* Feature cards */
+.VPFeature {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 12px;
+  transition: all 0.25s ease;
+}
+
+.VPFeature:hover {
+  border-color: var(--vp-c-brand-1);
+  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Code blocks */
+.vp-doc div[class*='language-'] {
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-border);
+}
+
+/* Badges */
+.custom-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.custom-badge.npm {
+  background: linear-gradient(135deg, #cb3837, #ff6b6b);
+  color: white;
+}
+
+.custom-badge.version {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+
+/* Package cards */
+.package-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.package-card {
+  padding: 1.5rem;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 12px;
+  background: var(--vp-c-bg-soft);
+  transition: all 0.25s ease;
+}
+
+.package-card:hover {
+  border-color: var(--vp-c-brand-1);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.1);
+}
+
+.package-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.package-card p {
+  margin: 0;
+  color: var(--vp-c-text-2);
+  font-size: 0.9rem;
+}
+
+/* Ecosystem diagram */
+.ecosystem-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  margin: 2rem 0;
+  background: var(--vp-c-bg-soft);
+  border-radius: 16px;
+  border: 1px solid var(--vp-c-border);
+}
+
+.ecosystem-flow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ecosystem-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: var(--vp-c-bg);
+  border: 2px solid var(--vp-c-border);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.ecosystem-node:hover {
+  border-color: var(--vp-c-brand-1);
+  transform: scale(1.05);
+}
+
+.ecosystem-node.highlight {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+
+.ecosystem-arrow {
+  font-size: 1.5rem;
+  color: var(--vp-c-text-3);
+}
+
+/* Tip boxes enhancement */
+.vp-doc .custom-block {
+  border-radius: 12px;
+}
+
+/* Navigation enhancement */
+.VPNavBarTitle .title {
+  font-weight: 700;
+}
+
+/* Button overrides */
+.VPButton.brand {
+  background: linear-gradient(135deg, var(--vp-c-brand-1), var(--vp-c-brand-2));
+  border: none;
+}
+
+.VPButton.brand:hover {
+  background: linear-gradient(135deg, var(--vp-c-brand-2), var(--vp-c-brand-1));
+}
+
+/* Stats section */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.stat-item {
+  padding: 1.5rem;
+  background: var(--vp-c-bg-soft);
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-border);
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--vp-c-brand-1), var(--vp-c-brand-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-label {
+  color: var(--vp-c-text-2);
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}

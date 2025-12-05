@@ -24,10 +24,19 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
+      
+      # Build main app
       - run: npm run build
         env:
           VITE_GITHUB_OAUTH_URL: ${{ secrets.VITE_GITHUB_OAUTH_URL }}
           VITE_CORS_PROXY_URL: ${{ secrets.VITE_CORS_PROXY_URL }}
+      
+      # Build documentation
+      - run: npm run docs:build
+      
+      # Copy docs to dist/docs
+      - run: cp -r docs/.vitepress/dist dist/docs
+      
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

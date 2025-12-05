@@ -11,6 +11,9 @@
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
         "build:packages": "npm run build -w @25xcodes/llmfeed-validator && npm run build -w @25xcodes/llmfeed-signer && npm run build -w @25xcodes/llmfeed-action",
+        "docs:dev": "vitepress dev docs",
+        "docs:build": "vitepress build docs",
+        "docs:preview": "vitepress preview docs",
         "lint": "eslint .",
         "test": "vitest",
         "test:run": "vitest run",
@@ -97,6 +100,7 @@
         "typescript": "~5.7.2",
         "typescript-eslint": "^8.38.0",
         "vite": "^7.2.6",
+        "vitepress": "^1.6.4",
         "vitest": "^4.0.15"
     }
 }
