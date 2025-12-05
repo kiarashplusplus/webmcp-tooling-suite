@@ -63,9 +63,10 @@ export function LLMSTxtArchive({ onNavigate, onComplete, initialUrl }: LLMSTxtAr
         }
     }, [isAuthenticated, fetchGistArchives])
 
-    // Filter to only show llms.txt archives
+    // Filter to only show llms.txt archives (stored as "llmstxt-domain-name" OR "webmcp-archive-llmstxt-...")
     const llmstxtArchives = gistArchives.filter(g =>
-        g.domain.includes('llmstxt') ||
+        g.domain.startsWith('llmstxt-') ||
+        g.filename?.includes('llmstxt') ||
         g.description?.toLowerCase().includes('llms.txt')
     )
 
@@ -87,10 +88,11 @@ export function LLMSTxtArchive({ onNavigate, onComplete, initialUrl }: LLMSTxtAr
             const validation = validateLLMSTxt(doc)
 
             // Create a normalized domain for the archive
-            let normalizedDomain = domain
+            // Strip www. prefix and convert to lowercase for consistent gist identification
+            let normalizedDomain = domain.toLowerCase().replace(/^www\./, '')
             try {
                 const url = new URL(doc.sourceUrl || `https://${domain}`)
-                normalizedDomain = url.hostname
+                normalizedDomain = url.hostname.toLowerCase().replace(/^www\./, '')
             } catch {
                 // Keep original if parsing fails
             }
@@ -264,17 +266,17 @@ export function LLMSTxtArchive({ onNavigate, onComplete, initialUrl }: LLMSTxtAr
             </Card>
 
             {/* Published GitHub Gist Archives */}
-            {isAuthenticated && gistArchives.length > 0 && (
+            {isAuthenticated && llmstxtArchives.length > 0 && (
                 <Card className="p-6 glass-card border-accent/30">
                     <div className="flex items-center gap-3 mb-4">
                         <GithubLogo size={24} className="text-accent" />
                         <div>
                             <h3 className="font-bold text-foreground">Your Published Gist Archives</h3>
-                            <p className="text-xs text-muted-foreground">{gistArchives.length} archive(s) stored on GitHub</p>
+                            <p className="text-xs text-muted-foreground">{llmstxtArchives.length} llms.txt archive(s) stored on GitHub</p>
                         </div>
                     </div>
                     <div className="space-y-3">
-                        {gistArchives.map((gist) => (
+                        {llmstxtArchives.map((gist) => (
                             <div key={gist.id} className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50">
                                 <div className="flex-1 min-w-0">
                                     <div className="font-mono text-sm font-semibold text-foreground">{gist.domain}</div>
@@ -326,7 +328,7 @@ export function LLMSTxtArchive({ onNavigate, onComplete, initialUrl }: LLMSTxtAr
             )}
 
             {/* Next Step Navigation */}
-            {onNavigate && isAuthenticated && gistArchives.length > 0 && (
+            {onNavigate && isAuthenticated && llmstxtArchives.length > 0 && (
                 <Card className="p-6 glass-card shadow-xl border-primary/30 bg-primary/5">
                     <div className="flex items-center justify-between">
                         <div>
