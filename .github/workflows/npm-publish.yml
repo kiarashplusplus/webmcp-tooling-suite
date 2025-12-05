@@ -45,8 +45,11 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
-      - name: Run tests
+      - name: Run unit tests
         run: npm run test:run
+
+      - name: Run integration tests
+        run: npx vitest run tests/integration/local-packages.test.ts
 
       - name: Check if versions already exist on npm
         id: version-check
