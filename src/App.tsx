@@ -291,19 +291,19 @@ function AppContent() {
             )}
 
             {/* Submit Your Site CTA - LLMS.txt mode */}
-            {mode === 'llmstxt' && (
+            {mode === 'llmstxt' && activeTab !== 'archive' && (
               <div className="mt-12 mb-8">
                 <div className="glass-card rounded-2xl p-6 border border-primary/20 bg-primary/5">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-bold text-foreground font-mono">Own a site with llms.txt?</h3>
-                      <p className="text-sm text-muted-foreground">Archive your llms.txt file and get listed in our directory</p>
+                      <h3 className="text-lg font-bold text-foreground font-mono">Own a WebMCP-enabled site?</h3>
+                      <p className="text-sm text-muted-foreground">Archive your llms.txt and get listed in our directory</p>
                     </div>
                     <button
                       onClick={() => handleTabChange('archive')}
                       className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap"
                     >
-                      Archive Your llms.txt →
+                      Submit Your llms.txt →
                     </button>
                   </div>
                 </div>

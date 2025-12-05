@@ -268,10 +268,27 @@ export function useGistArchive() {
         .map(gist => {
           const filename = Object.keys(gist.files).find(f => f.startsWith(ARCHIVE_PREFIX)) || ''
           const file = gist.files[filename]
-          const domain = filename
-            .replace(ARCHIVE_PREFIX, '')
-            .replace('.json', '')
-            .replace(/-/g, '.')
+
+          // Parse domain from filename, preserving structure
+          // Filename format: webmcp-archive-{domain-with-hyphens}.json
+          // We need to restore dots only in the actual domain part, not prefixes like "llmstxt-"
+          let domainPart = filename
+            .replace(ARCHIVE_PREFIX, '')  // "llmstxt-cursor-com.json" or "cursor-com.json"
+            .replace('.json', '')          // "llmstxt-cursor-com" or "cursor-com"
+
+          // Check if it has a mode prefix (llmstxt-)
+          let domain: string
+          if (domainPart.startsWith('llmstxt.')) {
+            // Already has dots (from previous version)
+            domain = domainPart
+          } else if (domainPart.startsWith('llmstxt-')) {
+            // Preserve the llmstxt- prefix, only convert remaining hyphens to dots
+            const actualDomain = domainPart.substring('llmstxt-'.length).replace(/-/g, '.')
+            domain = `llmstxt-${actualDomain}`
+          } else {
+            // Regular domain - convert all hyphens to dots
+            domain = domainPart.replace(/-/g, '.')
+          }
 
           return {
             id: gist.id,
