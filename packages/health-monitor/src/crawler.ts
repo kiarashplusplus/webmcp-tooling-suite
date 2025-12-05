@@ -489,8 +489,9 @@ function extractContactInfo(feed: unknown): ContactInfo | undefined {
 }
 
 function detectGitHubRepo(url: string, feed: unknown): GitHubRepo | undefined {
-  // Check if URL is on github.io
   const parsed = new URL(url)
+  
+  // Check if URL is on github.io
   if (parsed.hostname.endsWith('.github.io')) {
     const owner = parsed.hostname.replace('.github.io', '')
     // Default repo name is usually the username.github.io or first path segment
@@ -499,12 +500,42 @@ function detectGitHubRepo(url: string, feed: unknown): GitHubRepo | undefined {
     return { owner, repo, feedPath: parsed.pathname }
   }
   
+  // Check if URL is raw.githubusercontent.com
+  if (parsed.hostname === 'raw.githubusercontent.com') {
+    const pathParts = parsed.pathname.split('/').filter(Boolean)
+    if (pathParts.length >= 2) {
+      const owner = pathParts[0]
+      const repo = pathParts[1]
+      const feedPath = '/' + pathParts.slice(3).join('/') // Skip owner/repo/branch
+      return { owner, repo, feedPath }
+    }
+  }
+  
+  // Check if URL is github.com (direct raw or blob)
+  if (parsed.hostname === 'github.com') {
+    const pathParts = parsed.pathname.split('/').filter(Boolean)
+    if (pathParts.length >= 2) {
+      const owner = pathParts[0]
+      const repo = pathParts[1]
+      return { owner, repo }
+    }
+  }
+  
   // Check feed metadata for repo link
   if (feed && typeof feed === 'object') {
     const f = feed as Record<string, unknown>
     const metadata = f.metadata as Record<string, unknown> | undefined
     
     if (metadata) {
+      // Check origin field for GitHub URL
+      const origin = metadata.origin as string | undefined
+      if (origin && origin.includes('github.com')) {
+        const match = origin.match(/github\.com\/([^\/]+)\/([^\/]+)/)
+        if (match) {
+          return { owner: match[1], repo: match[2].replace('.git', '') }
+        }
+      }
+      
       const repoUrl = metadata.repository as string | undefined ||
                       metadata.github as string | undefined ||
                       metadata.source as string | undefined

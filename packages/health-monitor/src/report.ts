@@ -424,7 +424,8 @@ function generateFixPrUrl(feed: FeedSource, validation: ValidationResult): strin
     .join('\n') || 'Fix LLMFeed validation issues'
   
   // Generate a URL that opens the file in GitHub's web editor
-  const path = feedPath || '.well-known/mcp.llmfeed.json'
+  // Remove leading slash from feedPath if present
+  const path = (feedPath?.replace(/^\//, '') || '.well-known/mcp.llmfeed.json')
   const title = encodeURIComponent('Fix LLMFeed validation issues')
   const body = encodeURIComponent(`This PR addresses LLMFeed validation issues found by the Health Monitor:\n\n${suggestions}`)
   
