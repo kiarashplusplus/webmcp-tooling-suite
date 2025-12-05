@@ -50,7 +50,7 @@ function colorize(text: string, color: keyof typeof COLORS): string {
 function printHeader(): void {
   console.log('')
   console.log(colorize('┌─────────────────────────────────────────┐', 'cyan'))
-  console.log(colorize('│', 'cyan') + colorize('   @25xcodes/llmfeed-signer v1.1.6     ', 'bold') + colorize('│', 'cyan'))
+  console.log(colorize('│', 'cyan') + colorize('   @25xcodes/llmfeed-signer v1.1.7     ', 'bold') + colorize('│', 'cyan'))
   console.log(colorize('│', 'cyan') + colorize('   Ed25519 Key Generation & Signing     ', 'dim') + colorize('│', 'cyan'))
   console.log(colorize('└─────────────────────────────────────────┘', 'cyan'))
   console.log('')

@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.7] - 2025-12-05
+
+### Fixed
+
+#### Documentation Discrepancies (19 issues resolved)
+
+**Import Path Fixes**
+- Fixed validator README examples using wrong import path (`@webmcp/validator` → `@25xcodes/llmfeed-validator`)
+- Fixed signer CLI header showing wrong package name (`@webmcp/signer` → `@25xcodes/llmfeed-signer`)
+
+**Function Signature Documentation**
+- Fixed `validateFeedStructure` docs (returns `ValidationError[]`, not `{ valid, errors }`)
+- Fixed `validateLLMFeed` docs (removed non-existent `structureValid` and `signatureError` properties)
+- Fixed `fetchLLMFeed` docs (returns `LLMFeed`, not `{ feed, valid }`)
+- Fixed `verifyEd25519Signature` docs (returns `SignatureVerificationResult`, not `boolean`)
+- Fixed `verifyFeed` docs in signer package (requires `publicKeyBase64` parameter)
+- Fixed `validateCapabilitySchemas` docs (takes full `LLMFeed` object, returns `ValidationError[]`)
+
+**Type Export Documentation**
+- Fixed health-monitor type exports in docs (`HealthCheck`, `StorageAdapter` instead of `HealthReport`, `FeedStorage`)
+- Fixed `crawlFeed` signature docs (uses `config` object, not separate `storage` and `options` params)
+- Fixed `CrawlResult` property access docs (properties are nested under `healthCheck`)
+
+**CLI Usage Documentation**
+- Fixed validator CLI flag (`--skip-signature` not `--verify-signature`)
+- Fixed CLI package names in all docs (`npx @25xcodes/llmfeed-*` format)
+- Fixed GitHub Action `uses` path (`kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1`)
+- Fixed GitHub Action input name (`feed` not `feed-path`)
+- Updated all examples to use `mcp.llmfeed.json` instead of `llm.txt`
+
+**Trust Block Structure**
+- Fixed signer docs to show correct signed feed structure with separate `trust` and `signature` blocks
+
+#### @25xcodes/llmfeed-signer (`1.1.7`)
+- **CLI Version Display** — Fixed CLI header to show correct version
+
+#### @25xcodes/llmfeed-health-monitor (`1.1.7`)
+- **VERSION Export** — Fixed hardcoded `VERSION` constant to match package.json
+
+---
+
 ## [1.1.3] - 2025-12-05
 
 ### Fixed
@@ -188,6 +229,9 @@ First stable release of the WebMCP Tooling Suite—a comprehensive toolkit for t
 
 ---
 
+[1.1.7]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.1.7
+[1.1.3]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.1.3
+[1.1.2]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.1.2
 [1.1.1]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.1.1
 [1.1.0]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.1.0
 [1.0.0]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.0.0
