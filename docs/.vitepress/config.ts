@@ -3,16 +3,16 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'LLMFeed',
   description: 'The Complete Toolkit for MCP-Ready Feed Discovery, Validation & Trust',
-  
+
   base: '/webmcp-tooling-suite/docs/',
-  
+
   // Ignore dead links for pages not yet created
   ignoreDeadLinks: [
     /\/packages\/validator\/(installation|usage|cli)/,
     /\/packages\/signer\/(installation|key-management|signing)/,
     /\/packages\/health-monitor\/(installation|crawling|reports)/,
   ],
-  
+
   head: [
     ['link', { rel: 'icon', href: '/webmcp-tooling-suite/docs/favicon.svg', type: 'image/svg+xml' }],
     ['meta', { name: 'theme-color', content: '#7c3aed' }],
@@ -25,7 +25,7 @@ export default defineConfig({
 
   themeConfig: {
     logo: '/logo.svg',
-    
+
     nav: [
       { text: 'Guide', link: '/guide/' },
       { text: 'Packages', link: '/packages/' },
@@ -123,7 +123,7 @@ export default defineConfig({
 
     footer: {
       message: 'Community documentation provided as-is. Not official guidance. Verify before production use.',
-      copyright: 'Released under the MIT License. Copyright © 2025-present LLMFeed Contributors'
+      copyright: 'Released under the MIT License. Copyright © 2025-present Kiarash Adl'
     },
 
     search: {
