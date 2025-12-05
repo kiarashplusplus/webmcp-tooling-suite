@@ -5,6 +5,13 @@ compatibility_date = "2024-01-01"
 [vars]
 FRONTEND_URL = "https://kiarashplusplus.github.io/webmcp-tooling-suite"
 
+[observability]
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
+
 # D1 Database binding
 [[d1_databases]]
 binding = "DB"

@@ -321,13 +321,43 @@ async function handleFeedsAPI(
     const id = `${domain.replace(/\./g, '-')}-${Date.now()}`
 
     try {
-      // Check for duplicate URL
+      // Check for duplicate URL (including inactive entries due to UNIQUE constraint)
       const existing = await env.DB.prepare(
-        'SELECT id FROM feeds WHERE url = ? AND is_active = 1'
-      ).bind(body.url).first()
+        'SELECT id, is_active FROM feeds WHERE url = ?'
+      ).bind(body.url).first<{ id: string; is_active: number }>()
       
       if (existing) {
-        return jsonResponse({ error: 'This feed URL has already been submitted' }, 409, cors)
+        if (existing.is_active) {
+          return jsonResponse({ error: 'This feed URL has already been submitted' }, 409, cors)
+        }
+        // Reactivate inactive entry with updated info
+        await env.DB.prepare(`
+          UPDATE feeds 
+          SET title = ?, description = ?, feed_type = ?, capabilities_count = ?, version = ?, 
+              score = ?, signature_valid = ?, submitted_by = ?, submitted_at = ?, is_active = 1
+          WHERE id = ?
+        `).bind(
+          body.title || null,
+          body.description || null,
+          body.feed_type || 'mcp',
+          body.capabilities_count || 0,
+          body.version || null,
+          body.score ?? null,
+          body.signature_valid ? 1 : 0,
+          user.login,
+          Date.now(),
+          existing.id
+        ).run()
+        
+        const updated = await env.DB.prepare(
+          'SELECT * FROM feeds WHERE id = ?'
+        ).bind(existing.id).first()
+        
+        return jsonResponse({ 
+          success: true, 
+          feed: rowToFeed(updated as Record<string, unknown>),
+          message: 'Feed reactivated successfully'
+        }, 200, cors)
       }
 
       // Insert new feed
