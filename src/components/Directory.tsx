@@ -185,8 +185,26 @@ export function FeedDirectory() {
   }
 
   const handleViewArchivedMirror = (feed: FeedMetadata) => {
-    const archiveUrl = getArchivedSnapshotUrl(feed.id)
-    window.open(archiveUrl, '_blank')
+    const snapshot = findArchivedSnapshot(feed.id)
+    if (snapshot) {
+      const servedData = {
+        snapshot_id: snapshot.id,
+        domain: snapshot.domain,
+        archived_at: new Date(snapshot.timestamp).toISOString(),
+        feed_url: snapshot.feed.metadata?.origin || `https://${snapshot.domain}/.well-known/mcp.llmfeed.json`,
+        validation_score: snapshot.validationScore,
+        signature_valid: snapshot.signatureValid,
+        feed: snapshot.feed
+      }
+      
+      const blob = new Blob([JSON.stringify(servedData, null, 2)], { 
+        type: 'application/json' 
+      })
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+    } else {
+      toast.error('Archived snapshot not found in local storage')
+    }
   }
 
   const handleDownloadArchivedMirror = (feed: FeedMetadata) => {
@@ -397,26 +415,18 @@ export function FeedDirectory() {
           
           {isFromArchive && (
             <>
-              <a
-                href={getArchivedSnapshotUrl(feed.id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-archived-feed-json-url={getArchivedSnapshotUrl(feed.id)}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleViewArchivedMirror(feed)}
+                className="flex-1 glass-strong hover:border-accent/50 text-accent hover:text-accent transition-all"
                 data-snapshot-id={feed.id}
                 data-feed-type={feed.feed_type}
-                className="flex-1"
-                itemProp="distribution"
               >
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full glass-strong hover:border-accent/50 text-accent hover:text-accent transition-all"
-                >
-                  <Archive size={16} className="mr-2" />
-                  <span className="font-mono text-xs">View Mirror</span>
-                  <ArrowUpRight size={14} className="ml-2 shrink-0" />
-                </Button>
-              </a>
+                <Archive size={16} className="mr-2" />
+                <span className="font-mono text-xs">View Mirror</span>
+                <ArrowUpRight size={14} className="ml-2 shrink-0" />
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
