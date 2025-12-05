@@ -225,8 +225,14 @@ async function sendGitHubNotification(
   const title = MESSAGE_TEMPLATES.github.title(feed)
   const body = MESSAGE_TEMPLATES.github.body(feed, healthCheck, reportUrl)
   
-  try {
-    const response = await fetch(
+  // Helper to create issue with or without labels
+  const createIssue = async (includeLabels: boolean) => {
+    const issueData: Record<string, unknown> = { title, body }
+    if (includeLabels) {
+      issueData.labels = ['llmfeed', 'bot']
+    }
+    
+    return fetch(
       `https://api.github.com/repos/${owner}/${repo}/issues`,
       {
         method: 'POST',
@@ -236,23 +242,35 @@ async function sendGitHubNotification(
           'Content-Type': 'application/json',
           'User-Agent': 'LLMFeed-Health-Monitor',
         },
-        body: JSON.stringify({
-          title,
-          body,
-          labels: ['llmfeed', 'bot'],
-        }),
+        body: JSON.stringify(issueData),
       }
     )
+  }
+  
+  try {
+    // Try with labels first
+    let response = await createIssue(true)
     
+    // If labels failed (403 or 422), retry without labels
     if (!response.ok) {
-      const error = await response.text()
-      return {
-        feedId: feed.id,
-        channel: 'github',
-        timestamp,
-        type: 'notification',
-        success: false,
-        response: `GitHub API error: ${response.status} - ${error}`,
+      const errorText = await response.text()
+      if (response.status === 403 || response.status === 422) {
+        if (errorText.includes('label') || errorText.includes('Label')) {
+          console.log('[Notifier] Label creation not allowed, retrying without labels...')
+          response = await createIssue(false)
+        }
+      }
+      
+      if (!response.ok) {
+        const error = response.ok ? '' : await response.text().catch(() => errorText)
+        return {
+          feedId: feed.id,
+          channel: 'github',
+          timestamp,
+          type: 'notification',
+          success: false,
+          response: `GitHub API error: ${response.status} - ${error || errorText}`,
+        }
       }
     }
     
