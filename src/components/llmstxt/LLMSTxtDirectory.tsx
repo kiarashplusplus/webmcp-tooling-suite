@@ -90,6 +90,29 @@ export function LLMSTxtDirectory() {
 
     return (
         <div className="space-y-8">
+            {/* GitHub Sign-in Prompt for non-authenticated users */}
+            {!isAuthenticated && (
+                <Card className="p-6 glass-card border-accent/30 shadow-xl">
+                    <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                            <GithubLogo size={24} className="text-accent" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-lg font-bold text-foreground mb-2">
+                                Sign in to Archive llms.txt Files
+                            </h3>
+                            <p className="text-sm text-muted-foreground mb-4">
+                                Publish your llms.txt archives as <span className="font-semibold text-accent">GitHub Gists</span> with automatic versioning.
+                                Each archive gets a permanent URL that's publicly accessible and tracked in your GitHub account.
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                Use the <span className="font-semibold">Archive</span> tab above to sign in and start archiving.
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
             {/* Section Label for Scrapers & AI Bots */}
             <div className="flex items-center gap-3">
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-accent/30 to-transparent" />

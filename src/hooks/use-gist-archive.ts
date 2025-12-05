@@ -74,8 +74,51 @@ export function useGistArchive() {
       const filename = `${ARCHIVE_PREFIX}${domain.replace(/\./g, '-')}.json`
       const description = `WebMCP LLMFeed Archive: ${domain} | Archived ${new Date().toISOString().split('T')[0]}`
 
-      // Check if a gist already exists for this domain
-      const existingGist = archives.find(a => a.domain === domain)
+      // IMPORTANT: Fetch current archives to check for existing gist
+      // This ensures we update existing gists rather than creating duplicates
+      let currentArchives = archives
+      if (currentArchives.length === 0) {
+        // Fetch from GitHub if local state is empty
+        const response = await fetch(`${GIST_API}?per_page=100`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+          }
+        })
+
+        if (response.ok) {
+          const gists = await response.json() as Array<{
+            id: string
+            description: string
+            files: Record<string, { filename: string }>
+          }>
+
+          // Find existing gist by filename (not domain, since domain can have prefix)
+          const existingByFile = gists.find(gist =>
+            Object.keys(gist.files || {}).some(f => f === filename)
+          )
+
+          if (existingByFile) {
+            currentArchives = [{
+              id: existingByFile.id,
+              domain,
+              url: '',
+              rawUrl: '',
+              htmlUrl: '',
+              description: existingByFile.description,
+              filename,
+              createdAt: '',
+              updatedAt: '',
+              revisions: 1
+            }]
+          }
+        }
+      }
+
+      // Check if a gist already exists for this domain (by filename match)
+      const existingGist = currentArchives.find(a =>
+        a.filename === filename || a.domain === domain
+      )
 
       let response: Response
       let gistData: {
@@ -144,8 +187,33 @@ export function useGistArchive() {
         htmlUrl: gistData.html_url
       }
 
-      // Refresh archives list
-      await fetchArchives()
+      // Update local archives state (will be refreshed on next mount or explicit call)
+      // We update the domain in local state to prevent duplicates on subsequent calls
+      setArchives(prev => {
+        const existingIndex = prev.findIndex(a => a.filename === filename || a.domain === domain)
+        const newArchive: GistArchive = {
+          id: gistData.id,
+          url: `${GIST_API}/${gistData.id}`,
+          rawUrl: file.raw_url,
+          htmlUrl: gistData.html_url,
+          description,
+          filename,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          domain,
+          revisions: existingIndex >= 0 ? (prev[existingIndex].revisions + 1) : 1
+        }
+
+        if (existingIndex >= 0) {
+          // Update existing
+          const updated = [...prev]
+          updated[existingIndex] = newArchive
+          return updated
+        } else {
+          // Add new
+          return [newArchive, ...prev]
+        }
+      })
 
       return result
     } catch (err) {
