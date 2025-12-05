@@ -49,6 +49,11 @@
           data-feed-type="mcp" 
           data-feed-domain="llmca.org" 
           title="LLMCA Feed" />
+    <link rel="feed" type="application/json" href="https://dev.mcp.siemens.com/.well-known/mcp.llmfeed.json" 
+          data-feed-json-url="https://dev.mcp.siemens.com/.well-known/mcp.llmfeed.json" 
+          data-feed-type="mcp" 
+          data-feed-domain="dev.mcp.siemens.com" 
+          title="Siemens MCP Server Feed" />
     <link rel="feed" type="application/json" href="https://wellknownmcp.org/.well-known/llm-index.llmfeed.json" 
           data-feed-json-url="https://wellknownmcp.org/.well-known/llm-index.llmfeed.json" 
           data-feed-type="llm-index" 
@@ -213,6 +218,17 @@
           "position": 4,
           "item": {
             "@type": "WebAPI",
+            "name": "Siemens MCP Server",
+            "description": "Siemens search tools and resources via MCP protocol",
+            "url": "https://dev.mcp.siemens.com/.well-known/mcp.llmfeed.json",
+            "documentation": "https://dev.mcp.siemens.com/"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 5,
+          "item": {
+            "@type": "WebAPI",
             "name": "LLM Index",
             "description": "Curated index of LLMFeed-enabled sites",
             "url": "https://wellknownmcp.org/.well-known/llm-index.llmfeed.json",
@@ -267,6 +283,14 @@
                data-feed-type="mcp"
                data-feed-domain="llmca.org">
               LLMCA - Trust infrastructure for AI agents
+            </a>
+          </li>
+          <li>
+            <a href="https://dev.mcp.siemens.com/.well-known/mcp.llmfeed.json"
+               data-feed-json-url="https://dev.mcp.siemens.com/.well-known/mcp.llmfeed.json"
+               data-feed-type="mcp"
+               data-feed-domain="dev.mcp.siemens.com">
+              Siemens MCP Server - Search tools via MCP protocol
             </a>
           </li>
           <li>
