@@ -16,8 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Verified signature: `+10` bonus
   - Formula: `100 - (errors×20) - (warnings×5) - (unsigned?30:0) + (verified?10:0)`
 
-#### @25xcodes/llmfeed-health-monitor (`1.1.0`)
-- **Scoring Alignment** — Crawler scoring now matches validator
+#### @25xcodes/llmfeed-health-monitor (`1.1.1`)
+- **Scoring Alignment** — Crawler scoring now matches validator (65/100 for unsigned)
+- **Added Unsigned Warning** — CLI now shows "Feed is not cryptographically signed" warning
 - **Improved GitHub Issues** — Retry issue creation without labels if permission denied
 - **Fixed Issue Templates** — Reference GitHub Action instead of broken llm-feed.org link
 - **Raw GitHub URL Detection** — Support `raw.githubusercontent.com` URLs for one-click PRs

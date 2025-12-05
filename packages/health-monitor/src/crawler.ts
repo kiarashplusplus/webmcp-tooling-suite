@@ -446,11 +446,19 @@ function basicValidation(feed: unknown): ValidationResult {
     })
   }
   
-  const errorCount = issues.filter(i => i.type === 'error').length
-  const warningCount = issues.filter(i => i.type === 'warning').length
-  
   // Check if feed is unsigned
   const isUnsigned = !f.trust || !f.signature
+  if (isUnsigned) {
+    issues.push({
+      type: 'warning',
+      code: 'UNSIGNED_FEED',
+      message: 'Feed is not cryptographically signed',
+      suggestion: 'Sign your feed with Ed25519 for verified trust status',
+    })
+  }
+  
+  const errorCount = issues.filter(i => i.type === 'error').length
+  const warningCount = issues.filter(i => i.type === 'warning').length
   
   // Calculate basic score (aligned with validator and github-action)
   let score = 100
