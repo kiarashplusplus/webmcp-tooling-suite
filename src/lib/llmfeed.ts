@@ -466,14 +466,14 @@ export async function verifyEd25519Signature(
     details: { createdAt: feed.signature.created_at }
   })
 
-  // Step 3: Verify algorithm
-  if (feed.trust.algorithm !== 'Ed25519') {
+  // Step 3: Verify algorithm (case-insensitive check)
+  if (!feed.trust.algorithm || feed.trust.algorithm.toLowerCase() !== 'ed25519') {
     result.steps.push({
       step: 'Verify algorithm',
       status: 'failed',
-      message: `Unsupported algorithm: ${feed.trust.algorithm}. Only Ed25519 is supported.`
+      message: `Unsupported algorithm: ${feed.trust.algorithm || 'none'}. Only Ed25519 is supported.`
     })
-    result.error = `Unsupported algorithm: ${feed.trust.algorithm}`
+    result.error = `Unsupported algorithm: ${feed.trust.algorithm || 'none'}`
     return result
   }
 

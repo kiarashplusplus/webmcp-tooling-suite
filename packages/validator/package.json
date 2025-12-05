@@ -1,6 +1,6 @@
 {
   "name": "@25xcodes/llmfeed-validator",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "LLMFeed validation library with Ed25519 signature verification",
   "type": "module",
   "main": "./dist/index.cjs",
