@@ -27,7 +27,7 @@ inputs:
     default: '10000'
   
   create-badge:
-    description: 'Generate a validation status badge'
+    description: 'Generate a validation status badge (SVG file)'
     required: false
     default: 'false'
   
@@ -35,6 +35,16 @@ inputs:
     description: 'Path to save the generated badge SVG'
     required: false
     default: '.github/badges/llmfeed-status.svg'
+  
+  badge-gist-id:
+    description: 'GitHub Gist ID for dynamic badge endpoint (requires GIST_TOKEN env var). Creates a shields.io compatible endpoint.'
+    required: false
+    default: ''
+  
+  badge-filename:
+    description: 'Filename in the gist for the badge JSON endpoint'
+    required: false
+    default: 'llmfeed-badge.json'
 
 outputs:
   valid:
@@ -57,7 +67,11 @@ outputs:
   
   capabilities-count:
     description: 'Number of capabilities in the feed'
+  
+  badge-url:
+    description: 'URL to the dynamic badge (if badge-gist-id is configured)'
 
 runs:
   using: 'node20'
   main: 'dist/index.js'
+

@@ -31,7 +31,9 @@ jobs:
           feed: '.well-known/mcp.llmfeed.json'
 ```
 
-### With Badge Generation
+### With SVG Badge Generation
+
+Generate a static SVG badge that gets committed to your repo:
 
 ```yaml
 name: Validate and Badge
@@ -73,6 +75,62 @@ Then add to your README:
 ```markdown
 ![LLMFeed Status](/.github/badges/llmfeed-status.svg)
 ```
+
+### With Dynamic Badge (Recommended)
+
+Generate a dynamic badge via shields.io endpoint that updates automatically without commits:
+
+**Setup:**
+
+1. Create a GitHub Gist with an initial `llmfeed-badge.json` file containing:
+   ```json
+   {"schemaVersion": 1, "label": "LLMFeed", "message": "pending", "color": "gray"}
+   ```
+
+2. Create a [Personal Access Token](https://github.com/settings/tokens) with `gist` scope
+
+3. Add the token as a repository secret named `GIST_TOKEN`
+
+4. Configure the workflow:
+
+```yaml
+name: Validate LLMFeed
+
+on:
+  push:
+    paths: ['**/*.llmfeed.json']
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Validate LLMFeed
+        id: validate
+        uses: kiarashplusplus/webmcp-tooling-suite/packages/github-action@v1
+        with:
+          feed: '.well-known/mcp.llmfeed.json'
+          skip-signature: 'true'
+          badge-gist-id: 'YOUR_GIST_ID'  # e.g., 'abc123def456'
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+      
+      - name: Show badge URL
+        run: echo "Badge URL: ${{ steps.validate.outputs.badge-url }}"
+```
+
+5. Add the dynamic badge to your README:
+```markdown
+[![LLMFeed](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/USERNAME/GIST_ID/raw/llmfeed-badge.json)](https://your-site/.well-known/mcp.llmfeed.json)
+```
+
+The badge updates on each validation run with colors:
+- 🟢 **brightgreen**: Score ≥ 80
+- 🟢 **green**: Score ≥ 60
+- 🟡 **yellow**: Score ≥ 40
+- 🟠 **orange**: Score < 40
+- 🔴 **red**: Invalid feed
 
 ### Validate Remote Feed
 
@@ -119,6 +177,7 @@ Then add to your README:
     echo "Signature: ${{ steps.validate.outputs.signature-status }}"
     echo "Title: ${{ steps.validate.outputs.feed-title }}"
     echo "Capabilities: ${{ steps.validate.outputs.capabilities-count }}"
+    echo "Badge URL: ${{ steps.validate.outputs.badge-url }}"
 ```
 
 ### PR Comment with Results
@@ -165,8 +224,10 @@ Then add to your README:
 | `fail-on-warning` | Fail if warnings are found | No | `false` |
 | `skip-signature` | Skip Ed25519 signature verification | No | `false` |
 | `timeout` | Network request timeout (ms) | No | `10000` |
-| `create-badge` | Generate validation status badge | No | `false` |
-| `badge-path` | Path for generated badge SVG | No | `.github/badges/llmfeed-status.svg` |
+| `create-badge` | Generate SVG validation badge | No | `false` |
+| `badge-path` | Path for generated SVG badge | No | `.github/badges/llmfeed-status.svg` |
+| `badge-gist-id` | Gist ID for dynamic shields.io badge | No | - |
+| `badge-filename` | Filename in gist for badge JSON | No | `llmfeed-badge.json` |
 
 ## Outputs
 
@@ -179,6 +240,7 @@ Then add to your README:
 | `warnings` | JSON array of validation warnings |
 | `feed-title` | Title from feed metadata |
 | `capabilities-count` | Number of capabilities in the feed |
+| `badge-url` | Dynamic shields.io badge URL (if `badge-gist-id` is set) |
 
 ## Validation Checks
 
@@ -208,3 +270,4 @@ The security score (0-100) is calculated based on:
 ## License
 
 MIT
+

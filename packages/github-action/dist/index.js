@@ -25911,6 +25911,36 @@ function generateBadgeSvg(status, label, message) {
   </g>
 </svg>`;
 }
+/**
+ * Updates a GitHub Gist with a shields.io compatible JSON endpoint
+ * This allows dynamic badges that update on each validation run
+ */
+async function updateBadgeGist(gistId, filename, badge, token) {
+    const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+        method: 'PATCH',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            files: {
+                [filename]: {
+                    content: JSON.stringify(badge, null, 2)
+                }
+            }
+        })
+    });
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update gist: HTTP ${response.status} - ${errorText}`);
+    }
+    const gistData = await response.json();
+    const owner = gistData.owner?.login || 'unknown';
+    // Return the raw gist URL for shields.io endpoint
+    return `https://gist.githubusercontent.com/${owner}/${gistId}/raw/${filename}`;
+}
 // ============================================================================
 // Main Action
 // ============================================================================
@@ -25923,6 +25953,8 @@ async function run() {
         const timeout = parseInt(core.getInput('timeout') || '10000', 10);
         const createBadge = core.getInput('create-badge') === 'true';
         const badgePath = core.getInput('badge-path') || '.github/badges/llmfeed-status.svg';
+        const badgeGistId = core.getInput('badge-gist-id');
+        const badgeFilename = core.getInput('badge-filename') || 'llmfeed-badge.json';
         core.info(`🔍 Validating LLMFeed: ${feedInput}`);
         // Load feed
         let feedContent;
@@ -25990,7 +26022,7 @@ async function run() {
                 core.warning(`  • ${warning.message}${warning.field ? ` (${warning.field})` : ''}`);
             }
         }
-        // Generate badge
+        // Generate SVG badge (local file)
         if (createBadge) {
             const badgeStatus = result.valid ? 'passing' : 'failing';
             const badgeMessage = result.valid
@@ -26003,7 +26035,56 @@ async function run() {
                 (0, fs_1.mkdirSync)(badgeDir, { recursive: true });
             }
             (0, fs_1.writeFileSync)(fullBadgePath, badgeSvg);
-            core.info(`\n📛 Badge generated: ${badgePath}`);
+            core.info(`\n📛 SVG Badge generated: ${badgePath}`);
+        }
+        // Generate dynamic badge via GitHub Gist (shields.io endpoint)
+        if (badgeGistId) {
+            const gistToken = process.env.GIST_TOKEN;
+            if (!gistToken) {
+                core.warning('GIST_TOKEN environment variable not set - skipping dynamic badge update');
+                core.warning('To enable dynamic badges, add GIST_TOKEN secret with gist scope');
+            }
+            else {
+                // Determine badge color based on score and validity
+                let badgeColor;
+                if (!result.valid) {
+                    badgeColor = 'red';
+                }
+                else if (result.securityScore >= 80) {
+                    badgeColor = 'brightgreen';
+                }
+                else if (result.securityScore >= 60) {
+                    badgeColor = 'green';
+                }
+                else if (result.securityScore >= 40) {
+                    badgeColor = 'yellow';
+                }
+                else {
+                    badgeColor = 'orange';
+                }
+                const badge = {
+                    schemaVersion: 1,
+                    label: 'LLMFeed',
+                    message: result.valid
+                        ? `${result.securityScore}/100`
+                        : 'invalid',
+                    color: badgeColor,
+                    cacheSeconds: 300 // 5 minute cache
+                };
+                try {
+                    const gistUrl = await updateBadgeGist(badgeGistId, badgeFilename, badge, gistToken);
+                    const shieldsUrl = `https://img.shields.io/endpoint?url=${encodeURIComponent(gistUrl)}`;
+                    core.setOutput('badge-url', shieldsUrl);
+                    core.info(`\n📛 Dynamic badge updated!`);
+                    core.info(`   Gist endpoint: ${gistUrl}`);
+                    core.info(`   Badge URL: ${shieldsUrl}`);
+                    core.info(`\n   Add to README:`);
+                    core.info(`   [![LLMFeed](${shieldsUrl})](https://your-site/.well-known/mcp.llmfeed.json)`);
+                }
+                catch (error) {
+                    core.warning(`Failed to update dynamic badge: ${error instanceof Error ? error.message : error}`);
+                }
+            }
         }
         // Determine exit status
         if (!result.valid) {
