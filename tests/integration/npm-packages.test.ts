@@ -13,12 +13,19 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { execSync } from 'child_process'
-import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync } from 'fs'
+import { mkdtempSync, rmSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 
 // Skip in CI - these tests require already-published packages
 const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true'
+
+// Early exit if CI - don't even set up test directory
+if (isCI) {
+  describe('NPM Package Integration Tests', () => {
+    it.skip('skipped in CI - run manually after publishing', () => {})
+  })
+} else {
 
 // Test directory for isolation
 let testDir: string
@@ -490,3 +497,5 @@ describe.skipIf(isCI)('NPM Package Integration Tests', () => {
     }
   })
 })
+
+} // end if (!isCI)
