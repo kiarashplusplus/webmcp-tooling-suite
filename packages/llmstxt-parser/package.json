@@ -1,0 +1,52 @@
+{
+    "name": "@25xcodes/llmstxt-parser",
+    "version": "1.2.0",
+    "description": "High-quality llms.txt parser and validator for the llmstxt.org specification",
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "llms.txt",
+        "llmstxt",
+        "llm",
+        "parser",
+        "validator",
+        "markdown",
+        "ai",
+        "rag",
+        "mcp",
+        "model-context-protocol"
+    ],
+    "author": "",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kiarashplusplus/webmcp-tooling-suite.git",
+        "directory": "packages/llmstxt-parser"
+    },
+    "homepage": "https://llmstxt.org",
+    "devDependencies": {
+        "@vitest/coverage-v8": "^4.0.0",
+        "tsup": "^8.0.0",
+        "typescript": "^5.3.0",
+        "vitest": "^4.0.0"
+    }
+}

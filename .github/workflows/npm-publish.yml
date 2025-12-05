@@ -13,6 +13,7 @@ on:
           - validator
           - signer
           - health-monitor
+          - llmstxt-parser
           - github-action
           - npm-packages
           - all
@@ -53,6 +54,7 @@ jobs:
           cd packages/validator && npm run build
           cd ../signer && npm run build
           cd ../health-monitor && npm run build
+          cd ../llmstxt-parser && npm run build
 
       - name: Run integration tests
         run: |
@@ -83,6 +85,15 @@ jobs:
             console.log('All required exports present');
           "
           
+          # Test llmstxt-parser exports
+          node -e "
+            const p = require('./packages/llmstxt-parser/dist/index.cjs');
+            console.log('LLMS.txt parser exports:', Object.keys(p));
+            const hasRequired = ['parseLLMSTxt', 'validateLLMSTxt', 'fetchLLMSTxt', 'estimateTokens', 'toRAGFormat', 'extractLinksForIndex'].every(k => k in p);
+            if (!hasRequired) throw new Error('Missing required exports');
+            console.log('All required exports present');
+          "
+          
           echo "✅ Integration tests passed"
 
       - name: Check if versions already exist on npm
@@ -91,6 +102,7 @@ jobs:
           VALIDATOR_VERSION=$(node -p "require('./packages/validator/package.json').version")
           SIGNER_VERSION=$(node -p "require('./packages/signer/package.json').version")
           HEALTH_VERSION=$(node -p "require('./packages/health-monitor/package.json').version")
+          LLMSTXT_VERSION=$(node -p "require('./packages/llmstxt-parser/package.json').version")
           
           # Check validator
           if npm view @25xcodes/llmfeed-validator@$VALIDATOR_VERSION version 2>/dev/null; then
@@ -118,6 +130,15 @@ jobs:
             echo "health_exists=false" >> $GITHUB_OUTPUT
             echo "✅ @25xcodes/llmfeed-health-monitor@$HEALTH_VERSION is new"
           fi
+          
+          # Check llmstxt-parser
+          if npm view @25xcodes/llmstxt-parser@$LLMSTXT_VERSION version 2>/dev/null; then
+            echo "llmstxt_exists=true" >> $GITHUB_OUTPUT
+            echo "⚠️ @25xcodes/llmstxt-parser@$LLMSTXT_VERSION already exists on npm"
+          else
+            echo "llmstxt_exists=false" >> $GITHUB_OUTPUT
+            echo "✅ @25xcodes/llmstxt-parser@$LLMSTXT_VERSION is new"
+          fi
 
       - name: Determine packages to publish
         id: packages
@@ -131,11 +152,11 @@ jobs:
           
           case "$PACKAGE" in
             all)
-              echo "npm_packages=validator signer health-monitor" >> $GITHUB_OUTPUT
+              echo "npm_packages=validator signer health-monitor llmstxt-parser" >> $GITHUB_OUTPUT
               echo "github_action=true" >> $GITHUB_OUTPUT
               ;;
             npm-packages)
-              echo "npm_packages=validator signer health-monitor" >> $GITHUB_OUTPUT
+              echo "npm_packages=validator signer health-monitor llmstxt-parser" >> $GITHUB_OUTPUT
               echo "github_action=false" >> $GITHUB_OUTPUT
               ;;
             github-action)
@@ -250,6 +271,25 @@ jobs:
         if: contains(steps.packages.outputs.npm_packages, 'health-monitor') && steps.version-check.outputs.health_exists == 'true'
         run: echo "⏭️ Skipping @25xcodes/llmfeed-health-monitor - version already exists on npm"
 
+      - name: Build and publish @25xcodes/llmstxt-parser
+        if: contains(steps.packages.outputs.npm_packages, 'llmstxt-parser') && steps.version-check.outputs.llmstxt_exists != 'true'
+        working-directory: packages/llmstxt-parser
+        run: |
+          npm run build
+          
+          if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
+            echo "🏃 Dry run - skipping publish"
+            npm pack --dry-run
+          else
+            npm publish --access public --provenance
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Skip @25xcodes/llmstxt-parser (already published)
+        if: contains(steps.packages.outputs.npm_packages, 'llmstxt-parser') && steps.version-check.outputs.llmstxt_exists == 'true'
+        run: echo "⏭️ Skipping @25xcodes/llmstxt-parser - version already exists on npm"
+
       # ========================================
       # Update Major Version Tag (v1, v2, etc.)
       # ========================================
@@ -324,6 +364,11 @@ jobs:
               echo "- @25xcodes/llmfeed-health-monitor: ⏭️ Skipped (already exists)" >> $GITHUB_STEP_SUMMARY
             else
               echo "- @25xcodes/llmfeed-health-monitor: ✅ Published" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ "${{ steps.version-check.outputs.llmstxt_exists }}" = "true" ]; then
+              echo "- @25xcodes/llmstxt-parser: ⏭️ Skipped (already exists)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- @25xcodes/llmstxt-parser: ✅ Published" >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "- No npm packages selected" >> $GITHUB_STEP_SUMMARY

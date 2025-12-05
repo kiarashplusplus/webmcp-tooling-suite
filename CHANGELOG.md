@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-05
+
+### Added
+
+#### npm Packages
+- **@25xcodes/llmstxt-parser** (`1.2.0`) — NEW: High-quality llms.txt parser and validator
+  - **Parser** — `parseLLMSTxt()` parses llms.txt markdown into structured `LLMSTxtDocument`
+    - Handles H1 titles, blockquote summaries, H2/H3 sections, and markdown links
+    - Extracts link metadata including optional markers
+    - Preserves section content and hierarchy
+  - **Validator** — `validateLLMSTxt()` validates documents per llmstxt.org specification
+    - Checks for required H1 title
+    - Validates URL formats (absolute, relative, anchor)
+    - Detects duplicate links
+    - Quality scoring (0-100) with errors and warnings
+  - **Fetcher** — `fetchLLMSTxt()` and `discoverLLMSTxtFiles()` with well-known path discovery
+    - Tries `/llms.txt`, `/llms-full.txt`, `/.well-known/llms.txt`
+    - CORS proxy support for browser environments
+    - Configurable timeout and custom fetch
+  - **RAG Utilities** — Tools for AI/embedding workflows
+    - `estimateTokens()` — Approximate token counts by section
+    - `toRAGFormat()` — Convert to plain text for embeddings
+    - `extractLinksForIndex()` — Structured link data for vector DBs
+  - Zero runtime dependencies
+  - Full TypeScript support with comprehensive type definitions
+  - Dual ESM/CJS exports
+  - 41 tests with comprehensive coverage
+
+### Changed
+
+#### CI/CD
+- **npm-publish.yml** — Added `llmstxt-parser` to release workflow
+  - Version checking for duplicate prevention
+  - Integration tests verifying exports
+  - Automatic publishing on release
+
+#### Web Application
+- **src/lib/llmstxt.ts** — Refactored to use `@25xcodes/llmstxt-parser` package
+  - Re-exports all parser functions and types from package
+  - Adds app-specific CORS proxy wrapper for browser environments
+  - Auto-configures proxy from `VITE_CORS_PROXY_URL` environment variable
+
+---
+
 ## [1.1.7] - 2025-12-05
 
 ### Fixed
@@ -229,6 +273,7 @@ First stable release of the WebMCP Tooling Suite—a comprehensive toolkit for t
 
 ---
 
+[1.2.0]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.2.0
 [1.1.7]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.1.7
 [1.1.3]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.1.3
 [1.1.2]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.1.2
