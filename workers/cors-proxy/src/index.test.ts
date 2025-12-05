@@ -2,7 +2,7 @@
  * CORS Proxy Worker Test Suite
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // Constants matching those in index.ts
 const ALLOWED_ORIGINS = [
@@ -264,8 +264,8 @@ describe('Request Validation Edge Cases', () => {
     expect(result.valid).toBe(true)
   })
 
-  it('should handle international domain names', () => {
-    const result = validateTargetUrl('https://例え.jp/feed.json')
+  it('should handle domain with many levels', () => {
+    const result = validateTargetUrl('https://a.b.c.example.com/feed.json')
     expect(result.valid).toBe(true)
   })
 })

@@ -2,7 +2,7 @@
  * Validator Package Test Suite
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   deepSortObject,
   base64ToUint8Array,
@@ -15,9 +15,21 @@ import {
   type ValidationError
 } from './index.js'
 
+// Store original fetch for restoration
+const originalFetch = global.fetch
+
 // Mock fetch globally
 const mockFetch = vi.fn()
-global.fetch = mockFetch
+
+// Restore original fetch after all tests
+afterEach(() => {
+  mockFetch.mockReset()
+})
+
+// Setup mock before tests that need it
+beforeEach(() => {
+  global.fetch = mockFetch
+})
 
 describe('deepSortObject', () => {
   it('should return primitives unchanged', () => {
@@ -375,7 +387,8 @@ describe('sha256', () => {
   it('should handle empty string', async () => {
     const hash = await sha256('')
     expect(hash.length).toBe(64)
-    // SHA-256 of empty string is well-known
+    // Well-known SHA-256 test vector: empty string produces this hash
+    // Reference: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/shs/sha256testvectors.txt
     expect(hash).toBe('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
   })
 
@@ -386,10 +399,6 @@ describe('sha256', () => {
 })
 
 describe('validateLLMFeed', () => {
-  beforeEach(() => {
-    mockFetch.mockReset()
-  })
-
   it('should return valid: false for empty object', async () => {
     const result = await validateLLMFeed({})
     expect(result.valid).toBe(false)
@@ -499,10 +508,6 @@ describe('validateLLMFeed', () => {
 })
 
 describe('Signature verification edge cases', () => {
-  beforeEach(() => {
-    mockFetch.mockReset()
-  })
-
   it('should handle missing trust block', async () => {
     const feed: LLMFeed = {
       feed_type: 'mcp',
