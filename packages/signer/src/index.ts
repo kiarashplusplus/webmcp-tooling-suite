@@ -201,11 +201,30 @@ export async function sha256(text: string): Promise<string> {
 }
 
 /**
+ * Parse private key from various formats (PEM, base64, or raw)
+ * Returns base64-encoded PKCS#8 key bytes
+ */
+function parsePrivateKey(input: string): Uint8Array {
+  // Detect PEM format
+  if (input.includes('-----BEGIN') && input.includes('PRIVATE KEY')) {
+    const base64 = parsePem(input)
+    return base64ToUint8Array(base64)
+  }
+  
+  // Assume base64-encoded bytes
+  return base64ToUint8Array(input)
+}
+
+/**
  * Sign an LLMFeed with Ed25519
+ * 
+ * @param feed - The feed object to sign
+ * @param privateKey - Private key in PEM format, base64-encoded PKCS#8, or base64-encoded raw seed
+ * @param options - Signing options
  */
 export async function signFeed(
   feed: Record<string, unknown>,
-  privateKeyBase64: string,
+  privateKey: string,
   options: SigningOptions = {}
 ): Promise<SignedFeed> {
   // Determine blocks to sign
@@ -231,11 +250,12 @@ export async function signFeed(
   const canonicalPayload = JSON.stringify(sortedPayload)
   const payloadHash = await sha256(canonicalPayload)
 
-  // Import private key
-  const privateKeyBytes = base64ToUint8Array(privateKeyBase64)
+  // Parse and import private key (handles PEM, base64 PKCS#8, or raw seed)
+  const privateKeyBytes = parsePrivateKey(privateKey)
   let cryptoKey: CryptoKey
 
   if (privateKeyBytes.length === 48) {
+    // PKCS#8 format (48 bytes)
     cryptoKey = await crypto.subtle.importKey(
       'pkcs8',
       privateKeyBytes,
@@ -261,7 +281,7 @@ export async function signFeed(
       ['sign']
     )
   } else {
-    throw new Error(`Invalid private key length: ${privateKeyBytes.length}`)
+    throw new Error(`Invalid private key length: ${privateKeyBytes.length}. Expected 32 (raw seed), 48 (PKCS#8), or PEM format.`)
   }
 
   // Sign the canonical payload

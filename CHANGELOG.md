@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2025-12-05
+
+### Fixed
+
+#### @25xcodes/llmfeed-signer (`1.0.2`)
+- **PEM Input Support** — `signFeed()` now accepts private keys in PEM format, base64-encoded PKCS#8, or raw seed
+  - Automatically detects and parses PEM headers (`-----BEGIN PRIVATE KEY-----`)
+  - Improved error messages for invalid key lengths
+- **New Tests** — Added tests for PEM format key input and consistency with base64 input
+
+#### @25xcodes/llmfeed-health-monitor (`1.1.3`)
+- **New Exports** — Added missing exports to package index:
+  - `normalizeUrl` — Normalize feed URLs with proper protocol and path
+  - `generateFeedId` — Generate stable IDs from feed URLs
+  - `checkMetaOptOut` — Check HTML meta tags for opt-out signals
+  - `checkFeedOptOut` — Check feed content for opt-out signals
+
+#### @25xcodes/llmfeed-validator (`1.1.3`)
+- Documentation improvements
+
+### Internal
+- **Vitest Alignment** — All packages now use vitest `^4.0.0` with `@vitest/coverage-v8`
+- **Integration Tests** — Added comprehensive npm package integration tests
+
+---
+
 ## [1.1.2] - 2025-12-05
 
 ### Changed

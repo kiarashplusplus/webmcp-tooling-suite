@@ -397,6 +397,46 @@ describe('signFeed', () => {
     expect(result.payloadHash).toBeDefined()
     expect(result.payloadHash.length).toBe(64)
   })
+
+  it('should accept PEM-formatted private key', async () => {
+    const feed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Test Feed',
+        origin: 'https://example.com',
+        description: 'Test'
+      }
+    }
+
+    // Sign using PEM format instead of base64
+    const result = await signFeed(feed, keyPair.privateKeyPem)
+    
+    expect(result).toBeDefined()
+    expect(result.signature).toBeDefined()
+    expect(result.feed.trust).toBeDefined()
+    
+    // Signature should be 64 bytes
+    const sigBytes = base64ToUint8Array(result.signature)
+    expect(sigBytes.length).toBe(64)
+  })
+
+  it('should produce same signature with PEM and base64 key', async () => {
+    const feed = {
+      feed_type: 'mcp',
+      metadata: {
+        title: 'Consistency Test',
+        origin: 'https://example.com',
+        description: 'Test'
+      }
+    }
+
+    const resultBase64 = await signFeed(feed, keyPair.privateKey)
+    const resultPem = await signFeed(feed, keyPair.privateKeyPem)
+    
+    // Same key should produce same signature for same feed
+    expect(resultPem.signature).toBe(resultBase64.signature)
+    expect(resultPem.payloadHash).toBe(resultBase64.payloadHash)
+  })
 })
 
 describe('verifyFeed', () => {

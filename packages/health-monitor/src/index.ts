@@ -76,6 +76,10 @@ export {
   crawlFeed,
   crawlFeeds,
   discoverFeeds,
+  normalizeUrl,
+  generateFeedId,
+  checkMetaOptOut,
+  checkFeedOptOut,
   type CrawlResult,
 } from './crawler.js'
 
