@@ -91,7 +91,7 @@ The LLMFeed Validator is a comprehensive tool for validating any `.llmfeed.json`
   },
   "signature": {
     "value": "BASE64_ENCODED_64_BYTE_SIGNATURE",
-    "created_at": "2024-01-01T00:00:00Z"
+    "created_at": "2025-12-01T00:00:00Z"
   }
 }
 ```
@@ -227,7 +227,7 @@ When signature verification fails, the **Signature Debugger** provides:
   },
   "signature": {
     "value": "R3JlYXRTaWduYXR1cmVIZXJlV2l0aDY0Qnl0ZXNPZkVkMjU1MTlTaWduYXR1cmU=",
-    "created_at": "2024-01-15T10:30:00Z"
+    "created_at": "2025-11-15T10:30:00Z"
   }
 }
 ```

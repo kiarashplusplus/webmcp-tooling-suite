@@ -123,7 +123,7 @@ export default defineConfig({
 
     footer: {
       message: 'Community documentation provided as-is. Not official guidance. Verify before production use.',
-      copyright: 'Released under the MIT License. Copyright © 2024-present LLMFeed Contributors'
+      copyright: 'Released under the MIT License. Copyright © 2025-present LLMFeed Contributors'
     },
 
     search: {

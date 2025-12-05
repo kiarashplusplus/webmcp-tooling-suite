@@ -85,7 +85,7 @@ The signature and related metadata go in the `trust` block:
     "publicKey": "MCowBQYDK2VwAyEA...",
     "signature": "base64-signature...",
     "signedBlocks": ["feed_type", "metadata", "capabilities", "items"],
-    "timestamp": "2024-03-20T14:30:00Z",
+    "timestamp": "2025-12-01T14:30:00Z",
     "contentHash": "sha256:a7b3c4d5e6f7..."
   }
 }

@@ -231,7 +231,7 @@ Set appropriate cache headers:
 ```http
 Cache-Control: public, max-age=3600
 ETag: "abc123"
-Last-Modified: Thu, 21 Mar 2024 10:00:00 GMT
+Last-Modified: Fri, 05 Dec 2025 10:00:00 GMT
 ```
 
 ### Conditional Requests
@@ -241,7 +241,7 @@ Support `If-None-Match` and `If-Modified-Since`:
 ```http
 GET /.well-known/llm.txt HTTP/1.1
 If-None-Match: "abc123"
-If-Modified-Since: Thu, 21 Mar 2024 10:00:00 GMT
+If-Modified-Since: Fri, 05 Dec 2025 10:00:00 GMT
 ```
 
 Response for unchanged content:
@@ -258,7 +258,7 @@ Include freshness hints in your feed:
 {
   "meta": {
     "refreshInterval": "1h",
-    "lastUpdated": "2024-03-21T10:00:00Z"
+    "lastUpdated": "2025-12-05T10:00:00Z"
   }
 }
 ```
@@ -276,7 +276,7 @@ Include your feed in `sitemap.xml`:
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://example.com/.well-known/llm.txt</loc>
-    <lastmod>2024-03-21</lastmod>
+    <lastmod>2025-12-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>

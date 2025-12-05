@@ -167,8 +167,8 @@ Items are content resources associated with your service:
       "url": "https://docs.example.com/api",
       "type": "documentation",
       "tags": ["api", "reference"],
-      "published": "2024-01-15T10:00:00Z",
-      "updated": "2024-03-20T14:30:00Z"
+      "published": "2025-11-15T10:00:00Z",
+      "updated": "2025-12-01T14:30:00Z"
     },
     {
       "title": "Getting Started Guide",
@@ -204,7 +204,7 @@ The trust block contains cryptographic signing information:
     "publicKey": "MCowBQYDK2VwAyEA...",
     "signature": "base64-signature...",
     "signedBlocks": ["feed_type", "metadata", "capabilities", "items"],
-    "timestamp": "2024-03-20T14:30:00Z"
+    "timestamp": "2025-12-01T14:30:00Z"
   }
 }
 ```
@@ -308,7 +308,7 @@ Here's a complete, production-ready feed:
     "publicKey": "MCowBQYDK2VwAyEA7890xyz...",
     "signature": "base64-signature...",
     "signedBlocks": ["feed_type", "metadata", "capabilities", "items"],
-    "timestamp": "2024-03-20T14:30:00Z"
+    "timestamp": "2025-12-01T14:30:00Z"
   }
 }
 ```
@@ -443,8 +443,8 @@ Regularly update the `items` array with your latest documentation:
     {
       "title": "v2.0 Migration Guide",
       "url": "https://docs.example.com/migration",
-      "published": "2024-03-15",
-      "updated": "2024-03-20"
+      "published": "2025-11-15",
+      "updated": "2025-12-01"
     }
   ]
 }

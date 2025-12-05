@@ -340,7 +340,7 @@ describe('Feed with signature', () => {
       },
       signature: {
         // No value property
-        created_at: '2024-01-01T00:00:00Z'
+        created_at: '2025-12-01T00:00:00Z'
       }
     }
 

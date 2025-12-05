@@ -83,7 +83,7 @@ const result = await crawlFeed('https://example.com/llm.txt', storage, {
 {
   url: 'https://example.com/llm.txt',
   status: 'healthy',
-  crawledAt: '2024-03-20T14:30:00Z',
+  crawledAt: '2025-12-01T14:30:00Z',
   responseTime: 245,
   httpStatus: 200,
   structureValid: true,
@@ -249,7 +249,7 @@ Machine-readable format for integration:
 
 ```json
 {
-  "generatedAt": "2024-03-20T14:30:00Z",
+  "generatedAt": "2025-12-01T14:30:00Z",
   "summary": {
     "total": 10,
     "healthy": 8,
@@ -260,7 +260,7 @@ Machine-readable format for integration:
     {
       "url": "https://example.com/llm.txt",
       "status": "healthy",
-      "lastCrawled": "2024-03-20T14:25:00Z",
+      "lastCrawled": "2025-12-01T14:25:00Z",
       "responseTime": 245
     }
   ]
@@ -274,7 +274,7 @@ Simple text format for documentation:
 ```markdown
 # LLMFeed Health Report
 
-Generated: 2024-03-20 14:30:00
+Generated: 2025-12-01 14:30:00
 
 ## Summary
 
@@ -288,7 +288,7 @@ Generated: 2024-03-20 14:30:00
 ### https://example.com/llm.txt
 - Status: 🟢 Healthy
 - Response Time: 245ms
-- Last Crawled: 2024-03-20 14:25:00
+- Last Crawled: 2025-12-01 14:25:00
 ```
 
 ## Next Steps

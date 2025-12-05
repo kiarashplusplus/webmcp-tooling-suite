@@ -518,7 +518,7 @@ describe('Signature verification edge cases', () => {
       },
       signature: {
         value: 'some-signature',
-        created_at: '2024-01-01T00:00:00Z'
+        created_at: '2025-12-01T00:00:00Z'
       }
     }
     const result = await validateLLMFeed(feed)
@@ -593,7 +593,7 @@ MCowBQYDK2VwAyEAGb9bTmLHPWy3bNGP/2Z+aqHnCWB7ey5kWUBhZHnqDPU=
       },
       signature: {
         value: valid64ByteSignature,
-        created_at: '2024-01-01T00:00:00Z'
+        created_at: '2025-12-01T00:00:00Z'
       }
     }
     
@@ -623,7 +623,7 @@ MCowBQYDK2VwAyEAGb9bTmLHPWy3bNGP/2Z+aqHnCWB7ey5kWUBhZHnqDPU=
       },
       signature: {
         value: valid64ByteSignature,
-        created_at: '2024-01-01T00:00:00Z'
+        created_at: '2025-12-01T00:00:00Z'
       }
     }
     
@@ -652,7 +652,7 @@ MCowBQYDK2VwAyEAGb9bTmLHPWy3bNGP/2Z+aqHnCWB7ey5kWUBhZHnqDPU=
       },
       signature: {
         value: valid64ByteSignature,
-        created_at: '2024-01-01T00:00:00Z'
+        created_at: '2025-12-01T00:00:00Z'
       }
     }
     
@@ -682,7 +682,7 @@ MCowBQYDK2VwAyEAGb9bTmLHPWy3bNGP/2Z+aqHnCWB7ey5kWUBhZHnqDPU=
       signature: {
         // 64 bytes of zeros - won't match any real signature
         value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
-        created_at: '2024-01-01T00:00:00Z'
+        created_at: '2025-12-01T00:00:00Z'
       }
     }
     
@@ -710,7 +710,7 @@ MCowBQYDK2VwAyEAGb9bTmLHPWy3bNGP/2Z+aqHnCWB7ey5kWUBhZHnqDPU=
       },
       signature: {
         value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
-        created_at: '2024-01-01T00:00:00Z'
+        created_at: '2025-12-01T00:00:00Z'
       }
     }
     
@@ -735,7 +735,7 @@ MCowBQYDK2VwAyEAGb9bTmLHPWy3bNGP/2Z+aqHnCWB7ey5kWUBhZHnqDPU=
       },
       signature: {
         value: 'c2hvcnQ=', // Only 5 bytes, not 64
-        created_at: '2024-01-01T00:00:00Z'
+        created_at: '2025-12-01T00:00:00Z'
       }
     }
     
@@ -762,7 +762,7 @@ MCowBQYDK2VwAyEAGb9bTmLHPWy3bNGP/2Z+aqHnCWB7ey5kWUBhZHnqDPU=
       },
       signature: {
         // value is missing
-        created_at: '2024-01-01T00:00:00Z'
+        created_at: '2025-12-01T00:00:00Z'
       }
     }
     
@@ -786,7 +786,7 @@ MCowBQYDK2VwAyEAGb9bTmLHPWy3bNGP/2Z+aqHnCWB7ey5kWUBhZHnqDPU=
       },
       signature: {
         value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
-        created_at: '2024-01-01T00:00:00Z'
+        created_at: '2025-12-01T00:00:00Z'
       }
     }
     
@@ -815,7 +815,7 @@ MCowBQYDK2VwAyEAGb9bTmLHPWy3bNGP/2Z+aqHnCWB7ey5kWUBhZHnqDPU=
       },
       signature: {
         value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
-        created_at: '2024-01-01T00:00:00Z'
+        created_at: '2025-12-01T00:00:00Z'
       }
     }
     
