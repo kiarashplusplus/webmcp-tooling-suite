@@ -53,13 +53,13 @@ export interface ArchivedFeed {
 
 export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
   const { user, loading: authLoading, isAuthenticated } = useAuth()
-  const { 
-    archives: gistArchives, 
-    loading: gistLoading, 
+  const {
+    archives: gistArchives,
+    loading: gistLoading,
     error: gistError,
-    archiveToGist, 
+    archiveToGist,
     fetchArchives: fetchGistArchives,
-    deleteArchive: deleteGistArchive 
+    deleteArchive: deleteGistArchive
   } = useGistArchive()
   const [archives, setArchives] = useKV<Record<string, ArchivedFeed>>('webmcp-archives', {})
   const [archivedFeeds, setArchivedFeeds] = useKV<FeedMetadata[]>('archived-feeds', [])
@@ -71,6 +71,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
   const [showSignInDialog, setShowSignInDialog] = useState(false)
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
   const [publishingToGist, setPublishingToGist] = useState<string | null>(null)
+  const [recentlyArchived, setRecentlyArchived] = useState<{ domain: string; gistUrl: string } | null>(null)
 
   // Update domain when initialUrl changes
   useEffect(() => {
@@ -104,10 +105,10 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
     try {
       const feed = await fetchLLMFeed(domain)
       const validation = await validateLLMFeed(feed)
-      
+
       const normalizedDomain = new URL(feed.metadata.origin).hostname
       const feedUrl = feed.metadata.origin || `https://${normalizedDomain}/.well-known/mcp.llmfeed.json`
-      
+
       // Publish directly to Gist
       const gistResult = await archiveToGist(
         normalizedDomain,
@@ -120,14 +121,20 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
       )
 
       if (gistResult) {
+        // Set recently archived to show success hint
+        setRecentlyArchived({
+          domain: normalizedDomain,
+          gistUrl: gistResult.htmlUrl
+        })
+
         toast.success(`Archived ${normalizedDomain} to GitHub Gist!`, {
-          description: 'Your archive is versioned and publicly accessible',
+          description: 'Your archive may take up to a minute to appear in the list below',
           action: {
             label: 'View Gist',
             onClick: () => window.open(gistResult.htmlUrl, '_blank')
           }
         })
-        
+
         // Refresh gist archives list
         await fetchGistArchives()
       } else {
@@ -159,7 +166,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
       const updated = { ...currentArchives }
       if (updated[domain]) {
         updated[domain].snapshots = updated[domain].snapshots.filter(s => s.id !== snapshotId)
-        
+
         if (updated[domain].snapshots.length === 0) {
           delete updated[domain]
         } else {
@@ -168,7 +175,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
       }
       return updated
     })
-    
+
     toast.success('Snapshot deleted')
     if (selectedSnapshot?.id === snapshotId) {
       setSelectedSnapshot(null)
@@ -228,7 +235,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
     }
 
     const feedUrl = snapshot.feed.metadata.origin || `https://${snapshot.domain}/.well-known/mcp.llmfeed.json`
-    
+
     const feedMetadata: FeedMetadata = {
       id: snapshot.id,
       url: feedUrl,
@@ -316,10 +323,10 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
     }
 
     setPublishingToGist(snapshot.id)
-    
+
     try {
       const feedUrl = snapshot.feed.metadata.origin || `https://${snapshot.domain}/.well-known/mcp.llmfeed.json`
-      
+
       const result = await archiveToGist(
         snapshot.domain,
         snapshot.feed,
@@ -408,7 +415,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
                 Sign in to Publish to GitHub
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Publish your archives as <span className="font-semibold text-accent">GitHub Gists</span> with automatic versioning. 
+                Publish your archives as <span className="font-semibold text-accent">GitHub Gists</span> with automatic versioning.
                 Each archive gets a permanent URL that's publicly accessible and tracked in your GitHub account.
               </p>
               <Button
@@ -433,7 +440,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
           <div className="flex items-start gap-2 pt-2 border-t border-border/50">
             <GithubLogo size={14} className="text-accent mt-0.5 flex-shrink-0" />
             <p>
-              <span className="font-semibold text-accent">Publish to GitHub Gist:</span> Archives are saved as versioned Gists in your GitHub account. 
+              <span className="font-semibold text-accent">Publish to GitHub Gist:</span> Archives are saved as versioned Gists in your GitHub account.
               Each revision is tracked, and the raw JSON URL works directly for AI consumption. <span className="font-semibold">No storage costs, unlimited archives.</span>
             </p>
           </div>
@@ -481,6 +488,40 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
           </div>
         </div>
       </Card>
+
+      {/* Success Hint - shows after archiving */}
+      {recentlyArchived && (
+        <Alert className="glass-card border-green-500/30 bg-green-500/5">
+          <Check size={18} className="text-green-500" />
+          <AlertTitle className="text-sm font-semibold text-green-600 dark:text-green-400">
+            Successfully archived {recentlyArchived.domain}!
+          </AlertTitle>
+          <AlertDescription className="text-xs text-muted-foreground space-y-2">
+            <p>
+              Your archive has been saved to GitHub Gist. <strong>It may take up to a minute</strong> for it to appear in "Your Published Gist Archives" below due to GitHub's API caching.
+            </p>
+            <div className="flex items-center gap-2 pt-1">
+              <Button
+                onClick={() => window.open(recentlyArchived.gistUrl, '_blank')}
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs border-green-500/30 hover:bg-green-500/10"
+              >
+                <GithubLogo size={14} className="mr-1.5" />
+                View Gist Now
+              </Button>
+              <Button
+                onClick={() => setRecentlyArchived(null)}
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+              >
+                Dismiss
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {archiveList.length > 0 && (
         <div className="flex items-center justify-between">
@@ -605,99 +646,99 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
                             {archive.snapshots.map((snapshot) => {
                               const existingGist = getGistForDomain(snapshot.domain)
                               const isPublishing = publishingToGist === snapshot.id
-                              
+
                               return (
-                              <div
-                                key={snapshot.id}
-                                className={`p-3 rounded-xl border cursor-pointer transition-all duration-300 ${
-                                  selectedSnapshot?.id === snapshot.id
+                                <div
+                                  key={snapshot.id}
+                                  className={`p-3 rounded-xl border cursor-pointer transition-all duration-300 ${selectedSnapshot?.id === snapshot.id
                                     ? 'border-primary glass-strong shadow-lg'
                                     : 'glass border-border/30 hover:border-primary/40'
-                                }`}
-                                onClick={() => setSelectedSnapshot(snapshot)}
-                              >
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    <Clock size={14} className="text-muted-foreground" />
-                                    <span className="text-xs font-mono text-foreground">
-                                      {formatTimestamp(snapshot.timestamp)}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    {existingGist ? (
-                                      <Badge 
-                                        variant="default" 
-                                        className="h-6 px-2 text-xs bg-accent/20 text-accent border-accent/30 cursor-pointer"
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          window.open(existingGist.htmlUrl, '_blank')
-                                        }}
-                                      >
-                                        <GithubLogo size={12} className="mr-1" />
-                                        On Gist ({existingGist.revisions} rev)
-                                      </Badge>
-                                    ) : (
+                                    }`}
+                                  onClick={() => setSelectedSnapshot(snapshot)}
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <Clock size={14} className="text-muted-foreground" />
+                                      <span className="text-xs font-mono text-foreground">
+                                        {formatTimestamp(snapshot.timestamp)}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      {existingGist ? (
+                                        <Badge
+                                          variant="default"
+                                          className="h-6 px-2 text-xs bg-accent/20 text-accent border-accent/30 cursor-pointer"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            window.open(existingGist.htmlUrl, '_blank')
+                                          }}
+                                        >
+                                          <GithubLogo size={12} className="mr-1" />
+                                          On Gist ({existingGist.revisions} rev)
+                                        </Badge>
+                                      ) : (
+                                        <Button
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            publishToGist(snapshot)
+                                          }}
+                                          variant="ghost"
+                                          size="sm"
+                                          disabled={isPublishing}
+                                          className="h-6 px-2 text-xs text-accent hover:text-accent hover:bg-accent/10"
+                                          title={isAuthenticated ? "Publish to GitHub Gist" : "Sign in required"}
+                                        >
+                                          {isPublishing ? (
+                                            <>
+                                              <div className="animate-spin mr-1 h-3 w-3 border border-accent border-t-transparent rounded-full" />
+                                              Publishing...
+                                            </>
+                                          ) : isAuthenticated ? (
+                                            <>
+                                              <GithubLogo size={12} className="mr-1" />
+                                              To Gist
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Lock size={12} className="mr-1" />
+                                              To Gist
+                                            </>
+                                          )}
+                                        </Button>
+                                      )}
                                       <Button
                                         onClick={(e) => {
                                           e.stopPropagation()
-                                          publishToGist(snapshot)
+                                          handleDeleteSnapshot(archive.domain, snapshot.id)
                                         }}
                                         variant="ghost"
                                         size="sm"
-                                        disabled={isPublishing}
-                                        className="h-6 px-2 text-xs text-accent hover:text-accent hover:bg-accent/10"
-                                        title={isAuthenticated ? "Publish to GitHub Gist" : "Sign in required"}
+                                        className="h-6 w-6 p-0 text-destructive hover:text-destructive"
                                       >
-                                        {isPublishing ? (
-                                          <>
-                                            <div className="animate-spin mr-1 h-3 w-3 border border-accent border-t-transparent rounded-full" />
-                                            Publishing...
-                                          </>
-                                        ) : isAuthenticated ? (
-                                          <>
-                                            <GithubLogo size={12} className="mr-1" />
-                                            To Gist
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Lock size={12} className="mr-1" />
-                                            To Gist
-                                          </>
-                                        )}
+                                        <Trash size={12} />
                                       </Button>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {snapshot.validationScore !== undefined && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        <span className={getScoreColor(snapshot.validationScore)}>
+                                          Score: {snapshot.validationScore}
+                                        </span>
+                                      </Badge>
                                     )}
-                                    <Button
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleDeleteSnapshot(archive.domain, snapshot.id)
-                                      }}
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                                    >
-                                      <Trash size={12} />
-                                    </Button>
+                                    {snapshot.signatureValid !== undefined && (
+                                      <Badge
+                                        variant={snapshot.signatureValid ? 'default' : 'destructive'}
+                                        className="text-xs"
+                                      >
+                                        {snapshot.signatureValid ? '✓ Signed' : '✗ Invalid Sig'}
+                                      </Badge>
+                                    )}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  {snapshot.validationScore !== undefined && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      <span className={getScoreColor(snapshot.validationScore)}>
-                                        Score: {snapshot.validationScore}
-                                      </span>
-                                    </Badge>
-                                  )}
-                                  {snapshot.signatureValid !== undefined && (
-                                    <Badge 
-                                      variant={snapshot.signatureValid ? 'default' : 'destructive'}
-                                      className="text-xs"
-                                    >
-                                      {snapshot.signatureValid ? '✓ Signed' : '✗ Invalid Sig'}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            )})}
+                              )
+                            })}
                           </div>
                         </AccordionContent>
                       </AccordionItem>
@@ -717,7 +758,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
                     {(() => {
                       const existingGist = getGistForDomain(selectedSnapshot.domain)
                       const isPublishing = publishingToGist === selectedSnapshot.id
-                      
+
                       if (existingGist) {
                         return (
                           <>
@@ -752,7 +793,7 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
                           </>
                         )
                       }
-                      
+
                       return (
                         <Button
                           onClick={() => publishToGist(selectedSnapshot)}
@@ -908,9 +949,9 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
           <DialogHeader>
             <DialogTitle className="sr-only">Sign in with GitHub</DialogTitle>
           </DialogHeader>
-          <GitHubSignIn 
-            context="publish" 
-            onClose={() => setShowSignInDialog(false)} 
+          <GitHubSignIn
+            context="publish"
+            onClose={() => setShowSignInDialog(false)}
           />
         </DialogContent>
       </Dialog>

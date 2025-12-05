@@ -48,6 +48,7 @@ export function LLMSTxtArchive({ onNavigate, onComplete, initialUrl }: LLMSTxtAr
     const [loading, setLoading] = useState(false)
     const [showSignInDialog, setShowSignInDialog] = useState(false)
     const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
+    const [recentlyArchived, setRecentlyArchived] = useState<{ domain: string; gistUrl: string } | null>(null)
 
     // Update domain when initialUrl changes
     useEffect(() => {
@@ -125,8 +126,14 @@ export function LLMSTxtArchive({ onNavigate, onComplete, initialUrl }: LLMSTxtAr
             )
 
             if (gistResult) {
+                // Set recently archived to show success hint
+                setRecentlyArchived({
+                    domain: normalizedDomain,
+                    gistUrl: gistResult.htmlUrl
+                })
+
                 toast.success(`Archived ${normalizedDomain} llms.txt to GitHub Gist!`, {
-                    description: 'Your archive is versioned and publicly accessible',
+                    description: 'Your archive may take up to a minute to appear in the list below',
                     action: {
                         label: 'View Gist',
                         onClick: () => window.open(gistResult.htmlUrl, '_blank')
@@ -264,6 +271,40 @@ export function LLMSTxtArchive({ onNavigate, onComplete, initialUrl }: LLMSTxtAr
                     </div>
                 </div>
             </Card>
+
+            {/* Success Hint - shows after archiving */}
+            {recentlyArchived && (
+                <Alert className="glass-card border-green-500/30 bg-green-500/5">
+                    <Check size={18} className="text-green-500" />
+                    <AlertTitle className="text-sm font-semibold text-green-600 dark:text-green-400">
+                        Successfully archived {recentlyArchived.domain}!
+                    </AlertTitle>
+                    <AlertDescription className="text-xs text-muted-foreground space-y-2">
+                        <p>
+                            Your archive has been saved to GitHub Gist. <strong>It may take up to a minute</strong> for it to appear in "Your Published Gist Archives" below due to GitHub's API caching.
+                        </p>
+                        <div className="flex items-center gap-2 pt-1">
+                            <Button
+                                onClick={() => window.open(recentlyArchived.gistUrl, '_blank')}
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs border-green-500/30 hover:bg-green-500/10"
+                            >
+                                <GithubLogo size={14} className="mr-1.5" />
+                                View Gist Now
+                            </Button>
+                            <Button
+                                onClick={() => setRecentlyArchived(null)}
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs"
+                            >
+                                Dismiss
+                            </Button>
+                        </div>
+                    </AlertDescription>
+                </Alert>
+            )}
 
             {/* Published GitHub Gist Archives */}
             {isAuthenticated && llmstxtArchives.length > 0 && (
