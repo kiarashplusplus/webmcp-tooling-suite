@@ -32,6 +32,33 @@
     <meta name="twitter:image" content="https://kiarashplusplus.github.io/webmcp-tooling-suite/og-image.png" />
     <meta name="twitter:image:alt" content="LLMFeed Analyzer - Validate and archive MCP feeds for AI agents" />
     
+    <!-- LLMFeed Directory Links for Crawlers/AI Agents -->
+    <!-- These links expose feed URLs with data-feed-json-url attributes for programmatic discovery -->
+    <link rel="feed" type="application/json" href="https://25x.codes/.well-known/mcp.llmfeed.json" 
+          data-feed-json-url="https://25x.codes/.well-known/mcp.llmfeed.json" 
+          data-feed-type="mcp" 
+          data-feed-domain="25x.codes" 
+          title="25x.codes MCP Feed" />
+    <link rel="feed" type="application/json" href="https://wellknownmcp.org/.well-known/mcp.llmfeed.json" 
+          data-feed-json-url="https://wellknownmcp.org/.well-known/mcp.llmfeed.json" 
+          data-feed-type="mcp" 
+          data-feed-domain="wellknownmcp.org" 
+          title="WellKnownMCP Feed" />
+    <link rel="feed" type="application/json" href="https://llmca.org/.well-known/mcp.llmfeed.json" 
+          data-feed-json-url="https://llmca.org/.well-known/mcp.llmfeed.json" 
+          data-feed-type="mcp" 
+          data-feed-domain="llmca.org" 
+          title="LLMCA Feed" />
+    <link rel="feed" type="application/json" href="https://wellknownmcp.org/.well-known/llm-index.llmfeed.json" 
+          data-feed-json-url="https://wellknownmcp.org/.well-known/llm-index.llmfeed.json" 
+          data-feed-type="llm-index" 
+          data-feed-domain="wellknownmcp.org" 
+          title="LLM Index Directory" />
+    <!-- Full directory API endpoint for all feeds -->
+    <link rel="api" type="application/json" href="https://webmcp-directory.the-safe.workers.dev/api/feeds" 
+          data-feed-directory-api="https://webmcp-directory.the-safe.workers.dev/api/feeds"
+          title="LLMFeed Directory API - All Feeds" />
+    
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
