@@ -449,10 +449,14 @@ function basicValidation(feed: unknown): ValidationResult {
   const errorCount = issues.filter(i => i.type === 'error').length
   const warningCount = issues.filter(i => i.type === 'warning').length
   
-  // Calculate basic score
+  // Check if feed is unsigned
+  const isUnsigned = !f.trust || !f.signature
+  
+  // Calculate basic score (aligned with validator and github-action)
   let score = 100
-  score -= errorCount * 25
-  score -= warningCount * 10
+  score -= errorCount * 20
+  score -= warningCount * 5
+  if (isUnsigned) score -= 30  // Unsigned feed penalty
   score = Math.max(0, score)
   
   return {

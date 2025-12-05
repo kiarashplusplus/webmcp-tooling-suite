@@ -921,11 +921,17 @@ export async function validateLLMFeed(
   let score = 100
   score -= errorCount * 20
   score -= warningCount * 5
-  score = Math.max(0, Math.min(100, score))
-
+  
+  // Signature penalties/bonuses (aligned with github-action)
   if (signatureValid === true) {
-    score = Math.min(100, score + 10)
+    score += 10  // Bonus for verified signature
+  } else if (signatureValid === false) {
+    score -= 50  // Failed signature verification
+  } else if (!f.trust || !f.signature) {
+    score -= 30  // Unsigned feed penalty
   }
+  
+  score = Math.max(0, Math.min(100, score))
 
   return {
     valid: errorCount === 0,
