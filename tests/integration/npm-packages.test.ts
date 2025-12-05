@@ -5,6 +5,10 @@
  * when installed from the registry (not linked locally).
  * 
  * Run with: npx vitest run tests/integration/npm-packages.test.ts
+ * 
+ * NOTE: These tests are SKIPPED in CI because they test published packages.
+ * The packages need to be published first before these tests can pass.
+ * Run these tests manually after publishing to verify the release.
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
@@ -12,6 +16,9 @@ import { execSync } from 'child_process'
 import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
+
+// Skip in CI - these tests require already-published packages
+const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true'
 
 // Test directory for isolation
 let testDir: string
@@ -49,7 +56,7 @@ const invalidFeed = {
   }
 }
 
-describe('NPM Package Integration Tests', () => {
+describe.skipIf(isCI)('NPM Package Integration Tests', () => {
   beforeAll(() => {
     // Create isolated test directory
     testDir = mkdtempSync(join(tmpdir(), 'llmfeed-integration-'))
