@@ -130,7 +130,8 @@ export function SubmitFeed() {
   }
 
   const handleSubmit = async () => {
-    if (!validationResult?.valid || !parsedFeed) {
+    // Only require that validation was run (has a score), not that it's 100% valid
+    if (!validationResult || validationResult.score === undefined || !parsedFeed) {
       toast.error('Please validate a feed first')
       return
     }
@@ -336,7 +337,7 @@ export function SubmitFeed() {
         ) : (
           <Button 
             onClick={handleSubmit}
-            disabled={!validationResult?.valid || !isAuthenticated || isSubmitting}
+            disabled={!validationResult || validationResult.score === undefined || !isAuthenticated || isSubmitting}
             className="w-full gap-2"
           >
             {isSubmitting ? (
@@ -348,12 +349,12 @@ export function SubmitFeed() {
           </Button>
         )}
 
-        {!validationResult?.valid && (
+        {(!validationResult || validationResult.score === undefined) && (
           <p className="text-sm text-muted-foreground mt-2 text-center">
-            Validate your feed first to enable submission
+            Validate your feed first to enable submission (any score accepted)
           </p>
         )}
-        {validationResult?.valid && !isAuthenticated && (
+        {validationResult && validationResult.score !== undefined && !isAuthenticated && (
           <p className="text-sm text-muted-foreground mt-2 text-center">
             Sign in with GitHub to submit your feed
           </p>
