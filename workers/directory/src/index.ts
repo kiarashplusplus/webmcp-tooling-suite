@@ -34,6 +34,8 @@ interface Feed {
   version: string | null
   score: number | null
   signature_valid: boolean
+  gist_raw_url: string | null
+  gist_html_url: string | null
   submitted_by: string | null
   submitted_at: number
   last_validated: number | null
@@ -115,6 +117,8 @@ function rowToFeed(row: Record<string, unknown>): Feed {
     version: row.version as string | null,
     score: row.score as number | null,
     signature_valid: Boolean(row.signature_valid),
+    gist_raw_url: row.gist_raw_url as string | null,
+    gist_html_url: row.gist_html_url as string | null,
     submitted_by: row.submitted_by as string | null,
     submitted_at: row.submitted_at as number,
     last_validated: row.last_validated as number | null,
@@ -297,6 +301,8 @@ async function handleFeedsAPI(
       version?: string
       score?: number
       signature_valid?: boolean
+      gist_raw_url?: string
+      gist_html_url?: string
     }
     
     try {
@@ -334,7 +340,8 @@ async function handleFeedsAPI(
         await env.DB.prepare(`
           UPDATE feeds 
           SET title = ?, description = ?, feed_type = ?, capabilities_count = ?, version = ?, 
-              score = ?, signature_valid = ?, submitted_by = ?, submitted_at = ?, is_active = 1
+              score = ?, signature_valid = ?, gist_raw_url = ?, gist_html_url = ?, 
+              submitted_by = ?, submitted_at = ?, is_active = 1
           WHERE id = ?
         `).bind(
           body.title || null,
@@ -344,6 +351,8 @@ async function handleFeedsAPI(
           body.version || null,
           body.score ?? null,
           body.signature_valid ? 1 : 0,
+          body.gist_raw_url || null,
+          body.gist_html_url || null,
           user.login,
           Date.now(),
           existing.id
@@ -362,8 +371,8 @@ async function handleFeedsAPI(
 
       // Insert new feed
       await env.DB.prepare(`
-        INSERT INTO feeds (id, url, domain, title, description, feed_type, capabilities_count, version, score, signature_valid, submitted_by, submitted_at, is_curated, is_active)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1)
+        INSERT INTO feeds (id, url, domain, title, description, feed_type, capabilities_count, version, score, signature_valid, gist_raw_url, gist_html_url, submitted_by, submitted_at, is_curated, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1)
       `).bind(
         id,
         body.url,
@@ -375,6 +384,8 @@ async function handleFeedsAPI(
         body.version || null,
         body.score ?? null,
         body.signature_valid ? 1 : 0,
+        body.gist_raw_url || null,
+        body.gist_html_url || null,
         user.login,
         Date.now()
       ).run()

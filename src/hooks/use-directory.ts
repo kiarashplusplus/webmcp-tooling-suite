@@ -15,6 +15,8 @@ export interface DirectoryFeed {
   version: string | null
   score: number | null
   signature_valid: boolean
+  gist_raw_url: string | null
+  gist_html_url: string | null
   submitted_by: string | null
   submitted_at: number
   last_validated: number | null
@@ -39,6 +41,8 @@ export interface SubmitFeedParams {
   version?: string
   score?: number
   signature_valid?: boolean
+  gist_raw_url?: string
+  gist_html_url?: string
 }
 
 interface UseDirectoryReturn {

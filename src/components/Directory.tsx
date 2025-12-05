@@ -39,6 +39,8 @@ interface FeedMetadata {
   is_curated?: boolean
   signature_valid?: boolean
   score?: number
+  gist_raw_url?: string
+  gist_html_url?: string
 }
 
 // Convert DirectoryFeed to FeedMetadata for backward compatibility
@@ -57,6 +59,8 @@ function directoryFeedToMetadata(feed: DirectoryFeed): FeedMetadata {
     is_curated: feed.is_curated,
     signature_valid: feed.signature_valid,
     score: feed.score || undefined,
+    gist_raw_url: feed.gist_raw_url || undefined,
+    gist_html_url: feed.gist_html_url || undefined,
   }
 }
 
@@ -185,6 +189,13 @@ export function FeedDirectory() {
   }
 
   const handleViewArchivedMirror = (feed: FeedMetadata) => {
+    // If feed has a Gist URL, use that (preferred - permanent URL)
+    if (feed.gist_raw_url) {
+      window.open(feed.gist_raw_url, '_blank')
+      return
+    }
+    
+    // Fallback to localStorage snapshot
     const snapshot = findArchivedSnapshot(feed.id)
     if (snapshot) {
       const servedData = {
@@ -203,7 +214,9 @@ export function FeedDirectory() {
       const url = URL.createObjectURL(blob)
       window.open(url, '_blank')
     } else {
-      toast.error('Archived snapshot not found in local storage')
+      toast.error('No mirror available', {
+        description: 'This feed has not been archived yet'
+      })
     }
   }
 
@@ -413,7 +426,7 @@ export function FeedDirectory() {
             </Button>
           </a>
           
-          {isFromArchive && (
+          {(feed.gist_raw_url || isFromArchive) && (
             <>
               <Button 
                 variant="outline" 
@@ -422,20 +435,23 @@ export function FeedDirectory() {
                 className="flex-1 glass-strong hover:border-accent/50 text-accent hover:text-accent transition-all"
                 data-snapshot-id={feed.id}
                 data-feed-type={feed.feed_type}
+                data-gist-url={feed.gist_raw_url || undefined}
               >
                 <Archive size={16} className="mr-2" />
-                <span className="font-mono text-xs">View Mirror</span>
+                <span className="font-mono text-xs">{feed.gist_raw_url ? 'View Mirror' : 'View Local'}</span>
                 <ArrowUpRight size={14} className="ml-2 shrink-0" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleDownloadArchivedMirror(feed)}
-                className="flex-1 sm:flex-initial glass hover:border-accent/50 text-accent hover:text-accent transition-all"
-                title="Download archived JSON"
-              >
-                <FileJs size={16} />
-              </Button>
+              {!feed.gist_raw_url && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleDownloadArchivedMirror(feed)}
+                  className="flex-1 sm:flex-initial glass hover:border-accent/50 text-accent hover:text-accent transition-all"
+                  title="Download archived JSON"
+                >
+                  <FileJs size={16} />
+                </Button>
+              )}
             </>
           )}
         </div>

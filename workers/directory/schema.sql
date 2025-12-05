@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS feeds (
   version TEXT,
   score INTEGER,
   signature_valid INTEGER DEFAULT 0,  -- SQLite uses INTEGER for boolean
+  gist_raw_url TEXT,                  -- GitHub Gist raw URL for archived mirror
+  gist_html_url TEXT,                 -- GitHub Gist HTML URL for viewing
   submitted_by TEXT,
   submitted_at INTEGER NOT NULL,
   last_validated INTEGER,

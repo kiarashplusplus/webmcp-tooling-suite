@@ -91,38 +91,49 @@ export function Archive({ onNavigate, onComplete, initialUrl }: ArchiveProps) {
   const handleArchiveFeed = async () => {
     if (!domain.trim()) return
 
+    // Require authentication for archiving (since we publish to Gist)
+    if (!isAuthenticated) {
+      setShowSignInDialog(true)
+      toast.error('Sign in required', {
+        description: 'GitHub authentication is required to create archives'
+      })
+      return
+    }
+
     setLoading(true)
     try {
       const feed = await fetchLLMFeed(domain)
       const validation = await validateLLMFeed(feed)
       
       const normalizedDomain = new URL(feed.metadata.origin).hostname
-      const snapshot: ArchivedSnapshot = {
-        id: `${normalizedDomain}-${Date.now()}`,
-        domain: normalizedDomain,
+      const feedUrl = feed.metadata.origin || `https://${normalizedDomain}/.well-known/mcp.llmfeed.json`
+      
+      // Publish directly to Gist
+      const gistResult = await archiveToGist(
+        normalizedDomain,
         feed,
-        timestamp: Date.now(),
-        validationScore: validation.score,
-        signatureValid: validation.signatureValid
+        {
+          validationScore: validation.score,
+          signatureValid: validation.signatureValid,
+          feedUrl
+        }
+      )
+
+      if (gistResult) {
+        toast.success(`Archived ${normalizedDomain} to GitHub Gist!`, {
+          description: 'Your archive is versioned and publicly accessible',
+          action: {
+            label: 'View Gist',
+            onClick: () => window.open(gistResult.htmlUrl, '_blank')
+          }
+        })
+        
+        // Refresh gist archives list
+        await fetchGistArchives()
+      } else {
+        throw new Error('Failed to create Gist archive')
       }
 
-      setArchives((currentArchives) => {
-        const updated = { ...currentArchives }
-        if (!updated[normalizedDomain]) {
-          updated[normalizedDomain] = {
-            domain: normalizedDomain,
-            snapshots: [],
-            lastUpdated: Date.now()
-          }
-        }
-        
-        updated[normalizedDomain].snapshots.unshift(snapshot)
-        updated[normalizedDomain].lastUpdated = Date.now()
-        
-        return updated
-      })
-
-      toast.success(`Archived snapshot for ${normalizedDomain}`)
       setDomain('')
     } catch (err) {
       toast.error(`Failed to archive feed: ${err}`)
