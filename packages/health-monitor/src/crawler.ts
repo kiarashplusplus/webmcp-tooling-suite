@@ -358,6 +358,7 @@ export function checkMetaOptOut(html: string): string | null {
 async function validateFeed(feed: unknown, url: string): Promise<ValidationResult> {
   // Try to use the @25xcodes/llmfeed-validator if available
   try {
+    // @ts-ignore - optional peer dependency
     const validator = await import('@25xcodes/llmfeed-validator')
     const result = await validator.validateLLMFeed(feed)
     return {

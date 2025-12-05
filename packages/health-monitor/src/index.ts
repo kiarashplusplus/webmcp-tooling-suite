@@ -114,6 +114,7 @@ export {
 // Re-export validator if available
 export async function validateFeed(feed: unknown, options?: { url?: string }) {
   try {
+    // @ts-ignore - optional peer dependency
     const validator = await import('@25xcodes/llmfeed-validator')
     return validator.validateLLMFeed(feed)
   } catch {
