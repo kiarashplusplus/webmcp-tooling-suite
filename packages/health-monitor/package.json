@@ -1,0 +1,58 @@
+{
+  "name": "@25xcodes/llmfeed-health-monitor",
+  "version": "1.0.0",
+  "description": "Feed health monitoring, crawling, and outreach automation for the LLMFeed ecosystem",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "bin": {
+    "llmfeed-health": "./bin/llmfeed-health.js"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "llmfeed",
+    "webmcp",
+    "mcp",
+    "health-monitor",
+    "feed-crawler",
+    "validation",
+    "ed25519",
+    "bot",
+    "outreach"
+  ],
+  "author": "25xcodes",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kiarashplusplus/webmcp-tooling-suite.git",
+    "directory": "packages/health-monitor"
+  },
+  "dependencies": {
+    "@octokit/rest": "^21.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "@25xcodes/llmfeed-validator": "^1.0.0"
+  }
+}

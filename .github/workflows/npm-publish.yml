@@ -12,6 +12,7 @@ on:
         options:
           - validator
           - signer
+          - health-monitor
           - github-action
           - npm-packages
           - all
@@ -52,6 +53,7 @@ jobs:
         run: |
           VALIDATOR_VERSION=$(node -p "require('./packages/validator/package.json').version")
           SIGNER_VERSION=$(node -p "require('./packages/signer/package.json').version")
+          HEALTH_VERSION=$(node -p "require('./packages/health-monitor/package.json').version")
           
           # Check validator
           if npm view @25xcodes/llmfeed-validator@$VALIDATOR_VERSION version 2>/dev/null; then
@@ -70,6 +72,15 @@ jobs:
             echo "signer_exists=false" >> $GITHUB_OUTPUT
             echo "✅ @25xcodes/llmfeed-signer@$SIGNER_VERSION is new"
           fi
+          
+          # Check health-monitor
+          if npm view @25xcodes/llmfeed-health-monitor@$HEALTH_VERSION version 2>/dev/null; then
+            echo "health_exists=true" >> $GITHUB_OUTPUT
+            echo "⚠️ @25xcodes/llmfeed-health-monitor@$HEALTH_VERSION already exists on npm"
+          else
+            echo "health_exists=false" >> $GITHUB_OUTPUT
+            echo "✅ @25xcodes/llmfeed-health-monitor@$HEALTH_VERSION is new"
+          fi
 
       - name: Determine packages to publish
         id: packages
@@ -83,11 +94,11 @@ jobs:
           
           case "$PACKAGE" in
             all)
-              echo "npm_packages=validator signer" >> $GITHUB_OUTPUT
+              echo "npm_packages=validator signer health-monitor" >> $GITHUB_OUTPUT
               echo "github_action=true" >> $GITHUB_OUTPUT
               ;;
             npm-packages)
-              echo "npm_packages=validator signer" >> $GITHUB_OUTPUT
+              echo "npm_packages=validator signer health-monitor" >> $GITHUB_OUTPUT
               echo "github_action=false" >> $GITHUB_OUTPUT
               ;;
             github-action)
@@ -178,6 +189,25 @@ jobs:
         if: contains(steps.packages.outputs.npm_packages, 'signer') && steps.version-check.outputs.signer_exists == 'true'
         run: echo "⏭️ Skipping @25xcodes/llmfeed-signer - version already exists on npm"
 
+      - name: Build and publish @25xcodes/llmfeed-health-monitor
+        if: contains(steps.packages.outputs.npm_packages, 'health-monitor') && steps.version-check.outputs.health_exists != 'true'
+        working-directory: packages/health-monitor
+        run: |
+          npm run build
+          
+          if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
+            echo "🏃 Dry run - skipping publish"
+            npm pack --dry-run
+          else
+            npm publish --access public --provenance
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Skip @25xcodes/llmfeed-health-monitor (already published)
+        if: contains(steps.packages.outputs.npm_packages, 'health-monitor') && steps.version-check.outputs.health_exists == 'true'
+        run: echo "⏭️ Skipping @25xcodes/llmfeed-health-monitor - version already exists on npm"
+
       # ========================================
       # Update Major Version Tag (v1, v2, etc.)
       # ========================================
@@ -247,6 +277,11 @@ jobs:
               echo "- @25xcodes/llmfeed-signer: ⏭️ Skipped (already exists)" >> $GITHUB_STEP_SUMMARY
             else
               echo "- @25xcodes/llmfeed-signer: ✅ Published" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ "${{ steps.version-check.outputs.health_exists }}" = "true" ]; then
+              echo "- @25xcodes/llmfeed-health-monitor: ⏭️ Skipped (already exists)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- @25xcodes/llmfeed-health-monitor: ✅ Published" >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "- No npm packages selected" >> $GITHUB_STEP_SUMMARY
