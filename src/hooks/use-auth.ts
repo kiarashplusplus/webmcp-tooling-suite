@@ -119,10 +119,10 @@ export function useAuth() {
     const oauthEndpoint = import.meta.env.VITE_GITHUB_OAUTH_URL
     
     if (oauthEndpoint) {
-      // Build redirect URL with current path to return to after auth
-      const currentPath = window.location.pathname + window.location.search
+      // Build redirect URL - use just "/" since FRONTEND_URL already includes the base path
+      // The OAuth worker will append this to FRONTEND_URL
       const authUrl = new URL(oauthEndpoint)
-      authUrl.searchParams.set('redirect', currentPath)
+      authUrl.searchParams.set('redirect', '/')
       
       window.location.href = authUrl.toString()
       return
