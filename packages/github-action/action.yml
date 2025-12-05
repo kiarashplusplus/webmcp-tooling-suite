@@ -27,12 +27,12 @@ inputs:
     default: '10000'
   
   create-badge:
-    description: 'Generate a validation status badge (SVG file)'
+    description: 'Generate validation status badges (SVG + JSON for shields.io endpoint)'
     required: false
     default: 'false'
   
   badge-path:
-    description: 'Path to save the generated badge SVG'
+    description: 'Path for generated badge files (creates .svg and .json)'
     required: false
     default: '.github/badges/llmfeed-status.svg'
   
@@ -69,7 +69,7 @@ outputs:
     description: 'Number of capabilities in the feed'
   
   badge-url:
-    description: 'URL to the dynamic badge (if badge-gist-id is configured)'
+    description: 'Shields.io badge URL (set when create-badge or badge-gist-id is used)'
 
 runs:
   using: 'node20'

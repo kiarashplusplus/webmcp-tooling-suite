@@ -489,8 +489,46 @@ async function run(): Promise<void> {
         mkdirSync(badgeDir, { recursive: true })
       }
 
+      // Write SVG badge
       writeFileSync(fullBadgePath, badgeSvg)
       core.info(`\n📛 SVG Badge generated: ${badgePath}`)
+
+      // Also generate JSON file for shields.io endpoint (no gist needed!)
+      let badgeColor: string
+      if (!result.valid) {
+        badgeColor = 'red'
+      } else if (result.securityScore >= 80) {
+        badgeColor = 'brightgreen'
+      } else if (result.securityScore >= 60) {
+        badgeColor = 'green'
+      } else if (result.securityScore >= 40) {
+        badgeColor = 'yellow'
+      } else {
+        badgeColor = 'orange'
+      }
+
+      const jsonBadge: ShieldsBadge = {
+        schemaVersion: 1,
+        label: 'LLMFeed',
+        message: result.valid ? `${result.securityScore}/100` : 'invalid',
+        color: badgeColor,
+        cacheSeconds: 300
+      }
+
+      const jsonBadgePath = badgePath.replace(/\.svg$/, '.json')
+      const fullJsonPath = resolve(process.cwd(), jsonBadgePath)
+      writeFileSync(fullJsonPath, JSON.stringify(jsonBadge, null, 2))
+      core.info(`📛 JSON Badge generated: ${jsonBadgePath}`)
+
+      // Output URL hint for README usage
+      const { owner, repo } = github.context.repo
+      const branch = github.context.ref.replace('refs/heads/', '')
+      const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${jsonBadgePath}`
+      const shieldsUrl = `https://img.shields.io/endpoint?url=${encodeURIComponent(rawUrl)}`
+
+      core.setOutput('badge-url', shieldsUrl)
+      core.info(`\n   Add to README (after committing):`)
+      core.info(`   [![LLMFeed](${shieldsUrl})](https://your-site/.well-known/mcp.llmfeed.json)`)
     }
 
     // Generate dynamic badge via GitHub Gist (shields.io endpoint)
