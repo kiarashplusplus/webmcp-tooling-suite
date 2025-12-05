@@ -25,6 +25,9 @@ jobs:
           cache: 'npm'
       - run: npm ci
       
+      # Build workspace packages first (llmstxt-parser is a workspace dependency)
+      - run: npm run build:packages
+      
       # Build main app
       - run: npm run build
         env:
