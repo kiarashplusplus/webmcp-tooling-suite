@@ -52,6 +52,38 @@ npx @25xcodes/llmfeed-signer sign feed.json
 </td>
 </tr>
 <tr>
+<td width="50%">
+
+### 📄 LLMS.txt Parser
+**[@25xcodes/llmstxt-parser](https://npmjs.com/package/@25xcodes/llmstxt-parser)**
+
+[![npm](https://img.shields.io/npm/v/@25xcodes/llmstxt-parser?style=flat-square&color=6366f1)](https://npmjs.com/package/@25xcodes/llmstxt-parser)
+[![npm downloads](https://img.shields.io/npm/dm/@25xcodes/llmstxt-parser?style=flat-square&color=22c55e)](https://npmjs.com/package/@25xcodes/llmstxt-parser)
+
+Parse & validate [llms.txt](https://llmstxt.org) files with RAG utilities
+
+```bash
+import { parseLLMSTxt, validateLLMSTxt } from '@25xcodes/llmstxt-parser'
+```
+
+</td>
+<td width="50%">
+
+### 🏥 Health Monitor
+**[@25xcodes/llmfeed-health-monitor](https://npmjs.com/package/@25xcodes/llmfeed-health-monitor)**
+
+[![npm](https://img.shields.io/npm/v/@25xcodes/llmfeed-health-monitor?style=flat-square&color=6366f1)](https://npmjs.com/package/@25xcodes/llmfeed-health-monitor)
+[![npm downloads](https://img.shields.io/npm/dm/@25xcodes/llmfeed-health-monitor?style=flat-square&color=22c55e)](https://npmjs.com/package/@25xcodes/llmfeed-health-monitor)
+
+Feed health monitoring, crawling & outreach automation
+
+```bash
+npx @25xcodes/llmfeed-health-monitor check example.com
+```
+
+</td>
+</tr>
+<tr>
 <td colspan="2">
 
 ### 🤖 GitHub Action
@@ -299,6 +331,55 @@ Add the dynamic badge to your README:
 
 See [packages/github-action/README.md](packages/github-action/README.md) for complete documentation.
 
+### @25xcodes/llmstxt-parser
+
+Parse and validate [llms.txt](https://llmstxt.org) files with RAG utilities.
+
+```typescript
+import { parseLLMSTxt, validateLLMSTxt, fetchLLMSTxt } from '@25xcodes/llmstxt-parser'
+
+// Parse markdown
+const doc = parseLLMSTxt(markdown)
+console.log(doc.title, doc.links)
+
+// Validate
+const result = validateLLMSTxt(doc)
+console.log(result.valid, result.score)
+
+// Fetch from URL or domain
+const doc = await fetchLLMSTxt('example.com')
+```
+
+**Features:**
+- 📝 Parse llms.txt markdown into structured documents
+- ✅ Validate per llmstxt.org specification with quality scoring
+- 🔍 Discover llms.txt from well-known paths
+- 🎯 RAG utilities: token estimation, format conversion, link extraction
+- 🚀 Zero runtime dependencies, works in Node.js and browsers
+
+See [packages/llmstxt-parser/README.md](packages/llmstxt-parser/README.md) for complete documentation.
+
+### @25xcodes/llmfeed-health-monitor (CLI)
+
+Feed health monitoring, crawling, and outreach automation.
+
+```bash
+npm install -g @25xcodes/llmfeed-health-monitor
+
+llmfeed-health check https://example.com/.well-known/mcp.llmfeed.json
+llmfeed-health crawl https://site1.com https://site2.com
+llmfeed-health discover example.com
+llmfeed-health report https://example.com/feed.json --output report.html
+```
+
+**Features:**
+- 🔍 Feed crawler with opt-out detection
+- 📊 HTML & JSON health reports
+- 🔔 Multi-channel notifications (GitHub Issues, Email, Twitter)
+- ⏰ Scheduled monitoring with cron
+
+See [packages/health-monitor/README.md](packages/health-monitor/README.md) for complete documentation.
+
 ## Roadmap
 
 ### ✅ Completed
@@ -321,25 +402,31 @@ See [packages/github-action/README.md](packages/github-action/README.md) for com
    - Dynamic SVG badge generation
    - Outputs for downstream workflow steps
 
+4. **Feed Health Monitor** — `@25xcodes/llmfeed-health-monitor`
+   - Feed crawler with opt-out detection
+   - HTML & JSON health reports
+   - GitHub Issues / Email / Twitter notifications
+   - Scheduled monitoring with cron
+
+5. **LLMS.txt Parser** — `@25xcodes/llmstxt-parser`
+   - Parse llms.txt per llmstxt.org specification
+   - Validation with quality scoring
+   - Well-known path discovery
+   - RAG utilities (tokens, format, links)
+
 ### 📋 Planned
 
-4. **Feed Schema Generator**
+6. **Feed Schema Generator**
    - Generate LLMFeed from OpenAPI/Swagger specs
    - Import from existing MCP server definitions
    - TypeScript type generation from feed schemas
    - Reduce manual feed authoring friction
 
-5. **Multi-Feed Aggregator**
+7. **Multi-Feed Aggregator**
    - Combine multiple feeds into unified index
    - Namespace collision detection
    - Cross-feed capability search
    - Agent-optimized merged output
-
-6. **Feed Health Monitor** (Community Interest)
-   - Uptime tracking for registered feeds
-   - Signature expiration warnings
-   - Broken public_key_hint detection
-   - Optional status badges
 
 ## Reference Implementation
 

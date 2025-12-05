@@ -15,12 +15,19 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', href: '/webmcp-tooling-suite/docs/favicon.svg', type: 'image/svg+xml' }],
+    ['link', { rel: 'canonical', href: 'https://kiarashplusplus.github.io/webmcp-tooling-suite/docs/' }],
     ['meta', { name: 'theme-color', content: '#7c3aed' }],
     ['meta', { name: 'og:type', content: 'website' }],
-    ['meta', { name: 'og:title', content: 'LLMFeed Documentation - MCP Feed Ecosystem Tools' }],
-    ['meta', { name: 'og:description', content: 'Comprehensive documentation for LLMFeed validator, signer, and health monitor packages. Build trusted AI agent integrations with LLMFeed JSON (fully supported) and llm.txt (coming soon).' }],
-    ['meta', { name: 'twitter:card', content: 'summary' }],
-    ['meta', { name: 'keywords', content: 'MCP, Model Context Protocol, LLMFeed, AI agents, feed validation, cryptographic signing, llm.txt, llmfeed.json, WebMCP' }],
+    ['meta', { name: 'og:site_name', content: 'LLMFeed Documentation' }],
+    ['meta', { name: 'og:title', content: 'LLMFeed - MCP Feed Ecosystem Tools for AI Agents' }],
+    ['meta', { name: 'og:description', content: 'Complete toolkit for LLMFeed JSON and llms.txt: validator, signer, health monitor, and parser. Ed25519 signatures, RAG utilities, and GitHub Actions for AI agent integrations.' }],
+    ['meta', { name: 'og:image', content: 'https://kiarashplusplus.github.io/webmcp-tooling-suite/og-image.png' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: 'LLMFeed - MCP Feed Ecosystem Tools' }],
+    ['meta', { name: 'twitter:description', content: 'Validate, sign, and monitor LLMFeed JSON & llms.txt feeds for AI agent integrations.' }],
+    ['meta', { name: 'keywords', content: 'MCP, Model Context Protocol, LLMFeed, llms.txt, llmstxt, AI agents, feed validation, Ed25519 signing, llmfeed.json, WebMCP, RAG, vector database' }],
+    ['meta', { name: 'author', content: 'Kiarash Adl' }],
+    ['meta', { name: 'robots', content: 'index, follow' }],
   ],
 
   themeConfig: {
@@ -100,6 +107,12 @@ export default defineConfig({
           text: '@25xcodes/llmfeed-action',
           items: [
             { text: 'GitHub Action', link: '/packages/github-action/' },
+          ]
+        },
+        {
+          text: '@25xcodes/llmstxt-parser',
+          items: [
+            { text: 'Overview', link: '/packages/llmstxt-parser/' },
           ]
         }
       ],

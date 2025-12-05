@@ -7,10 +7,10 @@ LLMFeed provides a suite of npm packages for working with MCP feeds. Each packag
 | Format | Validation | Signing | Health Monitoring |
 |--------|------------|---------|------------------|
 | **LLMFeed JSON** (`.json`) | ✅ Full | ✅ Full | ✅ Full |
-| **llm.txt** (`.txt`) | 🚧 Coming | ❌ N/A | 🚧 Coming |
+| **llms.txt** (`.txt`) | ✅ Full | ❌ N/A | ❌ N/A |
 
-::: tip Current Status
-All packages are fully built and tested for **LLMFeed JSON** format. Support for **llm.txt** parsing is on our roadmap.
+::: tip New in v1.2.0
+**llms.txt support is now available!** Use `@25xcodes/llmstxt-parser` to parse and validate llms.txt files.
 :::
 
 ## Overview
@@ -47,6 +47,14 @@ All packages are fully built and tested for **LLMFeed JSON** format. Support for
       <a href="/packages/github-action/">Documentation →</a>
     </div>
   </div>
+  
+  <div class="package-card">
+    <h3>@25xcodes/llmstxt-parser</h3>
+    <p>Parse & validate llms.txt files with RAG utilities</p>
+    <div style="margin-top: 1rem;">
+      <a href="/packages/llmstxt-parser/">Documentation →</a>
+    </div>
+  </div>
 </div>
 
 ## Installation
@@ -68,6 +76,9 @@ npm install @25xcodes/llmfeed-signer
 
 # Just health monitoring
 npm install @25xcodes/llmfeed-health-monitor
+
+# Just llms.txt parsing
+npm install @25xcodes/llmstxt-parser
 ```
 
 ## Package Dependencies
@@ -118,6 +129,13 @@ import type {
   StorageAdapter,
   CrawlerConfig
 } from '@25xcodes/llmfeed-health-monitor'
+
+import type {
+  LLMSTxtDocument,
+  LLMSTxtValidationResult,
+  LLMSTxtLink,
+  FetchOptions
+} from '@25xcodes/llmstxt-parser'
 ```
 
 ## Browser & Node.js
@@ -150,6 +168,9 @@ npx @25xcodes/llmfeed-signer sign ./feed.json --key ./keys/private.pem
 # Monitor feed health
 npx @25xcodes/llmfeed-health-monitor crawl https://example.com/.well-known/mcp.llmfeed.json
 npx @25xcodes/llmfeed-health-monitor report --format html --output report.html
+
+# Parse llms.txt (library only, no CLI)
+import { parseLLMSTxt, validateLLMSTxt } from '@25xcodes/llmstxt-parser'
 ```
 
 ## Versioning
@@ -171,3 +192,4 @@ All packages are open source under the MIT license:
 - [packages/signer](https://github.com/kiarashplusplus/webmcp-tooling-suite/tree/main/packages/signer)
 - [packages/health-monitor](https://github.com/kiarashplusplus/webmcp-tooling-suite/tree/main/packages/health-monitor)
 - [packages/github-action](https://github.com/kiarashplusplus/webmcp-tooling-suite/tree/main/packages/github-action)
+- [packages/llmstxt-parser](https://github.com/kiarashplusplus/webmcp-tooling-suite/tree/main/packages/llmstxt-parser)

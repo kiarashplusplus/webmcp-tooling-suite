@@ -3,6 +3,9 @@
 User-agent: *
 Allow: /
 
+# Sitemap
+Sitemap: https://kiarashplusplus.github.io/webmcp-tooling-suite/sitemap.xml
+
 # Explicitly allow AI bots and crawlers
 User-agent: GPTBot
 Allow: /

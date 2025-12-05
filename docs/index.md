@@ -22,7 +22,7 @@ hero:
 features:
   - icon: ✅
     title: Feed Validation
-    details: Comprehensive schema validation for LLMFeed JSON feeds with detailed error reporting. Ensure your feeds are AI-ready. (llm.txt support coming soon)
+    details: Comprehensive schema validation for LLMFeed JSON feeds and llms.txt files with detailed error reporting. Ensure your feeds are AI-ready.
     link: /packages/validator/
     linkText: Learn more
 
@@ -55,6 +55,12 @@ features:
     details: Define rich capability metadata with JSON Schema validation. Describe what your service can do for AI agents.
     link: /guide/capabilities
     linkText: Learn more
+
+  - icon: 📄
+    title: llms.txt Parser
+    details: Parse and validate llms.txt files per llmstxt.org spec. RAG utilities for token estimation and vector DB indexing.
+    link: /packages/llmstxt-parser/
+    linkText: Learn more
 ---
 
 <div class="vp-doc" style="padding: 2rem;">
@@ -67,13 +73,13 @@ LLMFeed tools support two feed formats for the **Model Context Protocol (MCP)** 
 
 | Format | File | Status | Description |
 |--------|------|--------|-------------|
-| **LLMFeed JSON** | `llmfeed.json`, `feed.json` | ✅ **Fully Supported** | Structured JSON format with cryptographic signing, capability schemas, and full validation |
-| **llm.txt** | `llm.txt`, `/.well-known/llm.txt` | 🚧 **Work in Progress** | Markdown-based format for human-readable documentation (parsing support coming soon) |
+| **LLMFeed JSON** | `mcp.llmfeed.json` | ✅ **Fully Supported** | Structured JSON format with cryptographic signing, capability schemas, and full validation |
+| **llms.txt** | `llms.txt`, `/.well-known/llms.txt` | ✅ **Fully Supported** | Markdown format for human-readable documentation with parsing, validation, and RAG utilities |
 
 </div>
 
-::: tip Current Focus
-Our tooling is fully built for **LLMFeed JSON** format. This includes validation, signing, health monitoring, and CI/CD integration. Support for **llm.txt** (the markdown-based format) is planned for future releases.
+::: tip NEW in v1.2.0
+**llms.txt support is now available!** The `@25xcodes/llmstxt-parser` package provides full parsing, validation, and RAG utilities for [llms.txt](https://llmstxt.org) files.
 :::
 
 ## The MCP Feed Ecosystem
@@ -120,14 +126,17 @@ npm install @25xcodes/llmfeed-signer
 
 # Health Monitor - Feed crawling & health reports
 npm install @25xcodes/llmfeed-health-monitor
+
+# llms.txt Parser - Parse llms.txt files with RAG utilities
+npm install @25xcodes/llmstxt-parser
 ```
 
 ## Why LLMFeed?
 
 <div class="stats-grid">
   <div class="stat-item">
-    <div class="stat-value">3</div>
-    <div class="stat-label">Core Packages</div>
+    <div class="stat-value">5</div>
+    <div class="stat-label">npm Packages</div>
   </div>
   <div class="stat-item">
     <div class="stat-value">Ed25519</div>
