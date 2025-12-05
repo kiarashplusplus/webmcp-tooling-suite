@@ -6,6 +6,8 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:create": "wrangler d1 create webmcp-directory",
     "db:migrate": "wrangler d1 execute webmcp-directory --file=./schema.sql",
     "db:migrate:local": "wrangler d1 execute webmcp-directory --local --file=./schema.sql"
@@ -13,6 +15,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
     "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
     "wrangler": "^3.91.0"
   }
 }
