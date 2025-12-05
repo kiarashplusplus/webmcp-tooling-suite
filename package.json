@@ -10,7 +10,7 @@
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
-        "build:packages": "npm run build -w @25xcodes/llmfeed-validator && npm run build -w @25xcodes/llmfeed-signer && npm run build -w @25xcodes/llmfeed-action",
+        "build:packages": "npm run build -w @25xcodes/llmfeed-validator && npm run build -w @25xcodes/llmfeed-signer && npm run build -w @25xcodes/llmfeed-action && npm run build -w @25xcodes/llmfeed-health-monitor && npm run build -w @25xcodes/llmstxt-parser",
         "docs:dev": "vitepress dev docs",
         "docs:build": "vitepress build docs",
         "docs:preview": "vitepress preview docs",
