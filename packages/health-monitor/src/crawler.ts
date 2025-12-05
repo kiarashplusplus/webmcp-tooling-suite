@@ -222,10 +222,10 @@ export async function discoverFeeds(
 }
 
 // ============================================
-// Helper Functions
+// Helper Functions (exported for testing)
 // ============================================
 
-function normalizeUrl(url: string): string {
+export function normalizeUrl(url: string): string {
   // Add protocol if missing
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     url = `https://${url}`
@@ -240,7 +240,7 @@ function normalizeUrl(url: string): string {
   return parsed.toString()
 }
 
-function generateFeedId(url: string): string {
+export function generateFeedId(url: string): string {
   // Create a stable ID from the URL
   const parsed = new URL(url)
   return `${parsed.hostname}${parsed.pathname}`.replace(/[^a-z0-9]/gi, '-').toLowerCase()
@@ -309,7 +309,7 @@ async function checkRobotsTxt(domain: string): Promise<string | null> {
   }
 }
 
-function checkFeedOptOut(feed: unknown): string | null {
+export function checkFeedOptOut(feed: unknown): string | null {
   if (!feed || typeof feed !== 'object') return null
   
   const f = feed as Record<string, unknown>
@@ -331,6 +331,25 @@ function checkFeedOptOut(feed: unknown): string | null {
         meta['health-monitor'] === 'noindex') {
       return 'Feed _meta: health-monitor=noindex'
     }
+  }
+  
+  return null
+}
+
+/**
+ * Check HTML meta tags for opt-out signals
+ */
+export function checkMetaOptOut(html: string): string | null {
+  // Check for llmfeed-monitor meta tag
+  const llmfeedMatch = html.match(/<meta[^>]*name=["']llmfeed-monitor["'][^>]*content=["']([^"']+)["']/i)
+  if (llmfeedMatch && llmfeedMatch[1].toLowerCase().includes('noindex')) {
+    return 'Meta tag: llmfeed-monitor=noindex'
+  }
+  
+  // Check for robots noai meta tag
+  const robotsMatch = html.match(/<meta[^>]*name=["']robots["'][^>]*content=["']([^"']+)["']/i)
+  if (robotsMatch && robotsMatch[1].toLowerCase().includes('noai')) {
+    return 'Meta tag: robots=noai'
   }
   
   return null

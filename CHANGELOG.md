@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2024-12-05
+
+### Added
+
+#### npm Packages
+- **@25xcodes/llmfeed-health-monitor** (`1.0.0`) — NEW: Feed health monitoring & outreach automation
+  - **Feed Crawler** — Crawl and validate LLMFeeds with opt-out detection
+    - Respects `robots.txt` for `LLMFeed-Health-Monitor` user-agent
+    - Detects feed metadata opt-out signals (`health-monitor: noindex`)
+    - Detects HTML meta tag opt-outs (`llmfeed-monitor`, `robots: noai`)
+  - **Discovery Engine** — Auto-discover feeds from sitemaps and well-known paths
+  - **Multi-channel Notifier** — Automated outreach via:
+    - GitHub Issues (creates issues on detected repos)
+    - Email (via SMTP/nodemailer)
+    - Twitter DMs (via Twitter API)
+  - **Report Generator** — Beautiful HTML & JSON health reports
+    - Visual score ring with color coding
+    - One-click fix PR generation for GitHub repos
+    - Detailed issue breakdowns with remediation suggestions
+  - **Storage Adapters** — Flexible persistence options
+    - In-memory storage for testing
+    - SQLite/better-sqlite3 for production
+  - **Scheduler** — Cron-based monitoring with node-cron
+  - **CLI Tool** (`llmfeed-health`) — Full CLI for all operations
+    - `check <url>` — Check a single feed
+    - `crawl <urls...>` — Crawl multiple feeds
+    - `discover <domain>` — Discover feeds from a domain
+    - `report <url>` — Generate HTML report
+    - `monitor` — Start scheduled monitoring
+    - `stats` — View monitoring statistics
+  - TypeScript support with full type definitions
+  - Peer dependency on `@25xcodes/llmfeed-validator`
+
+#### GitHub Action
+- **Dynamic Badge Generation** — New shields.io integration via GitHub Gist
+  - New inputs: `badge-gist-id`, `badge-filename`
+  - New output: `badge-url` for README embedding
+  - Color-coded badges by score (brightgreen/green/yellow/orange/red)
+  - Automatic Gist updates on each validation run
+  - Backwards compatible with existing SVG badge generation
+
+### Changed
+- GitHub Action now generates both `.svg` and `.json` badge files when `create-badge: true`
+
+---
+
 ## [1.0.0] - 2024-12-04
 
 ### 🎉 Initial Release
@@ -59,4 +105,5 @@ First stable release of the WebMCP Tooling Suite—a comprehensive toolkit for t
 
 ---
 
+[1.1.0]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.1.0
 [1.0.0]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.0.0
