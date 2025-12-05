@@ -320,44 +320,52 @@ async function handleFeedsAPI(
     const domain = feedUrl.hostname
     const id = `${domain.replace(/\./g, '-')}-${Date.now()}`
 
-    // Check for duplicate URL
-    const existing = await env.DB.prepare(
-      'SELECT id FROM feeds WHERE url = ? AND is_active = 1'
-    ).bind(body.url).first()
-    
-    if (existing) {
-      return jsonResponse({ error: 'This feed URL has already been submitted' }, 409, cors)
+    try {
+      // Check for duplicate URL
+      const existing = await env.DB.prepare(
+        'SELECT id FROM feeds WHERE url = ? AND is_active = 1'
+      ).bind(body.url).first()
+      
+      if (existing) {
+        return jsonResponse({ error: 'This feed URL has already been submitted' }, 409, cors)
+      }
+
+      // Insert new feed
+      await env.DB.prepare(`
+        INSERT INTO feeds (id, url, domain, title, description, feed_type, capabilities_count, version, score, signature_valid, submitted_by, submitted_at, is_curated, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1)
+      `).bind(
+        id,
+        body.url,
+        domain,
+        body.title || null,
+        body.description || null,
+        body.feed_type || 'mcp',
+        body.capabilities_count || 0,
+        body.version || null,
+        body.score ?? null,
+        body.signature_valid ? 1 : 0,
+        user.login,
+        Date.now()
+      ).run()
+
+      // Fetch the created feed
+      const created = await env.DB.prepare(
+        'SELECT * FROM feeds WHERE id = ?'
+      ).bind(id).first()
+
+      return jsonResponse({ 
+        success: true, 
+        feed: rowToFeed(created as Record<string, unknown>),
+        message: 'Feed submitted successfully'
+      }, 201, cors)
+    } catch (dbError) {
+      console.error('Database error:', dbError)
+      return jsonResponse({ 
+        error: 'Database error', 
+        message: dbError instanceof Error ? dbError.message : 'Failed to insert feed'
+      }, 500, cors)
     }
-
-    // Insert new feed
-    await env.DB.prepare(`
-      INSERT INTO feeds (id, url, domain, title, description, feed_type, capabilities_count, version, score, signature_valid, submitted_by, submitted_at, is_curated, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1)
-    `).bind(
-      id,
-      body.url,
-      domain,
-      body.title || null,
-      body.description || null,
-      body.feed_type || 'mcp',
-      body.capabilities_count || 0,
-      body.version || null,
-      body.score || null,
-      body.signature_valid ? 1 : 0,
-      user.login,
-      Date.now()
-    ).run()
-
-    // Fetch the created feed
-    const created = await env.DB.prepare(
-      'SELECT * FROM feeds WHERE id = ?'
-    ).bind(id).first()
-
-    return jsonResponse({ 
-      success: true, 
-      feed: rowToFeed(created as Record<string, unknown>),
-      message: 'Feed submitted successfully'
-    }, 201, cors)
   }
 
   return jsonResponse({ error: 'Method not allowed' }, 405, cors)
