@@ -5,7 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2024-12-05
+## [1.1.1] - 2025-12-05
+
+### Changed
+
+#### @25xcodes/llmfeed-validator (`1.1.0`)
+- **Scoring Alignment** — Unified scoring formula across all tools
+  - Unsigned feeds now receive `-30` penalty (consistent with GitHub Action)
+  - Failed signature verification: `-50` penalty
+  - Verified signature: `+10` bonus
+  - Formula: `100 - (errors×20) - (warnings×5) - (unsigned?30:0) + (verified?10:0)`
+
+#### @25xcodes/llmfeed-health-monitor (`1.1.0`)
+- **Scoring Alignment** — Crawler scoring now matches validator
+- **Improved GitHub Issues** — Retry issue creation without labels if permission denied
+- **Fixed Issue Templates** — Reference GitHub Action instead of broken llm-feed.org link
+- **Raw GitHub URL Detection** — Support `raw.githubusercontent.com` URLs for one-click PRs
+- **Path Normalization** — Fixed double-slash bug in PR URLs
+
+---
+
+## [1.1.0] - 2025-12-05
 
 ### Added
 
@@ -105,5 +125,6 @@ First stable release of the WebMCP Tooling Suite—a comprehensive toolkit for t
 
 ---
 
+[1.1.1]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.1.1
 [1.1.0]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.1.0
 [1.0.0]: https://github.com/kiarashplusplus/webmcp-tooling-suite/releases/tag/v1.0.0
