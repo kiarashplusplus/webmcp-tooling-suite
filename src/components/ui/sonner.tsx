@@ -14,8 +14,16 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-bg": "var(--popover)",
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
+          "--success-bg": "var(--popover)",
+          "--success-text": "var(--popover-foreground)",
+          "--success-border": "var(--border)",
         } as CSSProperties
       }
+      toastOptions={{
+        classNames: {
+          description: "text-muted-foreground",
+        },
+      }}
       {...props}
     />
   )
