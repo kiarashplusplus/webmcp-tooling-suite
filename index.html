@@ -32,8 +32,36 @@
     <meta name="twitter:image" content="https://kiarashplusplus.github.io/webmcp-tooling-suite/og-image.png" />
     <meta name="twitter:image:alt" content="LLMFeed Analyzer - Validate and archive MCP feeds for AI agents" />
     
+    <!-- Preconnect to critical origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://webmcp-directory.the-safe.workers.dev" crossorigin>
+    <link rel="dns-prefetch" href="https://api.github.com">
+    
+    <!-- Critical CSS for above-the-fold content (LCP/FCP optimization) -->
+    <style>
+      /* Minimal critical CSS for immediate render */
+      *,*::before,*::after{box-sizing:border-box}
+      html{-webkit-text-size-adjust:100%;line-height:1.5}
+      body{margin:0;font-family:'Space Grotesk',system-ui,-apple-system,sans-serif;background:#1a1f2e;color:#f5f7fa}
+      #root{min-height:100vh}
+      /* Loading skeleton placeholder */
+      #root:empty::before{content:'';display:block;width:100%;max-width:1200px;margin:60px auto;padding:20px}
+      #root:empty::after{content:'';display:block;width:200px;height:40px;margin:100px auto;background:linear-gradient(90deg,#2a3042 0%,#3a4055 50%,#2a3042 100%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+      @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+      /* Preload font display swap */
+      @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:400;font-display:swap;src:local('Space Grotesk')}
+      @font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400;font-display:swap;src:local('JetBrains Mono')}
+    </style>
+    
+    <!-- Load fonts asynchronously with display=swap -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- Preload main CSS bundle (will be replaced by Vite build) -->
+    <link href="/src/main.css" rel="stylesheet" />
+    
     <!-- LLMFeed Directory Links for Crawlers/AI Agents -->
-    <!-- These links expose feed URLs with data-feed-json-url attributes for programmatic discovery -->
     <link rel="feed" type="application/json" href="https://25x.codes/.well-known/mcp.llmfeed.json" 
           data-feed-json-url="https://25x.codes/.well-known/mcp.llmfeed.json" 
           data-feed-type="mcp" 
@@ -44,205 +72,9 @@
           data-feed-type="mcp" 
           data-feed-domain="wellknownmcp.org" 
           title="WellKnownMCP Feed" />
-    <link rel="feed" type="application/json" href="https://llmca.org/.well-known/mcp.llmfeed.json" 
-          data-feed-json-url="https://llmca.org/.well-known/mcp.llmfeed.json" 
-          data-feed-type="mcp" 
-          data-feed-domain="llmca.org" 
-          title="LLMCA Feed" />
-    <link rel="feed" type="application/json" href="https://dev.mcp.siemens.com/.well-known/mcp.llmfeed.json" 
-          data-feed-json-url="https://dev.mcp.siemens.com/.well-known/mcp.llmfeed.json" 
-          data-feed-type="mcp" 
-          data-feed-domain="dev.mcp.siemens.com" 
-          title="Siemens MCP Server Feed" />
-    <link rel="feed" type="application/json" href="https://wellknownmcp.org/.well-known/llm-index.llmfeed.json" 
-          data-feed-json-url="https://wellknownmcp.org/.well-known/llm-index.llmfeed.json" 
-          data-feed-type="llm-index" 
-          data-feed-domain="wellknownmcp.org" 
-          title="LLM Index Directory" />
-    <!-- Full directory API endpoint for all feeds -->
     <link rel="api" type="application/json" href="https://webmcp-directory.the-safe.workers.dev/api/feeds" 
           data-feed-directory-api="https://webmcp-directory.the-safe.workers.dev/api/feeds"
           title="LLMFeed Directory API - All Feeds" />
-    
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Universal LLMFeed Analyzer",
-      "url": "https://kiarashplusplus.github.io/webmcp-tooling-suite/",
-      "description": "Comprehensive validation, discovery, and archival tools for any LLMFeed-enabled website or custom feed URL. Provides cryptographic signature verification, schema analysis, and RAG indexing preparation.",
-      "applicationCategory": "DeveloperApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Universal LLMFeed Validation",
-        "Ed25519 Signature Verification",
-        "WebMCP Feed Discovery",
-        "RAG Indexing Preparation",
-        "Feed Archival & Versioning",
-        "Schema Analysis",
-        "JSON-RPC Tool Inspection"
-      ],
-      "audience": {
-        "@type": "Audience",
-        "audienceType": "Developers, AI Engineers, Machine Learning Practitioners"
-      }
-    }
-    </script>
-    
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareTool",
-      "name": "LLMFeed Validator",
-      "description": "Validates LLMFeed JSON structure, verifies Ed25519 cryptographic signatures, and ensures schema conformance for AI agent security",
-      "url": "https://kiarashplusplus.github.io/webmcp-tooling-suite/",
-      "applicationCategory": "SecurityApplication"
-    }
-    </script>
-    
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "What is LLMFeed?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "LLMFeed is a file-based specification that provides structured JSON feeds for AI agents, targeting websites unable to operate a full JSON-RPC server. Feeds are discovered via .well-known URIs and include metadata, capabilities, and cryptographic signatures for security."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How does Ed25519 signature verification work?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "The LLMFeed Analyzer verifies Ed25519 cryptographic signatures included in the trust block of feeds. This ensures the feed has not been tampered with and originates from the claimed source, preventing tool poisoning and supply chain attacks."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What is WebMCP?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "WebMCP (Web Model Context Protocol) is a W3C initiative that enables websites to expose tools as client-side JavaScript functions via the navigator.modelContext API. It allows AI agents to interact with web pages through well-defined tools instead of brittle UI automation."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How do I prepare LLM feeds for RAG indexing?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Use the RAG Prep tab to transform validated LLMFeed data into structured format suitable for vector embeddings. The tool extracts capability descriptions, generates embedding previews, and exports JSON optimized for vector stores and semantic search."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I archive feeds from any URL?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes! When you submit a feed to our directory, it automatically creates a versioned GitHub Gist archive with a permanent URL. Each archive includes the full feed JSON, validation score, and signature status. Gists provide revision history, public accessibility, and are owned by your GitHub account."
-          }
-        }
-      ]
-    }
-    </script>
-    
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "TechArticle",
-      "headline": "Understanding LLMFeed and WebMCP for AI Agent Integration",
-      "description": "Comprehensive guide to LLMFeed validation, WebMCP discovery, and secure AI agent integration with cryptographic verification",
-      "keywords": "LLMFeed, WebMCP, Model Context Protocol, AI agents, Ed25519, cryptographic signatures, feed validation, RAG indexing",
-      "datePublished": "2025-12-05T00:00:00Z",
-      "author": {
-        "@type": "Person",
-        "name": "Kiarash Adl",
-        "url": "https://25x.codes/"
-      }
-    }
-    </script>
-    
-    <!-- LLMFeed Directory - Machine-readable feed URLs for AI agents and scrapers -->
-    <!-- Full directory available at: https://webmcp-directory.the-safe.workers.dev/api/feeds -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      "name": "LLMFeed Directory",
-      "description": "Directory of LLMFeed-enabled websites. Full feed list available at API endpoint.",
-      "mainEntityOfPage": "https://webmcp-directory.the-safe.workers.dev/api/feeds",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "item": {
-            "@type": "WebAPI",
-            "name": "25x.codes",
-            "description": "AI-powered development tools and services",
-            "url": "https://25x.codes/.well-known/mcp.llmfeed.json",
-            "documentation": "https://25x.codes/"
-          }
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "item": {
-            "@type": "WebAPI",
-            "name": "WellKnownMCP",
-            "description": "The WebMCP specification and reference implementation",
-            "url": "https://wellknownmcp.org/.well-known/mcp.llmfeed.json",
-            "documentation": "https://wellknownmcp.org/"
-          }
-        },
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "item": {
-            "@type": "WebAPI",
-            "name": "LLMCA",
-            "description": "LLM Certification Authority - Trust infrastructure for AI agents",
-            "url": "https://llmca.org/.well-known/mcp.llmfeed.json",
-            "documentation": "https://llmca.org/"
-          }
-        },
-        {
-          "@type": "ListItem",
-          "position": 4,
-          "item": {
-            "@type": "WebAPI",
-            "name": "Siemens MCP Server",
-            "description": "Siemens search tools and resources via MCP protocol",
-            "url": "https://dev.mcp.siemens.com/.well-known/mcp.llmfeed.json",
-            "documentation": "https://dev.mcp.siemens.com/"
-          }
-        },
-        {
-          "@type": "ListItem",
-          "position": 5,
-          "item": {
-            "@type": "WebAPI",
-            "name": "LLM Index",
-            "description": "Index of LLMFeed-enabled sites",
-            "url": "https://wellknownmcp.org/.well-known/llm-index.llmfeed.json",
-            "documentation": "https://wellknownmcp.org/"
-          }
-        }
-      ]
-    }
-    </script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="/src/main.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -285,28 +117,38 @@
               LLMCA - Trust infrastructure for AI agents
             </a>
           </li>
-          <li>
-            <a href="https://dev.mcp.siemens.com/.well-known/mcp.llmfeed.json"
-               data-feed-json-url="https://dev.mcp.siemens.com/.well-known/mcp.llmfeed.json"
-               data-feed-type="mcp"
-               data-feed-domain="dev.mcp.siemens.com">
-              Siemens MCP Server - Search tools via MCP protocol
-            </a>
-          </li>
-          <li>
-            <a href="https://wellknownmcp.org/.well-known/llm-index.llmfeed.json"
-               data-feed-json-url="https://wellknownmcp.org/.well-known/llm-index.llmfeed.json"
-               data-feed-type="llm-index"
-               data-feed-domain="wellknownmcp.org">
-              LLM Index - Feed directory
-            </a>
-          </li>
         </ul>
         <p>For the full interactive experience, please enable JavaScript.</p>
       </div>
     </noscript>
     
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Defer non-critical structured data to after first paint -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Universal LLMFeed Analyzer",
+      "url": "https://kiarashplusplus.github.io/webmcp-tooling-suite/",
+      "description": "Comprehensive validation, discovery, and archival tools for any LLMFeed-enabled website or custom feed URL.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+      "featureList": ["Universal LLMFeed Validation", "Ed25519 Signature Verification", "WebMCP Feed Discovery", "RAG Indexing Preparation"]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {"@type": "Question", "name": "What is LLMFeed?", "acceptedAnswer": {"@type": "Answer", "text": "LLMFeed is a file-based specification that provides structured JSON feeds for AI agents, targeting websites unable to operate a full JSON-RPC server."}},
+        {"@type": "Question", "name": "How does Ed25519 signature verification work?", "acceptedAnswer": {"@type": "Answer", "text": "The LLMFeed Analyzer verifies Ed25519 cryptographic signatures included in the trust block of feeds to ensure authenticity."}},
+        {"@type": "Question", "name": "What is WebMCP?", "acceptedAnswer": {"@type": "Answer", "text": "WebMCP enables websites to expose tools as client-side JavaScript functions via the navigator.modelContext API for AI agent interaction."}}
+      ]
+    }
+    </script>
 </body>
 
 </html>
