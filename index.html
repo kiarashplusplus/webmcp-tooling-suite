@@ -2,153 +2,200 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    
-    <title>Universal LLMFeed Analyzer - MCP Feed Validator & Archive</title>
-    <meta name="description" content="Comprehensive validation, discovery, and archival tools for LLMFeed and WebMCP feeds. Verify Ed25519 signatures, analyze capabilities, and prepare feeds for RAG indexing. Universal support for any .llmfeed.json file." />
-    <meta name="keywords" content="LLMFeed, WebMCP, MCP, Model Context Protocol, AI agents, feed validation, Ed25519 signature, RAG indexing, AI tools, machine learning, agent discovery, cryptographic verification" />
-    <meta name="author" content="Kiarash Adl" />
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-    <meta name="googlebot" content="index, follow" />
-    
-    <link rel="canonical" href="https://kiarashplusplus.github.io/webmcp-tooling-suite/" />
-    
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Universal LLMFeed Analyzer - MCP Feed Validator & Archive" />
-    <meta property="og:description" content="Validate, discover, and archive LLMFeed and WebMCP feeds. Ed25519 signature verification, schema analysis, and RAG preparation for AI agents." />
-    <meta property="og:url" content="https://kiarashplusplus.github.io/webmcp-tooling-suite/" />
-    <meta property="og:site_name" content="LLMFeed Analyzer" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:image" content="https://kiarashplusplus.github.io/webmcp-tooling-suite/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Universal LLMFeed Analyzer - Validate and archive MCP feeds" />
-    
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Universal LLMFeed Analyzer - MCP Feed Validator & Archive" />
-    <meta name="twitter:description" content="Comprehensive validation and archival tools for LLMFeed and WebMCP feeds with Ed25519 signature verification." />
-    <meta name="twitter:image" content="https://kiarashplusplus.github.io/webmcp-tooling-suite/og-image.png" />
-    <meta name="twitter:image:alt" content="LLMFeed Analyzer - Validate and archive MCP feeds for AI agents" />
-    
-    <!-- Preconnect to critical origins -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://webmcp-directory.the-safe.workers.dev" crossorigin>
-    <link rel="dns-prefetch" href="https://api.github.com">
-    
-    <!-- Critical CSS for above-the-fold content (LCP/FCP optimization) -->
-    <style>
-      /* Minimal critical CSS for immediate render */
-      *,*::before,*::after{box-sizing:border-box}
-      html{-webkit-text-size-adjust:100%;line-height:1.5}
-      body{margin:0;font-family:'Space Grotesk',system-ui,-apple-system,sans-serif;background:#1a1f2e;color:#f5f7fa}
-      #root{min-height:100vh}
-      /* Loading skeleton placeholder */
-      #root:empty::before{content:'';display:block;width:100%;max-width:1200px;margin:60px auto;padding:20px}
-      #root:empty::after{content:'';display:block;width:200px;height:40px;margin:100px auto;background:linear-gradient(90deg,#2a3042 0%,#3a4055 50%,#2a3042 100%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
-      @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-      /* Preload font display swap */
-      @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:400;font-display:swap;src:local('Space Grotesk')}
-      @font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400;font-display:swap;src:local('JetBrains Mono')}
-    </style>
-    
-    <!-- Load fonts asynchronously with display=swap -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
-    
-    <!-- Preload main CSS bundle (will be replaced by Vite build) -->
-    <link href="/src/main.css" rel="stylesheet" />
-    
-    <!-- LLMFeed Directory Links for Crawlers/AI Agents -->
-    <link rel="feed" type="application/json" href="https://25x.codes/.well-known/mcp.llmfeed.json" 
-          data-feed-json-url="https://25x.codes/.well-known/mcp.llmfeed.json" 
-          data-feed-type="mcp" 
-          data-feed-domain="25x.codes" 
-          title="25x.codes MCP Feed" />
-    <link rel="feed" type="application/json" href="https://wellknownmcp.org/.well-known/mcp.llmfeed.json" 
-          data-feed-json-url="https://wellknownmcp.org/.well-known/mcp.llmfeed.json" 
-          data-feed-type="mcp" 
-          data-feed-domain="wellknownmcp.org" 
-          title="WellKnownMCP Feed" />
-    <link rel="api" type="application/json" href="https://webmcp-directory.the-safe.workers.dev/api/feeds" 
-          data-feed-directory-api="https://webmcp-directory.the-safe.workers.dev/api/feeds"
-          title="LLMFeed Directory API - All Feeds" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <title>Universal LLMFeed Analyzer - MCP Feed Validator & Archive</title>
+  <meta name="description"
+    content="Comprehensive validation, discovery, and archival tools for LLMFeed and WebMCP feeds. Verify Ed25519 signatures, analyze capabilities, and prepare feeds for RAG indexing." />
+  <meta name="author" content="Kiarash Adl" />
+  <meta name="robots" content="index, follow" />
+
+  <link rel="canonical" href="https://kiarashplusplus.github.io/webmcp-tooling-suite/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Universal LLMFeed Analyzer" />
+  <meta property="og:description" content="Validate, discover, and archive LLMFeed and WebMCP feeds." />
+  <meta property="og:url" content="https://kiarashplusplus.github.io/webmcp-tooling-suite/" />
+  <meta property="og:image" content="https://kiarashplusplus.github.io/webmcp-tooling-suite/og-image.png" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Universal LLMFeed Analyzer" />
+  <meta name="twitter:image" content="https://kiarashplusplus.github.io/webmcp-tooling-suite/og-image.png" />
+
+  <!-- Preconnect to critical origins FIRST -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- CRITICAL: Inline comprehensive above-the-fold CSS -->
+  <style id="critical-css">
+    /* Reset & Base */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      border-width: 0;
+      border-style: solid
+    }
+
+    html {
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+      tab-size: 4
+    }
+
+    body {
+      margin: 0;
+      line-height: inherit;
+      font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, sans-serif
+    }
+
+    /* Theme - Dark mode default */
+    :root {
+      --background: oklch(0.18 0.04 240);
+      --foreground: oklch(0.97 0.02 220);
+      --primary: oklch(0.70 0.15 220);
+      --muted-foreground: oklch(0.75 0.03 230);
+      --card: oklch(0.25 0.03 235 / 0.5);
+      --border: oklch(0.97 0.02 220 / 0.18);
+      --radius: 1rem;
+    }
+
+    body {
+      background: var(--background);
+      color: var(--foreground)
+    }
+
+    /* Layout */
+    #root {
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem
+    }
+
+    /* Loading State - Shows immediately */
+    #root:empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem
+    }
+
+    #root:empty::before {
+      content: '';
+      display: block;
+      width: 280px;
+      height: 48px;
+      margin-bottom: 24px;
+      background: linear-gradient(90deg, oklch(0.25 0.03 235) 0%, oklch(0.35 0.04 235) 50%, oklch(0.25 0.03 235) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s ease-in-out infinite;
+      border-radius: 12px;
+    }
+
+    #root:empty::after {
+      content: '';
+      display: block;
+      width: 400px;
+      max-width: 90%;
+      height: 200px;
+      background: linear-gradient(90deg, oklch(0.22 0.03 235) 0%, oklch(0.28 0.03 235) 50%, oklch(0.22 0.03 235) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s ease-in-out infinite 0.2s;
+      border-radius: 16px;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0
+      }
+
+      100% {
+        background-position: -200% 0
+      }
+    }
+
+    /* Background gradient (matches App.tsx) */
+    #root::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.3;
+      z-index: -1;
+      background: radial-gradient(ellipse at top left, oklch(0.70 0.15 220) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, oklch(0.78 0.12 190) 0%, transparent 50%);
+    }
+
+    /* Font display swap */
+    @font-face {
+      font-family: 'Space Grotesk';
+      font-display: swap;
+      src: local('Space Grotesk'), local('SpaceGrotesk')
+    }
+
+    @font-face {
+      font-family: 'JetBrains Mono';
+      font-display: swap;
+      src: local('JetBrains Mono'), local('JetBrainsMono')
+    }
+
+    code,
+    pre,
+    .font-mono {
+      font-family: 'JetBrains Mono', ui-monospace, monospace
+    }
+
+    /* Glass card placeholder */
+    .glass-card {
+      background: var(--card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius)
+    }
+  </style>
+
+  <!-- Load fonts with font-display:swap (non-blocking) -->
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+    onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet">
+  </noscript>
+
+  <!-- Main CSS will be injected by Vite - we make it non-blocking via inline script below -->
 </head>
 
 <body>
-    <div id="root"></div>
-    
-    <!-- Static feed directory for scrapers/AI agents that don't execute JavaScript -->
-    <noscript>
-      <div id="llmfeed-directory" data-description="LLMFeed Directory - Machine-readable feed URLs">
-        <h1>LLMFeed Directory</h1>
-        <p>Directory of LLMFeed-enabled websites. <strong>For the complete list of all feeds, fetch the API:</strong></p>
-        <p><a href="https://webmcp-directory.the-safe.workers.dev/api/feeds" 
-              data-api-endpoint="true"
-              data-description="JSON API returning all registered LLMFeed URLs">
-          https://webmcp-directory.the-safe.workers.dev/api/feeds
-        </a></p>
-        
-        <h2>Registered Feeds</h2>
-        <ul>
-          <li>
-            <a href="https://25x.codes/.well-known/mcp.llmfeed.json" 
-               data-feed-json-url="https://25x.codes/.well-known/mcp.llmfeed.json"
-               data-feed-type="mcp"
-               data-feed-domain="25x.codes">
-              25x.codes - AI-powered development tools
-            </a>
-          </li>
-          <li>
-            <a href="https://wellknownmcp.org/.well-known/mcp.llmfeed.json"
-               data-feed-json-url="https://wellknownmcp.org/.well-known/mcp.llmfeed.json"
-               data-feed-type="mcp"
-               data-feed-domain="wellknownmcp.org">
-              WellKnownMCP - WebMCP specification
-            </a>
-          </li>
-          <li>
-            <a href="https://llmca.org/.well-known/mcp.llmfeed.json"
-               data-feed-json-url="https://llmca.org/.well-known/mcp.llmfeed.json"
-               data-feed-type="mcp"
-               data-feed-domain="llmca.org">
-              LLMCA - Trust infrastructure for AI agents
-            </a>
-          </li>
-        </ul>
-        <p>For the full interactive experience, please enable JavaScript.</p>
-      </div>
-    </noscript>
-    
-    <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- Defer non-critical structured data to after first paint -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Universal LLMFeed Analyzer",
-      "url": "https://kiarashplusplus.github.io/webmcp-tooling-suite/",
-      "description": "Comprehensive validation, discovery, and archival tools for any LLMFeed-enabled website or custom feed URL.",
-      "applicationCategory": "DeveloperApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
-      "featureList": ["Universal LLMFeed Validation", "Ed25519 Signature Verification", "WebMCP Feed Discovery", "RAG Indexing Preparation"]
-    }
-    </script>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {"@type": "Question", "name": "What is LLMFeed?", "acceptedAnswer": {"@type": "Answer", "text": "LLMFeed is a file-based specification that provides structured JSON feeds for AI agents, targeting websites unable to operate a full JSON-RPC server."}},
-        {"@type": "Question", "name": "How does Ed25519 signature verification work?", "acceptedAnswer": {"@type": "Answer", "text": "The LLMFeed Analyzer verifies Ed25519 cryptographic signatures included in the trust block of feeds to ensure authenticity."}},
-        {"@type": "Question", "name": "What is WebMCP?", "acceptedAnswer": {"@type": "Answer", "text": "WebMCP enables websites to expose tools as client-side JavaScript functions via the navigator.modelContext API for AI agent interaction."}}
-      ]
-    }
-    </script>
+  <div id="root"></div>
+
+  <noscript>
+    <div style="padding:40px;text-align:center">
+      <h1>LLMFeed Directory</h1>
+      <p>For the full experience, please enable JavaScript.</p>
+      <p>API: <a
+          href="https://webmcp-directory.the-safe.workers.dev/api/feeds">webmcp-directory.the-safe.workers.dev/api/feeds</a>
+      </p>
+    </div>
+  </noscript>
+
+  <script type="module" src="/src/main.tsx"></script>
+
+  <!-- Minimal structured data -->
+  <script
+    type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Universal LLMFeed Analyzer","url":"https://kiarashplusplus.github.io/webmcp-tooling-suite/","applicationCategory":"DeveloperApplication"}</script>
 </body>
 
 </html>
