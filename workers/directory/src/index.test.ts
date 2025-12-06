@@ -239,7 +239,7 @@ describe('generateFeedId', () => {
     const before = Date.now()
     const id = generateFeedId('example.com')
     const after = Date.now()
-    
+
     const parts = id.split('-')
     const timestamp = parseInt(parts[parts.length - 1], 10)
     expect(timestamp).toBeGreaterThanOrEqual(before)
@@ -352,6 +352,7 @@ describe('Constants', () => {
     expect(VALID_FEED_TYPES).toContain('mcp')
     expect(VALID_FEED_TYPES).toContain('export')
     expect(VALID_FEED_TYPES).toContain('llm-index')
-    expect(VALID_FEED_TYPES).toHaveLength(3)
+    expect(VALID_FEED_TYPES).toContain('llmstxt')
+    expect(VALID_FEED_TYPES).toHaveLength(4)
   })
 })

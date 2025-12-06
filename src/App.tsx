@@ -26,6 +26,7 @@ const LLMSTxtValidator = lazy(() => import('@/components/llmstxt/LLMSTxtValidato
 const LLMSTxtArchive = lazy(() => import('@/components/llmstxt/LLMSTxtArchive').then(m => ({ default: m.LLMSTxtArchive })))
 const LLMSTxtRAGPrep = lazy(() => import('@/components/llmstxt/LLMSTxtRAGPrep').then(m => ({ default: m.LLMSTxtRAGPrep })))
 const LLMSTxtDirectory = lazy(() => import('@/components/llmstxt/LLMSTxtDirectory').then(m => ({ default: m.LLMSTxtDirectory })))
+const LLMSTxtSubmit = lazy(() => import('@/components/llmstxt/LLMSTxtSubmit').then(m => ({ default: m.LLMSTxtSubmit })))
 
 // Loading skeleton for tab content
 function TabLoadingSkeleton() {
@@ -258,6 +259,15 @@ function AppContent() {
                 </TabsContent>
               )}
 
+              {/* Submit Tab - LLMS.txt mode */}
+              {mode === 'llmstxt' && (
+                <TabsContent value="submit" className="mt-0">
+                  <Suspense fallback={<TabLoadingSkeleton />}>
+                    <LLMSTxtSubmit />
+                  </Suspense>
+                </TabsContent>
+              )}
+
               {/* RAG Prep Tab */}
               <TabsContent value="rag" className="mt-0">
                 <Suspense fallback={<TabLoadingSkeleton />}>
@@ -291,19 +301,19 @@ function AppContent() {
             )}
 
             {/* Submit Your Site CTA - LLMS.txt mode */}
-            {mode === 'llmstxt' && activeTab !== 'archive' && (
+            {mode === 'llmstxt' && activeTab !== 'submit' && (
               <div className="mt-12 mb-8">
                 <div className="glass-card rounded-2xl p-6 border border-primary/20 bg-primary/5">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-bold text-foreground font-mono">Own a WebMCP-enabled site?</h3>
-                      <p className="text-sm text-muted-foreground">Archive your llms.txt and get listed in our directory</p>
+                      <h3 className="text-lg font-bold text-foreground font-mono">Have an llms.txt file?</h3>
+                      <p className="text-sm text-muted-foreground">Submit your llms.txt to get listed in our public directory</p>
                     </div>
                     <button
-                      onClick={() => handleTabChange('archive')}
+                      onClick={() => handleTabChange('submit')}
                       className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap"
                     >
-                      Submit Your llms.txt →
+                      Submit to Directory →
                     </button>
                   </div>
                 </div>

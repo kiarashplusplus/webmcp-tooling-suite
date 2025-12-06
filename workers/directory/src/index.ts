@@ -59,18 +59,18 @@ export const ALLOWED_ORIGINS = [
 
 // CORS headers
 export function corsHeaders(origin: string | null, frontendUrl?: string): HeadersInit {
-  const allowedOrigins = frontendUrl 
+  const allowedOrigins = frontendUrl
     ? [...ALLOWED_ORIGINS, frontendUrl]
     : ALLOWED_ORIGINS
-  
+
   // Check if origin matches any allowed origin (including subpaths)
-  const isAllowed = origin && allowedOrigins.some(allowed => 
+  const isAllowed = origin && allowedOrigins.some(allowed =>
     origin === allowed || origin.startsWith(allowed)
   )
-  
+
   // If origin is allowed, echo it back; otherwise use wildcard for public GET requests
   const allowOrigin = isAllowed ? origin : '*'
-  
+
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
@@ -108,7 +108,7 @@ export async function verifyGitHubToken(token: string): Promise<GitHubUser | nul
         'User-Agent': 'WebMCP-Directory-Worker',
       },
     })
-    
+
     if (!response.ok) return null
     return await response.json() as GitHubUser
   } catch {
@@ -149,7 +149,7 @@ export function validateFeedUrl(url: string): { valid: boolean; error?: string; 
   } catch {
     return { valid: false, error: 'Invalid URL' }
   }
-  
+
   return { valid: true, domain: feedUrl.hostname }
 }
 
@@ -165,8 +165,8 @@ export function generateFeedId(domain: string, timestamp?: number): string {
  * Calculate pagination info
  */
 export function calculatePagination(
-  totalResults: number, 
-  limit: number, 
+  totalResults: number,
+  limit: number,
   offset: number
 ): { hasMore: boolean; nextOffset: number | null } {
   const hasMore = offset + limit < totalResults
@@ -180,7 +180,7 @@ export function calculatePagination(
  * Normalize pagination parameters
  */
 export function normalizePaginationParams(
-  limitParam: string | null, 
+  limitParam: string | null,
   offsetParam: string | null
 ): { limit: number; offset: number } {
   const limit = Math.min(parseInt(limitParam || '50', 10), 100)
@@ -200,7 +200,7 @@ export function buildSearchPattern(search: string): string {
 /**
  * Valid feed types
  */
-export const VALID_FEED_TYPES = ['mcp', 'export', 'llm-index']
+export const VALID_FEED_TYPES = ['mcp', 'export', 'llm-index', 'llmstxt']
 
 /**
  * Check if feed type is valid
@@ -223,7 +223,7 @@ export default {
     try {
       // Route handling
       const path = url.pathname
-      
+
       // Health check
       if (path === '/health') {
         return jsonResponse({ status: 'ok', timestamp: Date.now() }, 200, cors)
@@ -260,15 +260,15 @@ async function handleFeedsAPI(
     const result = await env.DB.prepare(
       'SELECT * FROM feeds WHERE is_curated = 1 AND is_active = 1 ORDER BY submitted_at DESC'
     ).all()
-    
+
     const feeds = (result.results || []).map(rowToFeed)
-    
+
     // Add caching
     const cacheHeaders = {
       ...cors,
       'Cache-Control': 'public, max-age=3600, s-maxage=7200, stale-while-revalidate=86400',
     }
-    
+
     return jsonResponse({ feeds, total: feeds.length }, 200, cacheHeaders)
   }
 
@@ -277,7 +277,7 @@ async function handleFeedsAPI(
     const result = await env.DB.prepare(
       'SELECT url, domain, title, description, feed_type FROM feeds WHERE is_active = 1 ORDER BY is_curated DESC, submitted_at DESC'
     ).all()
-    
+
     const feeds = (result.results || []).map(row => ({
       url: row.url as string,
       domain: row.domain as string,
@@ -285,13 +285,13 @@ async function handleFeedsAPI(
       description: row.description as string | null,
       feed_type: row.feed_type as string,
     }))
-    
+
     // Heavy caching - 2hr browser, 6hr CDN, 24hr stale-while-revalidate
     const cacheHeaders = {
       ...cors,
       'Cache-Control': 'public, max-age=7200, s-maxage=21600, stale-while-revalidate=86400',
     }
-    
+
     return jsonResponse({ feeds, total: feeds.length }, 200, cacheHeaders)
   }
 
@@ -302,24 +302,24 @@ async function handleFeedsAPI(
     const result = await env.DB.prepare(
       'SELECT * FROM feeds WHERE id = ? AND is_active = 1'
     ).bind(id).first()
-    
+
     if (!result) {
       return jsonResponse({ error: 'Feed not found' }, 404, cors)
     }
-    
+
     return jsonResponse({ feed: rowToFeed(result as Record<string, unknown>) }, 200, cors)
   }
 
   // DELETE /api/feeds/:id
   if (idMatch && method === 'DELETE') {
     const id = idMatch[1]
-    
+
     // Require auth
     const authHeader = request.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
       return jsonResponse({ error: 'Unauthorized' }, 401, cors)
     }
-    
+
     const token = authHeader.slice(7)
     const user = await verifyGitHubToken(token)
     if (!user) {
@@ -330,11 +330,11 @@ async function handleFeedsAPI(
     const existing = await env.DB.prepare(
       'SELECT submitted_by FROM feeds WHERE id = ?'
     ).bind(id).first() as { submitted_by: string } | null
-    
+
     if (!existing) {
       return jsonResponse({ error: 'Feed not found' }, 404, cors)
     }
-    
+
     if (existing.submitted_by !== user.login && existing.submitted_by !== 'system') {
       return jsonResponse({ error: 'Forbidden: not the owner' }, 403, cors)
     }
@@ -343,7 +343,7 @@ async function handleFeedsAPI(
     await env.DB.prepare(
       'UPDATE feeds SET is_active = 0 WHERE id = ?'
     ).bind(id).run()
-    
+
     return jsonResponse({ success: true }, 200, cors)
   }
 
@@ -380,8 +380,8 @@ async function handleFeedsAPI(
     const result = await env.DB.prepare(query).bind(...params).all()
     const feeds = (result.results || []).map(rowToFeed)
 
-    return jsonResponse({ 
-      feeds, 
+    return jsonResponse({
+      feeds,
       total,
       limit,
       offset,
@@ -396,7 +396,7 @@ async function handleFeedsAPI(
     if (!authHeader?.startsWith('Bearer ')) {
       return jsonResponse({ error: 'Unauthorized: Please sign in with GitHub' }, 401, cors)
     }
-    
+
     const token = authHeader.slice(7)
     const user = await verifyGitHubToken(token)
     if (!user) {
@@ -416,7 +416,7 @@ async function handleFeedsAPI(
       gist_raw_url?: string
       gist_html_url?: string
     }
-    
+
     try {
       body = await request.json()
     } catch {
@@ -443,7 +443,7 @@ async function handleFeedsAPI(
       const existing = await env.DB.prepare(
         'SELECT id, is_active FROM feeds WHERE url = ?'
       ).bind(body.url).first<{ id: string; is_active: number }>()
-      
+
       if (existing) {
         if (existing.is_active) {
           return jsonResponse({ error: 'This feed URL has already been submitted' }, 409, cors)
@@ -469,13 +469,13 @@ async function handleFeedsAPI(
           Date.now(),
           existing.id
         ).run()
-        
+
         const updated = await env.DB.prepare(
           'SELECT * FROM feeds WHERE id = ?'
         ).bind(existing.id).first()
-        
-        return jsonResponse({ 
-          success: true, 
+
+        return jsonResponse({
+          success: true,
           feed: rowToFeed(updated as Record<string, unknown>),
           message: 'Feed reactivated successfully'
         }, 200, cors)
@@ -507,15 +507,15 @@ async function handleFeedsAPI(
         'SELECT * FROM feeds WHERE id = ?'
       ).bind(id).first()
 
-      return jsonResponse({ 
-        success: true, 
+      return jsonResponse({
+        success: true,
         feed: rowToFeed(created as Record<string, unknown>),
         message: 'Feed submitted successfully'
       }, 201, cors)
     } catch (dbError) {
       console.error('Database error:', dbError)
-      return jsonResponse({ 
-        error: 'Database error', 
+      return jsonResponse({
+        error: 'Database error',
         message: dbError instanceof Error ? dbError.message : 'Failed to insert feed'
       }, 500, cors)
     }
