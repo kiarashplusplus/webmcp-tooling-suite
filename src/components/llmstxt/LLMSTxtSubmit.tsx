@@ -107,7 +107,9 @@ export function LLMSTxtSubmit({ onComplete }: LLMSTxtSubmitProps) {
                 })
             } else {
                 toast.error('llms.txt validation failed', {
-                    description: result.errors?.[0] || 'Unknown error'
+                    description: typeof result.errors?.[0] === 'string'
+                        ? result.errors[0]
+                        : result.errors?.[0]?.message || 'Unknown error'
                 })
             }
         } catch (error) {
@@ -272,7 +274,7 @@ export function LLMSTxtSubmit({ onComplete }: LLMSTxtSubmitProps) {
                         {validationResult.errors && validationResult.errors.length > 0 && (
                             <div className="mt-3 pt-3 border-t border-border/50 text-sm text-red-400">
                                 {validationResult.errors.map((error, i) => (
-                                    <p key={i}>• {error}</p>
+                                    <p key={i}>• {typeof error === 'string' ? error : error.message}</p>
                                 ))}
                             </div>
                         )}
@@ -303,12 +305,17 @@ export function LLMSTxtSubmit({ onComplete }: LLMSTxtSubmitProps) {
                         <CheckCircle size={24} className="text-green-500" weight="fill" />
                         <Button
                             onClick={signOut}
+                            disabled={authLoading}
                             variant="ghost"
                             size="sm"
                             className="text-muted-foreground hover:text-destructive"
                             title="Sign out"
                         >
-                            <SignOut size={18} />
+                            {authLoading ? (
+                                <Spinner className="animate-spin" size={18} />
+                            ) : (
+                                <SignOut size={18} />
+                            )}
                         </Button>
                     </div>
                 ) : (

@@ -43,7 +43,7 @@ export function useAuth() {
     try {
       const hash = window.location.hash
       const authData = new URLSearchParams(hash.slice(6)) // Remove '#auth='
-      
+
       const error = authData.get('error')
       if (error) {
         console.error('OAuth error:', error, authData.get('error_description'))
@@ -65,17 +65,17 @@ export function useAuth() {
         localStorage.setItem('webmcp-github-token', token)
         localStorage.setItem(STORAGE_KEY, JSON.stringify(fullUserInfo))
         setUser(fullUserInfo)
-        
+
         // Clear the hash from URL
         window.history.replaceState(null, '', window.location.pathname)
-        
+
         // Check for pending state to restore (e.g., form data from Submit flow)
         const pendingState = localStorage.getItem('webmcp-auth-pending')
         if (pendingState) {
           localStorage.removeItem('webmcp-auth-pending')
           // Dispatch custom event for components to restore state
-          window.dispatchEvent(new CustomEvent('webmcp-auth-complete', { 
-            detail: JSON.parse(pendingState) 
+          window.dispatchEvent(new CustomEvent('webmcp-auth-complete', {
+            detail: JSON.parse(pendingState)
           }))
         }
       } else {
@@ -114,16 +114,16 @@ export function useAuth() {
     if (pendingState) {
       localStorage.setItem('webmcp-auth-pending', JSON.stringify(pendingState))
     }
-    
+
     // Check if we have a GitHub OAuth endpoint configured
     const oauthEndpoint = import.meta.env.VITE_GITHUB_OAUTH_URL
-    
+
     if (oauthEndpoint) {
       // Build redirect URL - use just "/" since FRONTEND_URL already includes the base path
       // The OAuth worker will append this to FRONTEND_URL
       const authUrl = new URL(oauthEndpoint)
       authUrl.searchParams.set('redirect', '/')
-      
+
       window.location.href = authUrl.toString()
       return
     }
@@ -150,10 +150,14 @@ export function useAuth() {
   }, [])
 
   // Sign out handler
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
+    setLoading(true)
+    // Small delay for visual feedback
+    await new Promise(resolve => setTimeout(resolve, 300))
     localStorage.removeItem(STORAGE_KEY)
     localStorage.removeItem('webmcp-github-token')
     setUser(null)
+    setLoading(false)
   }, [])
 
   // Handle OAuth callback from URL hash (called on page load)
@@ -167,7 +171,7 @@ export function useAuth() {
     try {
       // Parse the auth data from hash
       const authData = new URLSearchParams(hash.slice(6)) // Remove '#auth='
-      
+
       const error = authData.get('error')
       if (error) {
         console.error('OAuth error:', error, authData.get('error_description'))
@@ -198,7 +202,7 @@ export function useAuth() {
 
       // Clear the hash from URL (keeps it out of history)
       window.history.replaceState(null, '', window.location.pathname)
-      
+
       return true
     } catch (err) {
       console.error('OAuth callback parsing failed:', err)

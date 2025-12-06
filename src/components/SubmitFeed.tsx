@@ -30,7 +30,7 @@ export function SubmitFeed() {
   const { user, isAuthenticated, signIn, signOut, loading: authLoading } = useAuth()
   const { submitFeed, submitting: apiSubmitting, error: apiError } = useDirectory()
   const { archiveToGist } = useGistArchive()
-  
+
   const [feedUrl, setFeedUrl] = useState('')
   const [isValidating, setIsValidating] = useState(false)
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null)
@@ -50,7 +50,7 @@ export function SubmitFeed() {
     }
 
     window.addEventListener('webmcp-auth-complete', handleAuthComplete as EventListener)
-    
+
     // Also check localStorage on mount for pending state (backup)
     const pending = localStorage.getItem('webmcp-auth-pending')
     if (pending && isAuthenticated) {
@@ -70,9 +70,9 @@ export function SubmitFeed() {
 
   // Sign in with state preservation
   const handleSignIn = () => {
-    signIn({ 
-      tab: 'submit', 
-      feedUrl: feedUrl.trim() 
+    signIn({
+      tab: 'submit',
+      feedUrl: feedUrl.trim()
     })
   }
 
@@ -89,17 +89,17 @@ export function SubmitFeed() {
 
     try {
       let url = feedUrl.trim()
-      
+
       // Auto-add https:// if no protocol specified
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         url = 'https://' + url
       }
-      
+
       // Auto-append .well-known path if just a domain
       if (!url.includes('.json') && !url.includes('/.well-known/')) {
         url = url.replace(/\/$/, '') + '/.well-known/mcp.llmfeed.json'
       }
-      
+
       // Fetch and parse the feed
       const response = await fetchWithCorsProxy(url)
       if (!response.ok) {
@@ -107,12 +107,12 @@ export function SubmitFeed() {
       }
       const feed = await response.json() as LLMFeed
       setParsedFeed(feed)
-      
+
       // Validate the feed
       const result = await validateLLMFeed(feed)
       setValidationResult(result)
       setFeedUrl(url)
-      
+
       if (result.valid) {
         toast.success('Feed is valid!', {
           description: `Score: ${result.score}/100`
@@ -202,12 +202,12 @@ export function SubmitFeed() {
     setTimeout(() => setCopiedBadge(null), 2000)
   }
 
-  const badges = validationResult?.valid 
+  const badges = validationResult?.valid
     ? generateAllBadges(feedUrl, {
-        isVerified: validationResult.valid,
-        isSigned: validationResult.signatureValid,
-        score: validationResult.score
-      })
+      isVerified: validationResult.valid,
+      isSigned: validationResult.signatureValid,
+      score: validationResult.score
+    })
     : []
 
   return (
@@ -218,7 +218,7 @@ export function SubmitFeed() {
           Submit Your Feed
         </h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Get your WebMCP-enabled site listed in our directory. Validate your feed, 
+          Get your WebMCP-enabled site listed in our directory. Validate your feed,
           sign in with GitHub, and earn badges to showcase your integration.
         </p>
       </div>
@@ -231,7 +231,7 @@ export function SubmitFeed() {
           </div>
           <h3 className="text-lg font-semibold">Validate Your Feed</h3>
         </div>
-        
+
         <div className="flex gap-3">
           <Input
             placeholder="https://example.com or https://example.com/.well-known/mcp.llmfeed.json"
@@ -240,7 +240,7 @@ export function SubmitFeed() {
             onKeyDown={(e) => e.key === 'Enter' && handleValidate()}
             className="flex-1 glass font-mono text-sm"
           />
-          <Button 
+          <Button
             onClick={handleValidate}
             disabled={isValidating || !feedUrl.trim()}
             className="gap-2"
@@ -272,7 +272,7 @@ export function SubmitFeed() {
                 </p>
               </div>
             </div>
-            
+
             {parsedFeed?.metadata && (
               <div className="mt-3 pt-3 border-t border-border/50">
                 <p className="font-medium">{parsedFeed.metadata.title}</p>
@@ -304,9 +304,9 @@ export function SubmitFeed() {
 
         {isAuthenticated && user ? (
           <div className="flex items-center gap-3 p-4 rounded-lg glass-strong">
-            <img 
-              src={user.avatarUrl} 
-              alt={user.login} 
+            <img
+              src={user.avatarUrl}
+              alt={user.login}
               className="w-10 h-10 rounded-full"
             />
             <div className="flex-1">
@@ -314,18 +314,23 @@ export function SubmitFeed() {
               <p className="text-sm text-muted-foreground">Ready to submit</p>
             </div>
             <CheckCircle size={24} className="text-green-500" weight="fill" />
-            <Button 
+            <Button
               onClick={signOut}
+              disabled={authLoading}
               variant="ghost"
               size="sm"
               className="text-muted-foreground hover:text-destructive"
               title="Sign out"
             >
-              <SignOut size={18} />
+              {authLoading ? (
+                <Spinner className="animate-spin" size={18} />
+              ) : (
+                <SignOut size={18} />
+              )}
             </Button>
           </div>
         ) : (
-          <Button 
+          <Button
             onClick={handleSignIn}
             disabled={authLoading}
             variant="outline"
@@ -359,7 +364,7 @@ export function SubmitFeed() {
             </p>
           </div>
         ) : (
-          <Button 
+          <Button
             onClick={handleSubmit}
             disabled={!validationResult || validationResult.score === undefined || !isAuthenticated || isSubmitting}
             className="w-full gap-2"
@@ -411,7 +416,7 @@ export function SubmitFeed() {
                     <span className="font-medium capitalize">{badge.type} Badge</span>
                   </div>
                   {/* Preview */}
-                  <div 
+                  <div
                     dangerouslySetInnerHTML={{ __html: badge.svg }}
                     className="shrink-0"
                   />
@@ -478,12 +483,12 @@ export function SubmitFeed() {
             <h4 className="font-semibold mb-1">Don't have a feed yet?</h4>
             <p className="text-sm text-muted-foreground mb-3">
               Create your <code className="glass px-1.5 py-0.5 rounded text-xs font-mono">
-              .well-known/mcp.llmfeed.json</code> file to get started with WebMCP.
+                .well-known/mcp.llmfeed.json</code> file to get started with WebMCP.
             </p>
             <Button variant="outline" size="sm" className="gap-2" asChild>
-              <a 
-                href="https://github.com/kiarashplusplus/webmcp-tooling-suite/blob/main/VALIDATOR_GUIDE.md" 
-                target="_blank" 
+              <a
+                href="https://github.com/kiarashplusplus/webmcp-tooling-suite/blob/main/VALIDATOR_GUIDE.md"
+                target="_blank"
                 rel="noopener noreferrer"
               >
                 Read the Spec
